@@ -1,6 +1,6 @@
 ---
 name: pb-file-issues
-description: Act on an approved pb-triage batch: file approved tickets as GitLab issues and add triage comments and labels to approved GitLab issues. Run as /podbay:pb-file-issues.
+description: Act on an approved pb-triage batch: file approved tickets as GitLab issues and add triage comments and labels to approved GitLab issues. For findings a BA/QA already verified, use /podbay:pb-ticket instead. Run as /podbay:pb-file-issues.
 argument-hint: <triage file> [ticket ids (t1 t2) | finding numbers]
 disable-model-invocation: true
 ---

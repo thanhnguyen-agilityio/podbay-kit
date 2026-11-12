@@ -1,6 +1,6 @@
 ---
 name: pb-triage
-description: Verify Pod Bay findings and incoming GitLab issues on current main by reproducing each as a failing test, grill every ticket with the user, then stop for batch approval (gate 1). Run as /podbay:pb-triage.
+description: Verify Pod Bay findings and incoming GitLab issues on current main by reproducing each as a failing test, grill every ticket with the user, then stop for batch approval (gate 1). For findings a BA/QA already verified, use /podbay:pb-ticket instead. Run as /podbay:pb-triage.
 argument-hint: [--source <findings file> | --source gitlab [issue numbers]] [item ids (t1 t2) | finding numbers | all]
 disable-model-invocation: true
 ---

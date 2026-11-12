@@ -6,7 +6,7 @@
     {
       "name": "podbay",
       "source": "./plugins/podbay",
-      "description": "Pod Bay workflow kit: pb-triage, pb-file-issues, pb-auto-issues, pb-explain-mr, grill-me, bootstrap, plus the pb-guard Bash hook."
+      "description": "Pod Bay workflow kit: pb-triage, pb-file-issues, pb-ticket, pb-auto-issues, pb-explain-mr, grill-me, bootstrap, plus the pb-guard Bash hook."
     }
   ]
 }

@@ -39,6 +39,7 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 | --- | --- |
 | `/podbay:pb-triage` | Reproduce findings or GitLab issues as failing tests, grill, stop for approval |
 | `/podbay:pb-file-issues` | File the approved batch as GitLab issues |
+| `/podbay:pb-ticket` | Turn BA/QA-verified findings into grouped GitLab issues (no reproduction or triage file) |
 | `/podbay:pb-auto-issues` | Work approved issues end to end into MRs (never merges) |
 | `/podbay:pb-explain-mr` | Explain the Rust in an MR to a TS/C# developer |
 | `/podbay:grill-me` | Interview to sharpen a plan or ticket |
