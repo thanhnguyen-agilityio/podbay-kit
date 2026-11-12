@@ -1,0 +1,12 @@
+{
+  "name": "podbay-kit",
+  "description": "Claude Code plugins for working on the Pod Bay repo.",
+  "owner": { "name": "Thanh Nguyen" },
+  "plugins": [
+    {
+      "name": "podbay",
+      "source": "./plugins/podbay",
+      "description": "Pod Bay workflow kit: pb-triage, pb-file-issues, pb-auto-issues, pb-explain-mr, grill-me, bootstrap, plus the pb-guard Bash hook."
+    }
+  ]
+}
