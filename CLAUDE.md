@@ -1,0 +1,35 @@
+# podbay-claude-kit
+
+Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills, a PreToolUse guard hook and reference docs for working on the Pod Bay repo. `README.md` has install and usage.
+
+## Commands
+- `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
+- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 56 pass, 0 fail.
+- `claude plugin marketplace add <path to this repo>` then `claude plugin install podbay@podbay-kit` : try it locally. Edits apply on the next session or `/reload-plugins`.
+
+## Verifying your work
+- Before you say a task is done, run both validate commands and the guard tests, and paste the result lines.
+- Changed `pb-guard.sh` or a scanner: add a case to `test-pb-guard.sh` first, see it fail, then make it pass.
+- Changed a skill: run it once with `--dry-run` or on a throwaway checkout. Nothing here has an end-to-end test.
+- There is no CI. These local runs are the only gate.
+
+## Conventions
+- Layout: `.claude-plugin/marketplace.json` at the root; the plugin in `plugins/podbay/` with `skills/<name>/SKILL.md`, `hooks/hooks.json`, `scripts/`, `reference/`, `templates/`. Component folders go at the plugin root, never inside `.claude-plugin/`.
+- Marketplace `source` starts with `./` and has no `..`. The marketplace entry name equals `plugin.json` `name`.
+- Skills reach plugin files with `${CLAUDE_PLUGIN_ROOT}`. Never hard-code a machine path, home folder or username.
+- Skills write state to `.podbay/` in the target checkout, never into the plugin.
+- Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first.
+- Skill text stays terse; long rules go to `reference/`.
+- Commit messages are one plain sentence. Push only when asked.
+
+## Layout
+- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-explain-mr`, `grill-me`, `bootstrap` (copies `templates/` into a repo).
+- `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR merge/approve and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
+- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `preflight.md`, `lessons.md`, `rust-glossary.md`.
+
+## Things Claude gets wrong
+- Putting client or private notes in this repo (journal, comms log, people, decisions, backlog, review artifacts, tokens). This repo is meant to be shareable.
+- Editing a copied skill here and forgetting the source in `my-i-togepi/automation/`, or the reverse. Decide which copy is the master.
+- Letting `pb-guard.sh` allow pushes to `main`. Only `PB_KIT_REPO` set to an existing repo may.
+- Using `${CLAUDE_PLUGIN_ROOT}` in a Bash command. It exists only in hook/MCP fields and in skill text.
+- Copying text from third-party sources (for example the aihero.dev grill-me page) without a license.
