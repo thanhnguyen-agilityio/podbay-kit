@@ -17,6 +17,10 @@ Chrome's gif recorder only sees the browser. Use it only for the GitLab/GitHub s
    ffmpeg -v error -y -i "<out>/s<n>.mov" -t <seconds> -c copy "<out>/s<n>-trim.mov"
    ```
 
+Before each recording: bring the app to the front, then read its window bounds again (`app_list_windows`); windows move and resize between steps, and `-R` records whatever is on top in that area. Computer-use screenshot coordinates are not screen points: the result names its coordinate frame; `-R` takes points.
+
+Computer-use screenshots hide apps that are not granted, which can include system notification banners. To check for a banner, use `screencapture -x -R<corner>` instead.
+
 Screenshots at key steps: `screencapture -x "<out>/s<n>-<step>.png"`, or save the computer-use screenshot.
 
 Permission probe (step 0): `screencapture -v -x -V 2 <scratchpad>/probe.mov`. Exit 0 and a file with a duration (`ffprobe -v error -show_entries format=duration -of csv=p=0 <file>`) means Screen Recording is granted. Delete the probe after.
@@ -35,6 +39,14 @@ ffmpeg -v error -y -i "<out>/s<n>.mp4" \
   -vf "fps=8,scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer" \
   -loop 0 "<out>/s<n>.gif"
 ```
+
+## Blur personal data
+
+Blur one box (pixels of the file, `x,y` top-left) in a png, mp4 or gif; repeat the filter pair for more boxes:
+```bash
+ffmpeg -v error -y -i "<in>" -filter_complex "[0]split[a][b];[b]crop=<w>:<h>:<x>:<y>,boxblur=12[c];[a][c]overlay=<x>:<y>" "<out>"
+```
+Look at the result before using it. When the box moves between frames (scrolling, dialogs), post a still instead of the video.
 
 ## Keep every file at most 10 MB
 

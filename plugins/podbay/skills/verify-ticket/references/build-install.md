@@ -4,7 +4,9 @@ Use the repo's own commands. If the checkout's README or `tools/package/` disagr
 
 ## Build the dmg
 
-From `<checkout>`, on the MR source branch:
+Build from one fixed commit. If `git status` shows edits or HEAD moves during the build (another session may be fixing things), build in a detached worktree instead: `git worktree add --detach <scratchpad>/build-<sha> <sha>`, run the steps below there, and report `<sha>`. Tell the user if `<sha>` is not pushed yet: the comment must name a commit the MR has. Use literal paths in `rm`, never a bare variable.
+
+From `<checkout>` (or that worktree), on the MR source branch:
 
 ```bash
 export CARGO_TARGET_DIR="$HOME/.cache/cargo-target/podbay"
