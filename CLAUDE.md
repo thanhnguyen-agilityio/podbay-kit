@@ -24,9 +24,9 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 - Bump `version` in the changed plugin's `plugin.json` in every commit that should reach installed machines (fix 0.x.y+1, new or removed skill 0.x+1.0); `claude plugin update` ignores changes without a new version.
 
 ## Layout
-- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
+- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-fix`: one approved ticket to a Draft MR in one session. `pb-review`: isolated review in a fresh agent. `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
 - `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR merge/approve and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
-- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `preflight.md`, `lessons.md`, `rust-glossary.md`.
+- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `preflight.md`, `lessons.md`, `rust-glossary.md`.
 
 ## Things Claude gets wrong
 - Putting client or private notes in this repo (journal, comms log, people, decisions, backlog, review artifacts, tokens). This repo is meant to be shareable.

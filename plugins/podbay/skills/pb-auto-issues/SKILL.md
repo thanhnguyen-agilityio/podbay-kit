@@ -37,6 +37,7 @@ Select issues from $ARGUMENTS (`--skip-preflight` is not part of the selection):
   - A word that matches no label (`glab label list -R <repo>`): stop before preflight and reply with the valid labels.
   - Also drop issues with an open MR whose description says `Closes #<n>` (`glab mr list -R <repo> --search "<n>"`).
   - Also drop issues whose latest comment contains `<!-- pb:skipped -->` with no newer comment from a member.
+  - Also drop issues labelled `pb::needs-human`: a person looks at them first.
   - Also drop `type::spike` and `type::epic` issues: spikes run by hand, epics through their stories.
   - Follow-ups (`<!-- pb:followup-of #`) need their own triage like any issue, so they never chain into the same run.
   - In `live` mode only (contract, Target), also drop issues labelled `pb::needs-advisor` without `pb::approved`: the advisor has not approved them yet.
@@ -47,7 +48,7 @@ Select issues from $ARGUMENTS (`--skip-preflight` is not part of the selection):
 ## Per issue
 Record start and end time. **Budget:** 60 minutes wall clock per issue (contract); the worker checks it, and over budget it pushes what is done, opens a draft MR with `pb::draft`, and replies `draft`.
 1. **Worker, steps 1-4.** It replies `skipped` (done: it commented on the issue), `draft` (done: draft MR with failure log), or `ready`.
-2. **Review 2** (on `ready`): fresh `Agent` (`model: sonnet`) gets only the issue number and branch; it reads the issue and the branch diff and flags: (a) Expected section not met, (b) any line not needed for the ticket, including reformatting or whitespace-only hunks, (c) bugs, panics, security, missing tests. Send findings to the worker; it fixes, removes unneeded lines, reruns the gates, pushes. If code changed, run review 2 once more. Still blocking -> worker opens a draft MR with the findings; move on.
+2. **Review 2, isolated** (on `ready`): a fresh `Agent` (`model: sonnet`) runs `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md` with only `<checkout>`, the issue number, the branch, `main` and a scratch folder; never the worker's summary (contract, Isolated review). It flags (a) Expected not met, (b) lines not needed for the ticket, (c) bugs, panics, security, missing tests, and it proves that the new test fails on `main`. Send findings to the worker; it fixes each finding or answers why not, removes unneeded lines, reruns the gates, pushes, and puts the reviewer's Reviewer line in the MR's `## Checklist`. If code changed, run review 2 once more with a new fresh agent. Still blocking -> worker opens a draft MR with the findings; move on.
 3. **Worker, step 6:** send "do step 6"; it replies with the MR link when the evidence is in.
 4. **Sync** (worker): send "sync"; it runs `git fetch origin && git merge origin/main` on the branch and, if anything came in, reruns the gates and pushes.
 5. **Review 3:** fresh `Agent` (`model: opus`) gets the issue number, MR number, and `references/review-3.md`; it reruns the checks itself and returns the checklist and a verdict.

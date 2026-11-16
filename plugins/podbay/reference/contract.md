@@ -40,7 +40,18 @@ Two sources, one gate. Nothing is built before gate 1.
 
 Findings are filed per ticket: a findings file may group findings into tickets (`t1`, `t2`, ...), and one ticket is one issue that covers all its findings. Triage files write the item as `t<n>`; a batch without tickets holds one row per finding (`f<n>`).
 
-The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-auto-issues` works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable.
+The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-auto-issues` works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable. The label `pb::agent-ready` shows the approval on GitLab, but it never replaces the triage file.
+
+## Routing
+
+One ticket, one session, one branch.
+
+| Kind | Path |
+| --- | --- |
+| 1. Found by us (our own BA/QA findings, already verified) | `pb-ticket` files it; the approver approves the ticket text; `pb-fix` in the same session (failing test, fix, isolated review, Draft MR through `pb-mr`) |
+| 2. Logged by someone else | `pb-triage` (reproduce on current `main` as a failing test, grill); the approver approves the batch; `pb-file-issues` labels approved issues `pb::agent-ready`; then one new session per ticket (`pb-fix`) or `pb-auto-issues`; isolated review; Draft MR |
+
+A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `pb::needs-human` at filing and is not worked by an agent.
 
 ## Issue format
 
@@ -57,7 +68,7 @@ Created on first use. One of each group, plus state labels as they apply.
 | `priority::` | `high`, `medium`, `low` |
 | `type::` | `bug`, `story`, `task`, `spike`, `epic` ([ticket-format.md](ticket-format.md), section 1) |
 | `area::` | `workspace`, `clone`, `overview`, `tasks`, `machines`, `settings`, `net`, `other` |
-| State | `pb::ready` (MR waits for a person), `pb::needs-advisor` (on an MR: it changes behavior, architecture, or network/security, i.e. touches `src/net/`, `secure.rs`, `state.rs`, `ops.rs`, `service.rs`; on an issue: triage size is `big UX / new feature`, which includes every ticket sized L), `pb::approved` (the advisor approved a `pb::needs-advisor` issue), `pb::draft`, `pb::skipped`, `pb::followup` |
+| State | `pb::ready` (MR waits for a person), `pb::needs-advisor` (on an MR: it changes behavior, architecture, or network/security, i.e. touches `src/net/`, `secure.rs`, `state.rs`, `ops.rs`, `service.rs`; on an issue: triage size is `big UX / new feature`, which includes every ticket sized L), `pb::approved` (the advisor approved a `pb::needs-advisor` issue), `pb::agent-ready` (approved at gate 1; an agent may work it), `pb::needs-human` (could not be reproduced; a person looks first), `pb::draft`, `pb::skipped`, `pb::followup` |
 
 In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until they also carry `pb::approved`. In `pilot` mode, the label is informational.
 
@@ -75,6 +86,12 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 1. **Gate 1, grill then approve:** every ticket in the batch is grilled (`pb-triage` step 9) before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-file-issues` files only rows with yes.
 2. **Gate 2, merge:** a person merges every MR. No `pb-*` skill merges, approves, or pushes to `main`.
+
+## Isolated review
+
+- The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
+- Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning. The prompt is `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md`; `pb-review` runs it.
+- The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not, and the MR says who reviewed it (`## Checklist`).
 
 ## Merge requests
 

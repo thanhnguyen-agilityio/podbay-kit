@@ -21,6 +21,6 @@ File what the BA/QA already confirmed. Never reproduce, triage or fix. Create no
    - Write the description to a scratchpad file; run `${CLAUDE_PLUGIN_ROOT}/scripts/publish-check.sh <file>` and `${CLAUDE_PLUGIN_ROOT}/scripts/private-ref-check.sh <file>`. Fix private references and rerun; a publish-check MATCH skips that ticket (report `file:line`).
    - `glab issue create -R <repo> --title '<plain sentence>' --description-file <file> --label '<a,b,c>'` (single quotes, per the contract).
 8. Append to `.podbay/tickets/<yyyy-mm-dd>.md` after each create: ticket title -> issue number, findings covered (by position in the findings file). Reruns read it to skip existing ones. This file stays local.
-9. Reply with a table: ticket | link | result (filed / skipped existing / not filed: reason).
+9. Reply with a table: ticket | link | result (filed / skipped existing / not filed: reason). Next step (contract, Routing): `/podbay:pb-fix <n>` in this session, one ticket at a time.
 
 Rules: never touch the Rust repo; never print tokens; never close or edit existing issues.

@@ -1,11 +1,10 @@
 # Pod Bay review checklist
 
-Used by `pb-review`. Review order: correctness against the acceptance criteria first, then the risk areas below, then test gaps.
+Risk areas for the isolated reviewer (`reviewer-prompt.md`, step 5c). The order, rules and report format are in that prompt.
 
 ## Rules
 - Read-only. Never touch the user's real config folder (for example `~/.config/podbay-dev`).
-- Check every finding in the code: `file:line`, a concrete failure scenario, a fix. Drop what you cannot confirm.
-- Don't flag decided changes or known untested parts the user listed.
+- A decision written on the ticket (Assumptions, later comments) is not a finding.
 
 ## Risk areas (keep the ones the diff touches)
 - **Secrets stay local.** A saved sign-in or token never leaves its machine: check sealing, what goes into stats or logs, and what peers receive.
@@ -14,9 +13,3 @@ Used by `pb-review`. Review order: correctness against the acceptance criteria f
 - **UI state (egui).** State that can get stuck, double sends on repeated clicks, a dialog left open over a deleted or changed item.
 - **Platform code.** Code for an OS nobody ran: say so, don't assume it works.
 - **Tests.** Missing tests for the risky paths above.
-
-## Report
-1. **TL;DR**, 1–3 lines: ready or not, and the top issue.
-2. **Findings** by severity: blocker / should fix / nit. Each: `file:line`, failure scenario, suggested fix.
-3. **Acceptance criteria** table: criterion | met / partly met / not met | evidence (`file:line` or test).
-4. **Checks**: `cargo test` and `cargo clippy --all-targets` result lines.

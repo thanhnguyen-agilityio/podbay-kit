@@ -22,6 +22,7 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 7. **Safety and impact.** Check for changes to settings files, saved state formats, config, env vars, CLI flags and the peer protocol. Confirm that upgrading from the previous release still works (old settings and state load) and say how to roll back. Note any performance or security effect. A change under `src/net/`, `secure.rs`, `state.rs`, `ops.rs` or `service.rs` gets the label `pb::needs-advisor`.
 8. **Docs.** When behaviour changes, update `README.md`, and `CHANGELOG.md` if the repo has one.
 9. **Process.** The branch contains the latest target branch and has no conflicts. Commits are plain sentences (`contract.md`). Read the full diff yourself before asking for review. Ask the user who reviews; never guess.
+10. **Isolated review** (contract, Isolated review). Before the MR leaves Draft, `pb-review` has run in a fresh agent on the current head. Each finding is fixed or answered in one line, and the reviewer line is in `## Checklist`. Your own review in item 9 does not count.
 
 ## Description template
 
@@ -57,4 +58,5 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 - [ ] Tests added or updated; clippy, cargo test and cargo build pass locally
 - [ ] Docs and CHANGELOG updated, or not needed
 - [ ] No secrets or debug code
+- [ ] Isolated review: <fresh agent, model, date | person>; findings fixed or answered: <list or "none">
 ```

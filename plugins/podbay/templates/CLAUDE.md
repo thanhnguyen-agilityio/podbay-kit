@@ -22,6 +22,11 @@ Rust desktop app (egui 0.37, edition 2024) that shows Claude sessions and checko
 - Commit messages are one plain sentence with no prefix, for example "Show a finished action at once, without waiting for the machine to report".
 - Builds default to `PODBAY_ENV=local` (settings in `~/.config/podbay-local`, port 7881). Never read or write `~/.config/podbay-dev`.
 
+## Code review
+- The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
+- Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning (`/podbay:pb-review`).
+- The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not, and the MR says who reviewed it.
+
 ## Architecture
 One machine runs a window and a background service. Machines with the same password find each other on the LAN as peers; a leader is elected only to cut traffic. Only the member list is replicated (`src/state.rs`, mergeable in any order). Every action goes through `ops::exec`.
 - `src/ops.rs`: every operation a machine can do, as one enum; the window, the command line and other machines all call it.

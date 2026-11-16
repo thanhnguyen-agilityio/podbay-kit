@@ -8,7 +8,7 @@
     {
       "name": "podbay",
       "source": "./plugins/podbay",
-      "description": "Pod Bay workflow kit: pb-triage, pb-file-issues, pb-ticket, pb-auto-issues, pb-explain-mr, pb-mr, pb-review, pb-verify, verify-ticket, bootstrap, plus the pb-guard Bash hook."
+      "description": "Pod Bay workflow kit: pb-triage, pb-file-issues, pb-ticket, pb-auto-issues, pb-explain-mr, pb-fix, pb-mr, pb-review, pb-verify, verify-ticket, bootstrap, plus the pb-guard Bash hook."
     },
     {
       "name": "tools",

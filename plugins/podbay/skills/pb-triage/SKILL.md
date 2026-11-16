@@ -5,6 +5,7 @@ argument-hint: [--source <findings file> | --source gitlab [issue numbers]] [ite
 disable-model-invocation: true
 ---
 Verify findings on `main`. Never file issues and never fix anything.
+Routing (contract, Routing): this skill is for kind 2, tickets logged by someone else. Kind 1, found and verified by us, goes to `pb-ticket` and then `pb-fix`. A ticket that already has a failing test and repro steps skips triage and goes to `pb-fix`.
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` and `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md`. Resolve the target (`<repo>`, `<id>`, `<checkout>`) as the contract's Target section says. Working files go in `.podbay/` in the target checkout (`.podbay/triage/`); create it if missing.
 2. Source of findings:
@@ -32,7 +33,7 @@ Verify findings on `main`. Never file issues and never fix anything.
    - the ticket, drafted as a senior BA/QA would in `${CLAUDE_PLUGIN_ROOT}/reference/ticket-format.md`: classify it (section 1), title it (section 2), fill every section of its template (section 3) with the repro test as its verification, and fix it until the Definition of Ready (section 4) passes. Assumptions come from grilling in step 9.
 8. Write `.podbay/triage/<yyyy-mm-dd>.md`:
    - a TL;DR line;
-   - the batch table: item (`t<n>`, `f<n>` from `--source <file>`, or `#<iid>`) | findings (`#2, #6, #7`) | title | status | priority | type | area | level | size | proposed action (file / triage comment / comment: fixed upstream / comment: duplicate of #n / ask);
+   - the batch table: item (`t<n>`, `f<n>` from `--source <file>`, or `#<iid>`) | findings (`#2, #6, #7`) | title | status | priority | type | area | level | size | proposed action (file / triage comment / comment: fixed upstream / comment: duplicate of #n / needs human: not reproducible / ask). Approved rows get `pb::agent-ready` at filing, and "needs human" rows get `pb::needs-human`;
    - per item: the ticket draft exactly as it will be filed (title, then its sections), then an `Internal (not filed)` block: source (ticket, finding numbers), status per finding, layer, level, size, open decisions, the trimmed failure output.
 9. **Gate 1, grill then approve.** Grill the user on the batch yourself, in rounds:
    - Per item, map the design tree: scope, business rules, the behavior each Expected bullet implies, each scenario kind (happy, sad, boundary), empty and error states, macOS/Linux/Windows differences, what stays out of scope.
