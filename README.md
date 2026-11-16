@@ -43,7 +43,6 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 | `/podbay:pb-ticket` | Turn BA/QA-verified findings (local file or claude.ai artifact URL) into grouped GitLab issues (no reproduction or triage file). `--per-finding` = one ticket each, `--only 2,5` = pick findings. Example: `/podbay:pb-ticket https://claude.ai/artifact/AbC123 --only 2,5 --per-finding` |
 | `/podbay:pb-auto-issues` | Work approved issues end to end into MRs (never merges) |
 | `/podbay:pb-explain-mr` | Explain the Rust in an MR to a TS/C# developer |
-| `/podbay:grill-me` | Interview to sharpen a plan or ticket |
 | `/podbay:bootstrap` | Set up the current repo |
 
 Requirements: `git`, `glab` (authenticated), `python3`, a Rust toolchain for the Pod Bay repo.

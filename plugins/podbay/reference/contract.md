@@ -73,7 +73,7 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 ## Gates
 
-1. **Gate 1, grill then approve:** every ticket in the batch is grilled with `/podbay:grill-me` before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-file-issues` files only rows with yes.
+1. **Gate 1, grill then approve:** every ticket in the batch is grilled (`pb-triage` step 9) before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-file-issues` files only rows with yes.
 2. **Gate 2, merge:** a person merges every MR. No `pb-*` skill merges, approves, or pushes to `main`.
 
 ## Merge requests

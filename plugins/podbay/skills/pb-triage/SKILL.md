@@ -34,7 +34,7 @@ Verify findings on `main`. Never file issues and never fix anything.
    - a TL;DR line;
    - the batch table: item (`t<n>`, `f<n>` from `--source <file>`, or `#<iid>`) | findings (`#2, #6, #7`) | title | status | priority | type | area | level | size | proposed action (file / triage comment / comment: fixed upstream / comment: duplicate of #n / ask);
    - per item: the ticket draft exactly as it will be filed (title, then its sections), then an `Internal (not filed)` block: source (ticket, finding numbers), status per finding, layer, level, size, open decisions, the trimmed failure output.
-9. **Gate 1, grill then approve.** Invoke `/podbay:grill-me` (Skill tool, skill `podbay:grill-me`) on the batch:
+9. **Gate 1, grill then approve.** Grill the user on the batch yourself, in rounds:
    - Per item, map the design tree: scope, business rules, the behavior each Expected bullet implies, each scenario kind (happy, sad, boundary), empty and error states, macOS/Linux/Windows differences, what stays out of scope.
    - Settle facts yourself (code, `git log`, screenshots). Ask only decisions.
    - Ask in rounds. One round = the whole frontier across all items, numbered `<item>.Q<k>` (e.g. `t2.Q1`), each with a recommended answer worded so "yes" accepts it. Recompute the frontier after each answer set.

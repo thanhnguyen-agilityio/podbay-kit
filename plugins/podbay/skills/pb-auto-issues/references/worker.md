@@ -18,7 +18,7 @@ Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply onl
 ## 1. Plan
 - Read the issue: `glab issue view <n> -R <repo> --comments`. If the triage user posted a `<!-- pb:triage -->` comment, its Expected, Out of scope, Assumptions and Repro test replace the description's (contract, Intake).
 - The issue's Assumptions are settled at triage: build to them, never re-decide them. Work that would contradict one is a hard stop.
-- For implementation choices, use the grill-me discipline (`/podbay:grill-me`) without a human: map the design tree, settle facts from the code, and give each remaining decision a suggested pick per `references/decisions.md`. Ask nobody mid-run except through a hard stop.
+- For implementation choices, use the grilling discipline (contract, gate 1) without a human: map the design tree, settle facts from the code, and give each remaining decision a suggested pick per `references/decisions.md`. Ask nobody mid-run except through a hard stop.
 - Read the code the issue touches (the Regression risk section is a hint) and trace the real flow. Mark each claim Known (read in code) or Assumed.
 - Give every open question a suggested pick and confidence as `references/decisions.md` says, and take the pick unless it is a hard stop there.
 - Before step 2, post the work log from `references/decisions.md` (marker `pb:worklog`) on the issue with the plan and decisions: `glab issue note <n> -R <repo> -m "$(cat <file>)"`.
