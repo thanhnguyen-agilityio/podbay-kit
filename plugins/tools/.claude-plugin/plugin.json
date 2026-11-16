@@ -1,0 +1,6 @@
+{
+  "name": "tools",
+  "version": "0.1.0",
+  "description": "General skills (disk cleanup, writing, grilling), not Pod Bay specific.",
+  "author": { "name": "Thanh Nguyen" }
+}

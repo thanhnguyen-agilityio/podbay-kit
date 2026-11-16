@@ -7,6 +7,7 @@ A Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: the P
 ```sh
 claude plugin marketplace add <path-or-git-url>
 claude plugin install podbay@podbay-kit
+claude plugin install tools@podbay-kit   # optional: general skills, see plugins/tools/README.md
 ```
 
 ## Update
