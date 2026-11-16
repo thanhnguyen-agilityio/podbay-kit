@@ -44,7 +44,7 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 | `/podbay:pb-auto-issues` | Work approved issues end to end into MRs (never merges) |
 | `/podbay:pb-ci` | Local CI in Docker (GitLab has no runner): build, clippy `-D warnings`, tests and mesh tests on the checkout's current commit; log in `.podbay/ci/<sha>.log`, one-line summary. Linux only, no macOS-only code. Needs Docker Desktop. `/podbay:pb-ci [checkout] [--skip-mesh]` |
 | `/podbay:pb-explain-mr` | Explain the Rust in an MR to a TS/C# developer |
-| `/podbay:pb-fix` | Fix one approved ticket in this session: branch, failing test first, fix, gates, CHANGELOG, test build with step screenshots, isolated review, Draft MR. `/podbay:pb-fix <issue> [--target release/<version>]` |
+| `/podbay:pb-fix` | Fix one approved ticket in this session: branch, failing test first, fix, gates, CHANGELOG, test build with step screenshots, isolated review, Draft MR. `/podbay:pb-fix <issue> [--target release/<version> or feat/<epic-name>]` |
 | `/podbay:pb-mr` | Prepare and open a Draft GitLab MR for the current branch: checklist, local gates, evidence, description; one approval before the push. `/podbay:pb-mr <issue> [--target release/<version>] [--ready] [--dry-run]` |
 | `/podbay:pb-review` | Isolated review of an MR or branch: a fresh agent gets only the ticket, the diff and the repo path, proves the new test fails without the fix, and reports findings without posting. `/podbay:pb-review <mr or branch> [--ticket <n>] [--base <branch>]` |
 | `/podbay:pb-verify` | Verify an issue against its MR in the running app, record evidence, post the report as an MR comment (GitLab through Claude in Chrome) |

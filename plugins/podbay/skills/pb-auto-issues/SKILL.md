@@ -38,6 +38,7 @@ Select issues from $ARGUMENTS (`--skip-preflight` is not part of the selection):
   - Also drop issues with an open MR whose description says `Closes #<n>` (`glab mr list -R <repo> --search "<n>"`).
   - Also drop issues whose latest comment contains `<!-- pb:skipped -->` with no newer comment from a member.
   - Also drop issues labelled `pb::needs-human`: a person looks at them first.
+  - Also drop child tickets of an epic (`glab api projects/<id>/issues/<n> --jq .epic` not null): they target `feat/<epic-name>` through `pb-fix` (contract, Routing).
   - Also drop `type::spike` and `type::epic` issues: spikes run by hand, epics through their stories.
   - Follow-ups (`<!-- pb:followup-of #`) need their own triage like any issue, so they never chain into the same run.
   - In `live` mode only (contract, Target), also drop issues labelled `pb::needs-advisor` without `pb::approved`: the advisor has not approved them yet.

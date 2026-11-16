@@ -1,6 +1,6 @@
 {
   "name": "podbay",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Pod Bay workflow kit: triage findings into tickets, file GitLab issues, run issues end to end into merge requests, explain Rust in MRs. Includes a PreToolUse guard (no force-push, no push to main, no merge, secret and private-reference scans before GitLab writes).",
   "author": { "name": "Thanh Nguyen" }
 }

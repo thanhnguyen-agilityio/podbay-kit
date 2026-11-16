@@ -53,6 +53,8 @@ One ticket, one session, one branch.
 
 A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `pb::needs-human` at filing and is not worked by an agent.
 
+Epics: an epic gets one integration branch, `feat/<epic-name>`, cut from `main`. Its child tickets branch from it, and their MRs target it, not `main`. Each child MR gets the isolated review and is merged there by a person. At the end, one MR takes `feat/<epic-name>` into `main`. Child tickets go through `pb-fix`, not `pb-auto-issues`, which always targets `main`. The branch table and epic detection are in `mr-checklist.md`.
+
 ## Issue format
 
 [ticket-format.md](ticket-format.md) sets the type, title, template and Definition of Ready for every issue and every `pb:triage` comment: written as a senior BA/QA would. In the skills, **Expected** means a bug's Expected bullets, a story's acceptance criteria or a task's Definition of done; **repro test** means the test in the Fix verification (bug) or Verification (story) section; **Where** means Regression risk.
@@ -95,7 +97,7 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 ## Merge requests
 
-- Branch `<fix|feat>/issue-<n>-<short-slug>` from `origin/main`, in a git worktree under the scratchpad.
+- Branch `<fix|feat>/issue-<n>-<short-slug>` from `origin/main` (from `origin/feat/<epic-name>` for an epic's child ticket; see Routing), in a git worktree under the scratchpad.
 - Commits: one plain sentence, no prefix, plus the `Co-Authored-By` trailer the session gives. Small commits; the repro test first.
 - MR: title = plain sentence ending in `(#<n>)`; description per the template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`: `## What`, `## Why` (`Closes #<n>`), `## How` (approach, trade-offs, Decisions table + work log link), `## Test evidence`, `## Impact` (settings/state, breaking, rollback, risks and follow-ups), `## Pre-review`, `## Rust in this diff`, `## Checklist`. Hotfix branches and targets: same file. Created with `--remove-source-branch --squash-before-merge`.
 - Screenshots: upload with `glab api -X POST projects/<id>/uploads -F file=@<png>` and embed the returned markdown, before/after side by side.
