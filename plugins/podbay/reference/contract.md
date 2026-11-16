@@ -91,13 +91,13 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 - The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
 - Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning. The prompt is `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md`; `pb-review` runs it.
-- The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not, and the MR says who reviewed it (`## Checklist`).
+- The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not. The MR description's `## Pre-review` section says who reviewed it, how many rounds, and how each finding was handled; human review is still required. The author posts each round's full report as its own MR comment, headed with the commit it reviewed (`mr-checklist.md`, "Review comment").
 
 ## Merge requests
 
 - Branch `<fix|feat>/issue-<n>-<short-slug>` from `origin/main`, in a git worktree under the scratchpad.
 - Commits: one plain sentence, no prefix, plus the `Co-Authored-By` trailer the session gives. Small commits; the repro test first.
-- MR: title = plain sentence ending in `(#<n>)`; description per the template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`: `## What`, `## Why` (`Closes #<n>`), `## How` (approach, trade-offs, Decisions table + work log link), `## Test evidence`, `## Impact` (settings/state, breaking, rollback, risks and follow-ups), `## Rust in this diff`, `## Checklist`. Hotfix branches and targets: same file. Created with `--remove-source-branch --squash-before-merge`.
+- MR: title = plain sentence ending in `(#<n>)`; description per the template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`: `## What`, `## Why` (`Closes #<n>`), `## How` (approach, trade-offs, Decisions table + work log link), `## Test evidence`, `## Impact` (settings/state, breaking, rollback, risks and follow-ups), `## Pre-review`, `## Rust in this diff`, `## Checklist`. Hotfix branches and targets: same file. Created with `--remove-source-branch --squash-before-merge`.
 - Screenshots: upload with `glab api -X POST projects/<id>/uploads -F file=@<png>` and embed the returned markdown, before/after side by side.
 - Never: run `cargo fmt`/`rustfmt`, add dependencies (`--locked` everywhere), force-push, push to `main`, merge, print secrets. The `pb-guard` hook (plugin `hooks/hooks.json`) blocks most of these; a block message names the allowed route.
 

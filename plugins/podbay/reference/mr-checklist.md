@@ -22,7 +22,7 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 7. **Safety and impact.** Check for changes to settings files, saved state formats, config, env vars, CLI flags and the peer protocol. Confirm that upgrading from the previous release still works (old settings and state load) and say how to roll back. Note any performance or security effect. A change under `src/net/`, `secure.rs`, `state.rs`, `ops.rs` or `service.rs` gets the label `pb::needs-advisor`.
 8. **Docs.** When behaviour changes, update `README.md`, and `CHANGELOG.md` if the repo has one.
 9. **Process.** The branch contains the latest target branch and has no conflicts. Commits are plain sentences (`contract.md`). Read the full diff yourself before asking for review. Ask the user who reviews; never guess.
-10. **Isolated review** (contract, Isolated review). Before the MR leaves Draft, `pb-review` has run in a fresh agent on the current head. Each finding is fixed or answered in one line, and the reviewer line is in `## Checklist`. Your own review in item 9 does not count.
+10. **Isolated review** (contract, Isolated review). Before the MR leaves Draft, `pb-review` has run in a fresh agent on the current head. Each finding is fixed or answered in one line. The description's `## Pre-review` section gives the summary. Each review round's full report goes in its own MR comment, headed with the commit it reviewed (see "Review comment" below). A later round adds a new comment; never rewrite earlier rounds in the description. Your own review in item 9 does not count.
 
 ## Description template
 
@@ -50,6 +50,11 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 - Rollback: <revert this MR, or the extra steps>
 - Risks and follow-ups: <none, or a list>
 
+## Pre-review
+Isolated AI review (fresh agent, ticket + diff only), <N> rounds, last on <short sha>. Human review still required.
+- <finding> - <fixed in <sha> | not changed: <why>>
+<or "- No findings.">
+
 ## Rust in this diff
 <short notes on the Rust a TypeScript/C# reader needs to follow the change>
 
@@ -58,5 +63,18 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 - [ ] Tests added or updated; clippy, cargo test and cargo build pass locally
 - [ ] Docs and CHANGELOG updated, or not needed
 - [ ] No secrets or debug code
-- [ ] Isolated review: <fresh agent, model, date | person>; findings fixed or answered: <list or "none">
+- [ ] Isolated review done on the current head (see Pre-review)
+```
+
+## Review comment
+
+One MR comment per review round, posted by the author (never by the reviewer). Write it to the scratchpad, run `publish-check.sh` and `private-ref-check.sh` on it, then post it with `glab api -X POST projects/<id>/merge_requests/<iid>/notes -F body=@<file>`.
+
+```markdown
+### Isolated review, round <k>, commit <short sha>
+Fresh agent, <model>, <date>. Input: ticket, diff, repo path.
+
+<the reviewer's report: findings, Expected table, test proof, checks>
+
+**Handling:** <one line per finding: fixed in <sha> | not changed: <why>>
 ```

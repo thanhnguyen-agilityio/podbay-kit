@@ -31,4 +31,4 @@ You review a change you did not write. You report findings only. Never edit file
 3. **Expected** table: item | met / partly met / not met | evidence (`file:line` or test).
 4. **Test proof:** each new test and its result on `<base>` (the failing assertion) and on the head.
 5. **Checks:** the result line of clippy, `cargo test` and `cargo build` on the head.
-6. **Reviewer:** "fresh agent, <model>, <date>, head <short sha>". The author puts this line in the MR. `pb-mr` uses the sha to check that the review covers the current head.
+6. **Reviewer:** "fresh agent, <model>, <date>, head <short sha>". The author uses it in the MR's `## Pre-review` section and in this round's MR comment. `pb-mr` uses the sha to check that the review covers the current head.
