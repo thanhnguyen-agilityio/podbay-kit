@@ -42,6 +42,7 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 | `/podbay:pb-file-issues` | File the approved batch as GitLab issues |
 | `/podbay:pb-ticket` | Turn BA/QA-verified findings (local file or claude.ai artifact URL) into grouped GitLab issues (no reproduction or triage file). `--per-finding` = one ticket each, `--only 2,5` = pick findings. Example: `/podbay:pb-ticket https://claude.ai/artifact/AbC123 --only 2,5 --per-finding` |
 | `/podbay:pb-auto-issues` | Work approved issues end to end into MRs (never merges) |
+| `/podbay:pb-ci` | Local CI in Docker (GitLab has no runner): build, clippy `-D warnings`, tests and mesh tests on the checkout's current commit; log in `.podbay/ci/<sha>.log`, one-line summary. Linux only, no macOS-only code. Needs Docker Desktop. `/podbay:pb-ci [checkout] [--skip-mesh]` |
 | `/podbay:pb-explain-mr` | Explain the Rust in an MR to a TS/C# developer |
 | `/podbay:pb-fix` | Fix one approved ticket in this session: branch, failing test first, fix, gates, CHANGELOG, test build with step screenshots, isolated review, Draft MR. `/podbay:pb-fix <issue> [--target release/<version>]` |
 | `/podbay:pb-mr` | Prepare and open a Draft GitLab MR for the current branch: checklist, local gates, evidence, description; one approval before the push. `/podbay:pb-mr <issue> [--target release/<version>] [--ready] [--dry-run]` |

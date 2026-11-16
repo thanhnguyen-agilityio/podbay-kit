@@ -1,0 +1,14 @@
+---
+name: pb-ci
+description: Local CI for a Pod Bay checkout in Docker (GitLab has no runner) - build, clippy -D warnings, tests and mesh tests at the current commit, log in .podbay/ci/<sha>.log, one-line summary. Linux only. Run as /podbay:pb-ci.
+argument-hint: [checkout path] [--skip-mesh]
+---
+Runs the gates on the checkout's current commit in a pinned Linux container. It never edits the checkout: the checkout is mounted read-only, and only the log is written, to `.podbay/ci/`.
+
+1. Target: the given path, else `git rev-parse --show-toplevel`. Docker must be running; if it is not, tell the user to start Docker Desktop.
+2. Run `bash ${CLAUDE_PLUGIN_ROOT}/skills/pb-ci/pb-ci.sh <checkout>` (add `--skip-mesh` only if the user asks). A cold first run builds the image and the crate cache, and takes several minutes; later runs reuse the Docker volumes `pb-ci-target` and `pb-ci-cargo-*`. Run it in the background.
+3. Exit codes: 0 all gates pass; 1 a gate failed (read the log's `=== <step>` section and quote the failing lines); 2 dirty checkout (commit or stash, never auto-stash); 3 the build layout changed (report the list; the kit's `Dockerfile` and `layout.sh` need an update, so do not work around it); 4 no Docker.
+4. Steps, in order: `cargo build --locked`; `cargo clippy --locked -- -D warnings` (gate); `cargo clippy --all-targets --locked` (report only: known old warnings in `src/ui/tests.rs`, reported as a count); `cargo test --locked --bins` (the known flaky `an_answer_to_an_old_search_*` gets one rerun, shown as `pass-after-retry`); `cargo test --locked --test mesh` (real peers and tmux), or `skipped` with the reason. Tests in `KNOWN_LINUX` (`inner.sh`) fail on Linux but pass on macOS. They still run, but they are reported as `known-linux-fail=N` and do not fail the gate. When one passes, the summary says `known-linux-now-passes`: remove it from the list. Never `cargo fmt` or `rustfmt`.
+5. Reply with the summary line as printed: `pb-ci <sha> build=… clippy=… clippy-all-targets=info(warnings=N) test=… mesh=… total=…s log=…`.
+
+Not covered: macOS-only code and anything that needs the real app window (`cfg(target_os = "macos")`, the service install, L2/L3 checks). Use `pb-local-run` or the preflight `app` check for those.

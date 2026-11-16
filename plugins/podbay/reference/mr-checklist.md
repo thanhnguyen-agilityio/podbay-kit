@@ -17,7 +17,7 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 2. **Scope.** One purpose per MR. Aim for under 400 changed lines (`git diff --stat`). No unrelated refactors, renames, or whitespace or formatting changes. If the diff has more than one purpose, propose a split.
 3. **Code quality.** Follow the repo's conventions and match the surrounding style by hand. Never run `cargo fmt` or `rustfmt` (preflight, Notes). Check that the diff has no `dbg!`, stray `println!`/`eprintln!`, commented-out code, `TODO` without an issue number, or secrets. Names are clear, and there is no copied code that an existing helper already covers.
 4. **Tests.** New logic gets a test. A bug fix gets a test that fails on the base branch and passes on this branch. Cover the edge and error paths the change touches. All existing tests pass.
-5. **Local gates** (there is no GitLab CI). On the final commit, with `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`: `cargo clippy --all-targets --locked -- -D warnings`, `cargo test --locked`, `cargo build --locked`. Paste the pass and fail counts into Test evidence.
+5. **Local gates** (there is no GitLab CI). On the final commit, with `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`: `cargo clippy --all-targets --locked -- -D warnings`, `cargo test --locked`, `cargo build --locked`. Paste the pass and fail counts into Test evidence. Also run `pb-ci` (Docker, Linux) on the final commit and paste its summary line into Test evidence. The MR cannot leave Draft without a `pb-ci` pass for the current head (`mesh=skipped` needs a stated reason).
 6. **Verification evidence.** Use the level that `preflight.md` (Verification levels) requires. Give manual test steps. For a UI change, add before/after screenshots or a GIF, uploaded to GitLab (`contract.md`, Screenshots; upload fallback in preflight, Notes). For a network or peer protocol change, add a sample message or log line.
 7. **Safety and impact.** Check for changes to settings files, saved state formats, config, env vars, CLI flags and the peer protocol. Confirm that upgrading from the previous release still works (old settings and state load) and say how to roll back. Note any performance or security effect. A change under `src/net/`, `secure.rs`, `state.rs`, `ops.rs` or `service.rs` gets the label `pb::needs-advisor`.
 8. **Docs.** When behaviour changes, update `README.md`, and `CHANGELOG.md` if the repo has one.
@@ -40,6 +40,7 @@ After the release ships, a person merges `release/<version>` back into `main`. N
 
 ## Test evidence
 - clippy: <result>; cargo test: <passed>/<failed>/<ignored>; cargo build: <result>
+- pb-ci (Linux, Docker): `<summary line>`
 - New tests: `<test_name>` (fails on <base>, passes here)
 - Manual steps: <numbered steps and what you saw>
 - Screenshots: <before/after>
