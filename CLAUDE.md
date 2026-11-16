@@ -21,6 +21,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 - Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first.
 - Skill text stays terse; long rules go to `reference/`.
 - Commit messages are one plain sentence. Push only when asked.
+- Bump `version` in the changed plugin's `plugin.json` in every commit that should reach installed machines (fix 0.x.y+1, new or removed skill 0.x+1.0); `claude plugin update` ignores changes without a new version.
 
 ## Layout
 - `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
