@@ -80,7 +80,7 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 - Branch `<fix|feat>/issue-<n>-<short-slug>` from `origin/main`, in a git worktree under the scratchpad.
 - Commits: one plain sentence, no prefix, plus the `Co-Authored-By` trailer the session gives. Small commits; the repro test first.
-- MR: title = plain sentence; description sections `## What`, `## Why` (`Closes #<n>`), `## Decisions` (table + work log link), `## Test evidence`, `## Rust in this diff`, `## Risks / follow-ups`. Created with `--remove-source-branch --squash-before-merge`.
+- MR: title = plain sentence ending in `(#<n>)`; description per the template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`: `## What`, `## Why` (`Closes #<n>`), `## How` (approach, trade-offs, Decisions table + work log link), `## Test evidence`, `## Impact` (settings/state, breaking, rollback, risks and follow-ups), `## Rust in this diff`, `## Checklist`. Hotfix branches and targets: same file. Created with `--remove-source-branch --squash-before-merge`.
 - Screenshots: upload with `glab api -X POST projects/<id>/uploads -F file=@<png>` and embed the returned markdown, before/after side by side.
 - Never: run `cargo fmt`/`rustfmt`, add dependencies (`--locked` everywhere), force-push, push to `main`, merge, print secrets. The `pb-guard` hook (plugin `hooks/hooks.json`) blocks most of these; a block message names the allowed route.
 

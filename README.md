@@ -43,6 +43,7 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 | `/podbay:pb-ticket` | Turn BA/QA-verified findings (local file or claude.ai artifact URL) into grouped GitLab issues (no reproduction or triage file). `--per-finding` = one ticket each, `--only 2,5` = pick findings. Example: `/podbay:pb-ticket https://claude.ai/artifact/AbC123 --only 2,5 --per-finding` |
 | `/podbay:pb-auto-issues` | Work approved issues end to end into MRs (never merges) |
 | `/podbay:pb-explain-mr` | Explain the Rust in an MR to a TS/C# developer |
+| `/podbay:pb-mr` | Prepare and open a Draft GitLab MR for the current branch: checklist, local gates, evidence, description; one approval before the push. `/podbay:pb-mr <issue> [--target release/<version>] [--ready] [--dry-run]` |
 | `/podbay:pb-review` | Review an MR against its issue's acceptance criteria with `/code-review` and the Pod Bay checklist (read-only) |
 | `/podbay:pb-verify` | Verify an issue against its MR in the running app, record evidence, post the report as an MR comment (GitLab through Claude in Chrome) |
 | `/podbay:verify-ticket` | Test the app built from the MR branch against its ticket, then post video, gif and screenshot evidence as an MR comment. `/podbay:verify-ticket <ticket> <MR> [--dry-run]` |

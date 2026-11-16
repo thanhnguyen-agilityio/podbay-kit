@@ -50,8 +50,8 @@ Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply onl
 - Scope: the diff touches only planned files, or the MR description explains why.
 - Push. Call the `podbay:pb-explain-mr` skill with the Skill tool on `git diff origin/main...HEAD` and keep its `## Rust in this diff` section.
 - Write the description to a file per the contract's Writing section (plain, factual, short) and run `${CLAUDE_PLUGIN_ROOT}/scripts/publish-check.sh <file>`; on MATCH, open nothing, reply `draft` with the `file:line`. The same check runs on the work log and every comment file before posting.
-- Create the MR with `glab mr create -R <repo> --source-branch <branch> --target-branch main --title "<plain sentence>" --description-file <file> --remove-source-branch --squash-before-merge --yes`. Sections per contract: `## What`, `## Why` (`Closes #<n>`), `## Decisions` (table and work log link), `## Test evidence`, `## Rust in this diff`, `## Risks / follow-ups`. Never a one-line description.
-- Architecture change (new pattern, module, or data flow others must follow) -> label `pb::needs-advisor` and explain it under Decisions.
+- Create the MR with `glab mr create -R <repo> --source-branch <branch> --target-branch main --title "<plain sentence> (#<n>)" --description-file <file> --remove-source-branch --squash-before-merge --yes`. Sections per contract (template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`): `## What`, `## Why` (`Closes #<n>`), `## How` (Decisions table and work log link), `## Test evidence`, `## Impact`, `## Rust in this diff`, `## Checklist`. Never a one-line description.
+- Architecture change (new pattern, module, or data flow others must follow) -> label `pb::needs-advisor` and explain it under How.
 - Follow-ups: file up to 3 as issues (`references/decisions.md` "Follow-ups") and add `Refs #<f>`. Set the work log's **Result** to the MR link and follow-ups.
 - `## Test evidence`, only results from commands you ran:
   - each gate on the final commit with its result line (e.g. `test result: ok. 250 passed`);

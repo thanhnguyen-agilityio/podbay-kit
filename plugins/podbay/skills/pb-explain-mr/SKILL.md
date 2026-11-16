@@ -18,7 +18,7 @@ Teach only what the diff uses.
 5. Without `--update`: return the section and the new glossary rows. Change nothing else.
 6. With `--update` (MR number required):
    - Read the body: `glab api projects/<id>/merge_requests/<n> --jq .description`.
-   - Replace the `## Rust in this diff` section if present, else add it before `## Risks / follow-ups` (or at the end). Keep every other section as is.
+   - Replace the `## Rust in this diff` section if present, else add it before `## Checklist` (older MRs: before `## Risks / follow-ups`), or at the end. Keep every other section as is.
    - Run `${CLAUDE_PLUGIN_ROOT}/scripts/publish-check.sh <file>` on the scratchpad file (MATCH → stop). Write it back: `glab api -X PUT projects/<id>/merge_requests/<n> -F description=@<file>`.
    - Re-read the body once to confirm.
 

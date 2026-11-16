@@ -20,7 +20,7 @@ Never auto-pick these; comment the question with your suggested pick (`<!-- pb:b
 
 ## Scope change
 After the plan, the work needs something the plan does not list (a new file, a new behavior, a new module, a new dependency).
-- Add a row to the work log's Decisions table (edit in place) and to the MR's `## Decisions` table: what changed and why (evidence).
+- Add a row to the work log's Decisions table (edit in place) and to the Decisions table under the MR's `## How`: what changed and why (evidence).
 - Build it only if it is needed to meet the Expected section; otherwise file it as a follow-up.
 - If it hits a hard stop, it is still a hard stop.
 
