@@ -8,10 +8,11 @@ Read by `pb-mr`. Uses the rules in `contract.md` ("Merge requests", "Writing and
 | --- | --- | --- | --- |
 | Feature or fix for the next release | `origin/main` | `<fix\|feat>/issue-<n>-<short-slug>` | `main` |
 | Fix for a release already cut | `origin/release/<version>` | `hotfix/<version>-<short-name>` | `release/<version>` |
+| Cherry-pick of a merged hotfix (right after it merges) | `origin/main` | `cherry-pick/<hotfix branch name>` | `main` |
 | Epic: its integration branch (once per epic) | `origin/main` | `feat/<epic-name>` | `main`, by one final MR when the epic is done |
 | Child ticket of an epic | `origin/feat/<epic-name>` | `<fix\|feat>/issue-<n>-<short-slug>` | `feat/<epic-name>` |
 
-After the release ships, a person merges `release/<version>` back into `main`. Child MRs of an epic get the isolated review (`pb-review`) and are merged into `feat/<epic-name>` by a person. When the epic is done, one MR takes `feat/<epic-name>` into `main`, with its own `pb-ci` run and isolated review. No skill does any of these merges.
+A hotfix reaches `main` by cherry-pick, never by merging the release back: right after a person merges the hotfix MR into `release/<version>`, branch `cherry-pick/<hotfix branch name>` from `origin/main`, run `git cherry-pick -x <the hotfix's merge or squash commit>`, run the gates and `pb-ci`, and open an MR to `main` through `pb-mr`. Never push to `main` directly. On a conflict, resolve it keeping the hotfix's intent, or stop and ask. Child MRs of an epic get the isolated review (`pb-review`) and are merged into `feat/<epic-name>` by a person. When the epic is done, one MR takes `feat/<epic-name>` into `main`, with its own `pb-ci` run and isolated review. No skill does any of these merges.
 
 Epic detection: `glab api projects/<id>/issues/<n>` shows `.epic` (title and iid), or the parent work item in the issue's hierarchy. `<epic-name>` is the epic title as a slug. If `origin/feat/<epic-name>` does not exist, ask before creating it from `origin/main`. If it is unclear whether the ticket belongs to an epic, ask.
 

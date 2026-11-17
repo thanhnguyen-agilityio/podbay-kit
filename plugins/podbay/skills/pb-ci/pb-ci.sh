@@ -13,6 +13,10 @@ if [ -n "$(git -C "$checkout" status --porcelain -- . ':(exclude).podbay')" ]; t
   exit 2
 fi
 sha="$(git -C "$checkout" rev-parse --short=12 HEAD)"
+full_sha="$(git -C "$checkout" rev-parse HEAD)"
+# One shared target volume. Every checkout is mounted at /src and cargo decides rebuilds by
+# file mtime, so inner.sh cleans the podbay crate when the checkout or commit changes.
+target_vol="pb-ci-target"
 bash "$here/layout.sh" "$checkout" || exit 3
 docker info >/dev/null 2>&1 || { echo "pb-ci: Docker is not running. Start Docker Desktop (open -a Docker) and rerun."; exit 4; }
 
@@ -25,8 +29,8 @@ t0=$SECONDS
 set +e
 docker run --rm \
   -v "$checkout":/src:ro -v "$here":/ci:ro \
-  -v pb-ci-target:/target -v pb-ci-cargo-registry:/usr/local/cargo/registry -v pb-ci-cargo-git:/usr/local/cargo/git \
-  -e SKIP_MESH="$skip_mesh" "$image" bash /ci/inner.sh >"$log" 2>&1
+  -v "$target_vol":/target -v pb-ci-cargo-registry:/usr/local/cargo/registry -v pb-ci-cargo-git:/usr/local/cargo/git \
+  -e SKIP_MESH="$skip_mesh" -e PBCI_SHA="$full_sha" -e PBCI_CHECKOUT="$checkout" -e PBCI_TARGET="$target_vol" "$image" bash /ci/inner.sh >"$log" 2>&1
 rc=$?
 set -e
 

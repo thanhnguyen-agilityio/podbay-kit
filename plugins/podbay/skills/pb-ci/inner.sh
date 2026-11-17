@@ -10,7 +10,16 @@ step() { # step <name> <command...>; logs PBCI <name> <pass|fail> <seconds>
   if "$@"; then echo "PBCI $name pass $((SECONDS - t0))"; else echo "PBCI $name fail $((SECONDS - t0))"; fails=$((fails + 1)); fi
 }
 
+echo "PBCI-HEAD sha=${PBCI_SHA:-unknown} checkout=${PBCI_CHECKOUT:-unknown} target=${PBCI_TARGET:-unknown}"
+head=$(git -C /src rev-parse HEAD 2>/dev/null || echo unknown)
+if [ "${PBCI_SHA:-}" != "" ] && [ "$head" != "$PBCI_SHA" ]; then echo "PBCI build fail 0 head-moved:$head"; exit 1; fi
+stamp=/target/.pbci-last; now="${PBCI_CHECKOUT:-?} ${PBCI_SHA:-?}"
+if [ "$(cat "$stamp" 2>/dev/null)" != "$now" ]; then
+  echo "=== cache: last build was '$(cat "$stamp" 2>/dev/null || echo none)'; cleaning the podbay crate"
+  cargo clean --locked -p podbay >/dev/null 2>&1 || cargo clean -p podbay
+fi
 step build cargo build --locked
+echo "$now" > "$stamp"
 step clippy cargo clippy --locked -- -D warnings
 
 # Report only: --all-targets has known old warnings in src/ui/tests.rs.
