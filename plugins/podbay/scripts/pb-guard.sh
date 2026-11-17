@@ -7,7 +7,7 @@
 #   1. cargo fmt / rustfmt anywhere in the command (main is not rustfmt-formatted).
 #   2. git push with --force, -f, --force-with-lease, +refspec, --all or --mirror.
 #   3. git push to main or master. Allowed only when env PB_KIT_REPO is set to a repo path and the push targets that repo (git -C <path> inside it, or cd into it first). Unset: never allowed.
-#   4. glab mr merge, glab mr approve, glab api calls to /merge or /approve endpoints (Gate 2: a person merges).
+#   4. glab mr merge, glab mr approve, glab api calls to /merge or /approve endpoints. Merge is allowed only into a target that is not main, master or release/*, read from glab mr view; unsure -> block (Gate 2).
 #   5. Publishing to GitLab without a secret scan: glab issue|mr create|note|update and glab api with a non-GET method or
 #      field flags. Runs scripts/publish-check.sh on each --description-file / -F key=@file / --input file, and on the whole
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
@@ -118,8 +118,25 @@ while IFS= read -r seg; do
   fi
 
   # 4. glab merge / approve
-  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?mr[[:space:]]+(merge|approve)([[:space:]]|$)'; then
-    block "glab mr merge / approve is never allowed (Gate 2: a person merges and approves every MR). Leave the MR open and report its URL."
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?mr[[:space:]]+approve([[:space:]]|$)'; then
+    block "glab mr approve is never allowed (Gate 2: a person approves every MR). Leave the MR open and report its URL."
+  fi
+  # Merge is allowed only into a branch that is not main, master or release/* (for example an
+  # epic's feat/<name>). The target comes from `glab mr view <n> --output json`; unsure -> block.
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?mr[[:space:]]+merge([[:space:]]|$)'; then
+    margs="${seg#*mr merge}"; margs="${margs//\"/}"; margs="${margs//\'/}"
+    mrid="$(set -f; printf '%s\n' $margs | grep -E '^!?[0-9]+$' | head -1)"; mrid="${mrid#!}"
+    mrepo=""
+    if [[ "$seg" =~ (^|[[:space:]])(-R|--repo)[[:space:]=]+([^[:space:]]+) ]]; then mrepo="${BASH_REMATCH[3]}"; fi
+    [ -n "$mrid" ] || block "glab mr merge needs an explicit MR number, so the guard can check its target branch (Gate 2: a person merges into main and release/*)."
+    mtarget="$(cd "$CUR" 2>/dev/null && glab mr view "$mrid" ${mrepo:+-R "$mrepo"} --output json 2>/dev/null |
+      python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get("target_branch") or "")
+except Exception: print("")' 2>/dev/null)"
+    case "$mtarget" in
+      "") block "glab mr merge: could not read the target branch of MR !$mrid, so it is blocked (Gate 2: a person merges into main and release/*)." ;;
+      main|master|release/*) block "glab mr merge into $mtarget is never allowed (Gate 2: a person merges into main and release/*). Leave the MR open and report its URL." ;;
+    esac
   fi
   if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?api[[:space:]]' &&
      printf '%s' "$seg" | grep -Eq '/(merge|approve|unapprove)([^[:alnum:]_-]|$)'; then

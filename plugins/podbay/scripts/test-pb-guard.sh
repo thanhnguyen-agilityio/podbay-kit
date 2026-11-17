@@ -13,6 +13,20 @@ UNSET_KIT=0
 printf '## What\nFix the copy label.\n' > "$D/clean.md"
 printf 'token: "%s"\n' "glpat-""abcdefghijklmnopqrstuv" > "$D/secret.md"
 
+# A fake glab first on PATH answers `glab mr view <n> --output json` with a fixed target branch.
+mkdir -p "$D/bin"
+cat > "$D/bin/glab" <<'FAKE'
+#!/bin/bash
+[ "$1 $2" = "mr view" ] || exit 1
+case "${3#!}" in
+  4) t=main ;; 5) t=release/2026.11.13 ;; 6) t=feat/switch-account ;; 8) t=master ;;
+  9) echo '{"iid":9}'; exit 0 ;; *) echo "not found" >&2; exit 1 ;;
+esac
+printf '{"iid":%s,"target_branch":"%s"}\n' "${3#!}" "$t"
+FAKE
+chmod +x "$D/bin/glab"
+export PATH="$D/bin:$PATH"
+
 pass=0; fail=0
 # check <allow|block> <label> <command> [tool]
 check() {
@@ -57,6 +71,15 @@ UNSET_KIT=0
 check block "-C other repo main" "git -C /tmp push origin HEAD:main"
 check block "glab mr merge" "glab mr merge 4 -R group/project"
 check block "glab mr approve" "glab mr approve 4"
+check block "merge into release/*" "glab mr merge 5 -R group/project"
+check block "merge into master" "glab mr merge 8"
+check allow "merge into an epic branch" "glab mr merge 6 -R group/project --squash"
+check allow "merge !6 into an epic branch" "glab mr merge !6 --yes"
+check block "merge, target lookup fails" "glab mr merge 7"
+check block "merge, no target in answer" "glab mr merge 9"
+check block "merge without an MR number" "glab mr merge -R group/project"
+check block "approve stays blocked on epic MR" "glab mr approve 6"
+check block "allowed merge chained with a main merge" "glab mr merge 6 && glab mr merge 4"
 check block "glab api PUT merge" "glab api -X PUT projects/123/merge_requests/4/merge"
 check block "glab api POST approve" "glab api -X POST projects/123/merge_requests/4/approve"
 check allow "glab api GET" "glab api projects/123/merge_requests/4"

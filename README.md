@@ -56,6 +56,6 @@ Requirements: `git`, `glab` (authenticated), `python3`, a Rust toolchain for the
 
 ## Guard hook
 
-`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`, `glab mr merge/approve`, and GitLab writes whose text has a secret or a private reference. Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Self-test: `plugins/podbay/scripts/test-pb-guard.sh`.
+`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`, `glab mr approve`, a merge into `main`/`master`/`release/*` (or any merge whose target it cannot read), and GitLab writes whose text has a secret or a private reference. Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Self-test: `plugins/podbay/scripts/test-pb-guard.sh`.
 
 Reference docs (contract, preflight, ticket format, lessons, Rust glossary) are in `plugins/podbay/reference/`.

@@ -4,7 +4,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
-- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 56 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 65 pass, 0 fail.
 - `claude plugin marketplace add <path to this repo>` then `claude plugin install podbay@podbay-kit` : try it locally. Edits apply on the next session or `/reload-plugins`.
 
 ## Verifying your work
@@ -25,7 +25,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 
 ## Layout
 - `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-fix`: one approved ticket to a Draft MR in one session. `pb-review`: isolated review in a fresh agent. `pb-ci`: local CI in Docker (`Dockerfile`, `layout.sh`, `inner.sh`, `pb-ci.sh` in the skill folder; update the Rust pin and `layout.sh` together). `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-orchestrator`: drives Pod Bay sessions (`podbay-dev`); team-specific session names live in `.podbay/orchestrator.md`, never here. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
-- `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR merge/approve and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
+- `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR approve, merge into main/master/release/* (target read from `glab mr view`; unsure -> block) and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
 - `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `preflight.md`, `lessons.md`, `rust-glossary.md`.
 
 ## Things Claude gets wrong

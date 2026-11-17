@@ -5,7 +5,7 @@ argument-hint: <issue numbers | open [priority] [type]> [--skip-preflight]
 model: sonnet
 disable-model-invocation: true
 ---
-Skill version: pb-1. Work the GitLab issues selected by $ARGUMENTS (see Queue) end to end with no approval stops. Never merge: a person merges every MR (contract, Gates). A person reviews the run report and the MRs afterwards.
+Skill version: pb-1. Work the GitLab issues selected by $ARGUMENTS (see Queue) end to end with no approval stops. Never merge: a person merges every MR into `main` (contract, Gates). A person reviews the run report and the MRs afterwards.
 
 `${CLAUDE_PLUGIN_ROOT}` is the plugin root (read-only). Paths like `references/worker.md` are relative to `${CLAUDE_PLUGIN_ROOT}/skills/pb-auto-issues/`. Working files (triage files, run reports, lessons) live in `.podbay/` in `<checkout>`. `<scratch>` is your scratchpad dir.
 
