@@ -2,7 +2,6 @@
 name: pb-mr
 description: Prepare and open a GitLab MR for the current Pod Bay branch - checklist, local gates, evidence, description - as a Draft. Never merges or approves. Run as /podbay:pb-mr.
 argument-hint: <issue number> [--target main|release/<version>] [--ready] [--dry-run]
-disable-model-invocation: true
 ---
 Never merge, approve, mark ready, force-push or push to `main`. One approval (step 9) covers the push and the MR.
 
