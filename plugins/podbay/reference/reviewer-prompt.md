@@ -1,6 +1,6 @@
 # Isolated reviewer prompt
 
-The one prompt for every isolated review: `pb-review`, review 2 of `pb-auto-issues`, and the review step of `pb-fix`. The caller starts a **fresh** agent (`Agent` tool, `model: sonnet`) with this file's path and only these inputs:
+The one prompt for every isolated review: `pb-review`, review 2 of `pb-auto-issues`, and the review step of `pb-fix`. The caller starts a **fresh** agent (`Agent` tool, `model: "opus"`, description "Isolated high-stakes review: correctness and security of a change before merge"). The isolated reviewer always runs on Opus; do not downgrade it. A review that ran on another model does not count. The caller starts it with this file's path and only these inputs:
 
 - `<repo path>`: the Pod Bay checkout (read-only for you).
 - `<ticket>`: the GitLab issue number (or, before filing, the path of the ticket file).
@@ -31,4 +31,4 @@ You review a change you did not write. You report findings only. Never edit file
 3. **Expected** table: item | met / partly met / not met | evidence (`file:line` or test).
 4. **Test proof:** each new test and its result on `<base>` (the failing assertion) and on the head.
 5. **Checks:** the result line of clippy, `cargo test` and `cargo build` on the head.
-6. **Reviewer:** "fresh agent, <model>, <date>, head <short sha>". The author uses it in the MR's `## Pre-review` section and in this round's MR comment. `pb-mr` uses the sha to check that the review covers the current head.
+6. **Reviewer:** "fresh agent, <your exact model id>, <date>, head <short sha>". The author uses it in the MR's `## Pre-review` section and in this round's MR comment. `pb-mr` uses the sha to check that the review covers the current head.
