@@ -18,15 +18,15 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 - Marketplace `source` starts with `./` and has no `..`. The marketplace entry name equals `plugin.json` `name`.
 - Skills reach plugin files with `${CLAUDE_PLUGIN_ROOT}`. Never hard-code a machine path, home folder or username.
 - Skills write state to `.podbay/` in the target checkout, never into the plugin.
-- Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first. Exception: `pb-mr` may be started by a session; it still asks for one approval before the push and opens a Draft.
+- Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first. Exceptions: `pb-mr` and `pb-release` may be started by a session; they still ask for approval before each outward step, and MRs open as Drafts.
 - Skill text stays terse; long rules go to `reference/`.
 - Commit messages are one plain sentence. Push only when asked.
 - Bump `version` in the changed plugin's `plugin.json` in every commit that should reach installed machines (fix 0.x.y+1, new or removed skill 0.x+1.0); `claude plugin update` ignores changes without a new version.
 
 ## Layout
-- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-fix`: one approved ticket to a Draft MR in one session. `pb-review`: isolated review in a fresh agent. `pb-ci`: local CI in Docker (`Dockerfile`, `layout.sh`, `inner.sh`, `pb-ci.sh` in the skill folder; update the Rust pin and `layout.sh` together). `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-orchestrator`: drives Pod Bay sessions (`podbay-dev`); team-specific session names live in `.podbay/orchestrator.md`, never here. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
+- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-fix`: one approved ticket to a Draft MR in one session. `pb-review`: isolated review in a fresh agent. `pb-ci`: local CI in Docker (`Dockerfile`, `layout.sh`, `inner.sh`, `pb-ci.sh` in the skill folder; update the Rust pin and `layout.sh` together). `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-orchestrator`: drives Pod Bay sessions (`podbay-dev`); team-specific session names live in `.podbay/orchestrator.md`, never here. `pb-release`: weekly release from freeze to the sync MR into main; checklist in `reference/release-checklist.md`, templates in `templates/release/` (not copied by bootstrap), team values in `.podbay/release.md`. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
 - `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR approve, merge into main/master/release/* (target read from `glab mr view`; unsure -> block) and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
-- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `preflight.md`, `lessons.md`, `rust-glossary.md`.
+- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `release-checklist.md`, `preflight.md`, `lessons.md`, `rust-glossary.md`.
 
 ## Things Claude gets wrong
 - Putting client or private notes in this repo (journal, comms log, people, decisions, backlog, review artifacts, tokens). This repo is meant to be shareable.
