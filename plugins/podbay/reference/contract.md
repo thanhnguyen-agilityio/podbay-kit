@@ -94,6 +94,12 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 - The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
 - Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning. The prompt is `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md`; `pb-review` runs it.
 - The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not. The MR description's `## Pre-review` section says who reviewed it, how many rounds, and how each finding was handled; human review is still required. The author posts each round's full report as its own MR comment, headed with the commit it reviewed (`mr-checklist.md`, "Review comment").
+- Rounds, per MR:
+  1. At most 5 full rounds. If round 5 still has a blocker or should-fix finding, stop and ask the user: split the MR, accept the risk, or allow more rounds.
+  2. Stop early when a round has no blocker and no should-fix finding. Its nits go in the MR (Pre-review and the round's comment); fixing them needs no new round.
+  3. A rebase onto, or merge of, the base with no conflicts: rerun the gates and `pb-ci` only. No new review.
+  4. A rebase or merge with conflicts: one short round on the range-diff since the last reviewed head (`git range-diff <old base>..<last reviewed head> <new base>..HEAD`). It does not count toward the 5.
+  5. A change that needs another MR that has not merged yet stays behind a seam (a trait, a stub or an unused entry point), so each MR builds and passes alone. The MR that merges second wires them together.
 
 ## Merge requests
 
