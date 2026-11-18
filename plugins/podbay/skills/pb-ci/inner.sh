@@ -43,8 +43,7 @@ echo "PBCI clippy-all-targets info $((SECONDS - t0)) warnings=$n"
 
 # Tests that fail on Linux but pass on macOS (found 2026-11-16 on fb49b28). They run and are
 # reported as known-linux-fail; they do not fail the gate. Fix them in Pod Bay, then remove them here.
-# bulk_start_and_resume_*: added 2026-11-17, fails on Linux on main and release in every run.
-KNOWN_LINUX="ui::tests::ticking_rows_acts_on_each_for_what_it_can_do the_service_waits_signed_out_and_a_sign_in_reaches_it ui::tests::bulk_start_and_resume_each_take_only_the_rows_they_fit"
+KNOWN_LINUX="the_service_waits_signed_out_and_a_sign_in_reaches_it"
 
 tests() { # tests <step> <cargo test args...>
   local name="$1"; shift
