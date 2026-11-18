@@ -15,6 +15,7 @@ Repo values are here. Team values (people, hosts, channels, links) live only in 
 | Deploy script | here | `tools/deploy/deploy.sh --server --key --mac --notes` |
 | Credits | here | `python3 tools/licenses/make_credits.py` writes `assets/credits.json` |
 | Sync branch | here | `sync/release-<x.y.z>-<n>` from `origin/main` |
+| Release playbook (human reference; wins over this skill) | `.podbay/release.md` | `playbook: <path or link>` |
 | Deploy holder (server, signing key, build Mac) | `.podbay/release.md` | `deployer: @<gitlab user>` |
 | Slack channel | `.podbay/release.md` | `channel: #<name>` |
 | Release verify page | `.podbay/release.md` | `verify: <link>` |
