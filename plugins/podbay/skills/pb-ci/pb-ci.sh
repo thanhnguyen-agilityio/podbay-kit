@@ -23,12 +23,21 @@ docker info >/dev/null 2>&1 || { echo "pb-ci: Docker is not running. Start Docke
 image="pb-ci:$(shasum -a 256 "$here/Dockerfile" | cut -c1-12)"
 docker image inspect "$image" >/dev/null 2>&1 || docker build -q -t "$image" "$here" >/dev/null
 
+# A git worktree's .git is a file that points into the main repo's git folder. Mount that folder
+# read-only at the same path, so git inside the container (inner.sh, build.rs) can read the commit.
+git_mount=()
+common="$(git -C "$checkout" rev-parse --path-format=absolute --git-common-dir)"
+if [ "$common" != "$checkout/.git" ]; then
+  [ -d "$common" ] || { echo "pb-ci: cannot find the git folder $common for this worktree."; exit 2; }
+  git_mount=(-v "$common":"$common":ro)
+fi
+
 mkdir -p "$checkout/.podbay/ci"
 log="$checkout/.podbay/ci/$sha.log"
 t0=$SECONDS
 set +e
 docker run --rm \
-  -v "$checkout":/src:ro -v "$here":/ci:ro \
+  -v "$checkout":/src:ro -v "$here":/ci:ro ${git_mount[@]+"${git_mount[@]}"} \
   -v "$target_vol":/target -v pb-ci-cargo-registry:/usr/local/cargo/registry -v pb-ci-cargo-git:/usr/local/cargo/git \
   -e SKIP_MESH="$skip_mesh" -e PBCI_SHA="$full_sha" -e PBCI_CHECKOUT="$checkout" -e PBCI_TARGET="$target_vol" "$image" bash /ci/inner.sh >"$log" 2>&1
 rc=$?
