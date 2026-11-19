@@ -13,3 +13,8 @@ Risk areas for the isolated reviewer (`reviewer-prompt.md`, step 5c). The order,
 - **UI state (egui).** State that can get stuck, double sends on repeated clicks, a dialog left open over a deleted or changed item.
 - **Platform code.** Code for an OS nobody ran: say so, don't assume it works.
 - **Tests.** Missing tests for the risky paths above.
+
+## Always check
+- **ADR.** If the repo has `docs/adr/README.md`, check its triggers against the diff. A trigger applies and the MR has no ADR: should fix.
+- **Comments.** Follow the comment rule in the repo's `CLAUDE.md`. Flag comments that restate the code, and ticket numbers, dates or change history in comments (that belongs in the commit or MR): nit, or should fix when there are many.
+- **`unsafe`.** Every `unsafe` block or function has a `// SAFETY:` comment right before it that says why it is sound. Missing: should fix.

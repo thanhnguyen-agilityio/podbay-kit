@@ -29,6 +29,8 @@ Epic detection: `glab api projects/<id>/issues/<n>` shows `.epic` (title and iid
 9. **Process.** The branch contains the latest target branch and has no conflicts. Commits are plain sentences (`contract.md`). Read the full diff yourself before asking for review. Ask the user who reviews; never guess.
 10. **Isolated review** (contract, Isolated review). Before the MR leaves Draft, `pb-review` has run in a fresh agent on the current head. Each finding is fixed or answered in one line. The description's `## Pre-review` section gives the summary. Each review round's full report goes in its own MR comment, headed with the commit it reviewed (see "Review comment" below). A later round adds a new comment; never rewrite earlier rounds in the description. Your own review in item 9 does not count. If the change is over about 200 lines, Pre-review also says that the plan was reviewed first (contract, Isolated review, "Plan review").
 
+11. **ADR.** Does this MR need an ADR? Check the triggers in the repo's `docs/adr/README.md` (if the file exists). If yes, the ADR is in this MR. Comments follow the repo's `CLAUDE.md` comment rule, and every `unsafe` has a `// SAFETY:` comment.
+
 ## Description template
 
 ```markdown
@@ -69,6 +71,7 @@ Isolated AI review (fresh agent, ticket + diff only), <N> rounds, last on <short
 - [ ] Tests added or updated; clippy, cargo test and cargo build pass locally
 - [ ] Docs and CHANGELOG updated, or not needed
 - [ ] No secrets or debug code
+- [ ] ADR added if a `docs/adr/README.md` trigger applies, or not needed
 - [ ] Isolated review done on the current head (see Pre-review)
 ```
 
