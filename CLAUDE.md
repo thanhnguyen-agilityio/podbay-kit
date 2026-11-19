@@ -18,7 +18,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 - Marketplace `source` starts with `./` and has no `..`. The marketplace entry name equals `plugin.json` `name`.
 - Skills reach plugin files with `${CLAUDE_PLUGIN_ROOT}`. Never hard-code a machine path, home folder or username.
 - Skills write state to `.podbay/` in the target checkout, never into the plugin.
-- Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first. Exceptions: `pb-mr` and `pb-release` may be started by a session; they still ask for approval before each outward step, and MRs open as Drafts.
+- Skills that change things outside the checkout (GitLab issues) set `disable-model-invocation: true` and ask for one approval first. Exceptions: `pb-mr` and `pb-release` may be started by a session; they still ask for approval before each outward step, except that `pb-mr` pushes and opens a Draft MR into a target other than `main` or `release/*` without asking; MRs open as Drafts.
 - Skill text stays terse; long rules go to `reference/`.
 - Commit messages are one plain sentence. Push only when asked.
 - Bump `version` in the changed plugin's `plugin.json` in every commit that should reach installed machines (fix 0.x.y+1, new or removed skill 0.x+1.0); `claude plugin update` ignores changes without a new version.

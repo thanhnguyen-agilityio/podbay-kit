@@ -94,8 +94,9 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 - The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
 - Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning. The prompt is `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md`; `pb-review` runs it.
 - The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not. The MR description's `## Pre-review` section says who reviewed it, how many rounds, and how each finding was handled; human review is still required. The author posts each round's full report as its own MR comment, headed with the commit it reviewed (`mr-checklist.md`, "Review comment").
+- Plan review: before coding a ticket expected to change more than about 200 lines, the author writes a short plan to `.podbay/plan/<n>.md` (files, approach, tests) and a fresh agent reviews it against the ticket (`pb-review --plan`). The author fixes the plan or answers each finding, then codes. Plan rounds follow the same limits as below and are counted apart from the code review.
 - Rounds, per MR:
-  1. At most 5 full rounds. If round 5 still has a blocker or should-fix finding, stop and ask the user: split the MR, accept the risk, or allow more rounds.
+  1. At most 5 full rounds. This is a hard stop: if round 5 still has a blocker or should-fix finding, never start round 6; stop and report to the user, who chooses: split the MR, accept the risk, or allow more rounds.
   2. Stop early when a round has no blocker and no should-fix finding. Its nits go in the MR (Pre-review and the round's comment); fixing them needs no new round.
   3. A rebase onto, or merge of, the base with no conflicts: rerun the gates and `pb-ci` only. No new review.
   4. A rebase or merge with conflicts: one short round on the range-diff since the last reviewed head (`git range-diff <old base>..<last reviewed head> <new base>..HEAD`). It does not count toward the 5.
