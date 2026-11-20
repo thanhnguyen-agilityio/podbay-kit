@@ -13,6 +13,7 @@ Repo values are here. Team values (people, hosts, channels, links) live only in 
 | Tag | here | `v<x.y.z>`, annotated, on the release head |
 | GitLab Release name | here | `Pod Bay <x.y.z>` |
 | Deploy script | here | `tools/deploy/deploy.sh --server --key --mac --notes` |
+| User guide | here | `docs/guide/*.md`, built into the site; build steps in the repo's docs |
 | Credits | here | `python3 tools/licenses/make_credits.py` writes `assets/credits.json` |
 | Sync branch | here | `sync/release-<x.y.z>-<n>` from `origin/main` |
 | Release playbook (human reference; wins over this skill) | `.podbay/release.md` | `playbook: <path or link>` |
@@ -31,6 +32,7 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 | 2 | Release-head health | build, test, clippy `-D warnings` (no `--all-targets`) pass on the head; `pb-ci` pass with `PBCI-HEAD sha=` equal to the head | none |
 | 3 | Verify | Go / No-go verdict; release verify page updated | page update |
 | 4 | CHANGELOG | Section per format below; every line traced to an MR | MR into the release branch |
+| 4b | User guide | Every user-visible change from the merged MRs is in the guide; labels match the app; site rebuilt | same MR as step 4 |
 | 5 | Version bump | `Cargo.toml`, the podbay entry in `Cargo.lock`, `assets/credits.json`; gates pass | same or next MR |
 | 6 | Tag and Release | A person merged step 4/5; tag on the merge commit | tag, GitLab Release |
 | 7 | Deploy hand-off | Notes text and Slack draft shown | Slack draft only |
@@ -43,6 +45,7 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 - Build the release head after every hotfix merge: a hotfix can pass on its own branch and still break the combined branch.
 - The version bump is required: the app's update check offers only a newer version, and `deploy.sh` refuses a version the server already has.
 - `Cargo.lock`: change only the `version` line of the `podbay` package. Never `cargo update`. Then `cargo build --locked` must pass, and `credits_match_cargo_lock` must pass after the credits regenerate.
+- The user guide is updated once per release, in the release MR, not in each feature MR.
 - Release text states only facts found in the merged MRs (title, description, diff). An unsourced claim is removed, not softened.
 - Slack messages are drafts in `.podbay/release/<x.y.z>/`. Never sent by a skill. Keys, the server and `deploy.sh` belong to the deploy holder; a skill never runs `deploy.sh` and never reads a key.
 - Every merge into the release branch or `main` is done by a person (contract, Gate 2).
