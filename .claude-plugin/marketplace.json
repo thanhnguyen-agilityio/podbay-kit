@@ -13,7 +13,7 @@
     {
       "name": "tools",
       "source": "./plugins/tools",
-      "description": "General skills (disk cleanup, writing, grilling), not Pod Bay specific."
+      "description": "General skills (disk cleanup, writing, grill-me, wayfinder), not Pod Bay specific."
     }
   ]
 }

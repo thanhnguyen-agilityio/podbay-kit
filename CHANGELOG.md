@@ -2,6 +2,12 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.7.1 - 2026-11-21 (tools 0.3.0)
+
+- Grill first: every task, feature or bug, starts with grill-me before any code (contract, "Grill first"). pb-triage and pb-fix run it as step 1b; pb-fix will not code without the answers in the ticket, or a `skip grill: <reason>` from the person.
+- `tools`: `grill-me` restored (removing it in 0.7.0 was a mistake); it runs `grilling`, which stays as the engine. Source: Matt Pocock, aihero.dev/skills-grill-me, code in mattpocock/skills, MIT.
+- `tools`: `wayfinder` added (plan work too big for one session as a map of decision tickets). Source: Matt Pocock, aihero.dev/skills-wayfinder, code in mattpocock/skills, MIT. Not yet wired into pb-* steps.
+
 ## podbay 0.7.0 - 2026-11-21 (tools 0.2.0)
 
 Kit clean-up: one standard flow with one skill per step (pb-triage, pb-fix, pb-review, pb-mr, a person merges, pb-release, pb-verify).

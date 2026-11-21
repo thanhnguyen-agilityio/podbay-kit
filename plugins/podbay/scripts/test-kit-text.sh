@@ -43,13 +43,21 @@ has   "reviewer prompt sets CARGO_INCREMENTAL=0" reference/reviewer-prompt.md 'C
 has   "pb-review passes <target dir>" skills/pb-review/SKILL.md '<target dir>'
 has   "pb-fix batch mode passes <target dir>" skills/pb-fix/references/batch.md '<target dir>'
 
+# Grill first (0.7.1): every task starts with grill-me before code.
+has   "contract has the grill-first rule" reference/contract.md '^## Grill first'
+has   "contract allows an explicit skip with a reason" reference/contract.md 'skip grill: <reason>'
+step  "pb-triage grills first" skills/pb-triage/SKILL.md 1b 'Grill first'
+step  "pb-fix grills first and refuses to code without answers" skills/pb-fix/SKILL.md 1b 'Do not start step 3 without those answers'
+has   "grill-me is back in tools" ../tools/skills/grill-me/SKILL.md 'tools:grilling'
+has   "wayfinder keeps its source and license" ../tools/skills/wayfinder/SKILL.md 'mattpocock/skills.*MIT'
+
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
 want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-run pb-triage pb-verify"
 got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
 [ "$got" = "$want" ] && ok "podbay skills are the standard set" || bad "podbay skills are the standard set (got: $got)"
 got="$(cd "$ROOT/../tools/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
-[ "$got" = "grilling macos-cleaner unslop" ] && ok "tools skills are grilling, macos-cleaner, unslop" || bad "tools skills (got: $got)"
-old="$(grep -rnE 'pb-ticket|pb-file-issues|pb-auto-issues|verify-ticket|grill-me|pb-local-run' "$ROOT" "$ROOT/../tools" "$ROOT/../../README.md" "$ROOT/../../.claude-plugin" 2>/dev/null | grep -v 'formerly the' | grep -v '/scripts/test-kit-text.sh:')"
+[ "$got" = "grill-me grilling macos-cleaner unslop wayfinder" ] && ok "tools skills are grill-me, grilling, macos-cleaner, unslop, wayfinder" || bad "tools skills (got: $got)"
+old="$(grep -rnE 'pb-ticket|pb-file-issues|pb-auto-issues|verify-ticket|pb-local-run' "$ROOT" "$ROOT/../tools" "$ROOT/../../README.md" "$ROOT/../../.claude-plugin" 2>/dev/null | grep -v 'formerly the' | grep -v '/scripts/test-kit-text.sh:')"
 [ -z "$old" ] && ok "no references to removed or renamed skills" || bad "no references to removed or renamed skills ($(printf '%s' "$old" | head -1 | cut -c1-120))"
 missing=""
 for p in $(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT/skills" "$ROOT/reference" | sed -E 's/[.,;:)]+$//' | sort -u); do

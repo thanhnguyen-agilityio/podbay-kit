@@ -36,6 +36,8 @@ For a local checkout use `{ "source": "directory", "path": "<path>" }` instead.
 
 Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.gitlab/issue_templates/{Bug,Story}.md` if missing (never overwrites; shows a diff for existing files) and creates `.podbay/` (git-excluded) for triage files and run reports.
 
+Every task starts with `/tools:grill-me` (scope, acceptance criteria, edge cases) before any code; pb-triage and pb-fix do it as their first step.
+
 Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-review`, `pb-mr`) -> a person merges -> `pb-release` -> `pb-verify`.
 
 | I want to... | Skill |

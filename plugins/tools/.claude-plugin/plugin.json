@@ -1,6 +1,6 @@
 {
   "name": "tools",
-  "version": "0.2.0",
-  "description": "General skills (disk cleanup, writing, grilling), not Pod Bay specific.",
+  "version": "0.3.0",
+  "description": "General skills (disk cleanup, writing, grill-me, wayfinder), not Pod Bay specific.",
   "author": { "name": "Thanh Nguyen" }
 }

@@ -55,6 +55,10 @@ A ticket that already has a failing test and repro steps goes straight to a fix 
 
 Epics: an epic gets one integration branch, `feat/<epic-name>`, cut from `main`. Its child tickets branch from it, and their MRs target it, not `main`. Each child MR gets the isolated review and is merged there by a person. At the end, one MR takes `feat/<epic-name>` into `main`. Child tickets go through `pb-fix`, not `pb-fix` batch mode, which always targets `main`. The branch table and epic detection are in `mr-checklist.md`.
 
+## Grill first
+
+Every task, feature or bug, starts with grill-me (`/tools:grill-me`; a skill calls its engine, `tools:grilling`) with the person who asked, before any code, until scope, acceptance criteria and edge cases are clear. The answers go into the ticket in plain words: scope and edge cases as Assumptions, criteria as Expected (ticket-format.md). GitLab text never names the interview (Writing and publishing). When the requester is an orchestrator session, it answers from the ticket and passes open questions to the owner. `pb-fix` does not start coding until the ticket has those answers, or the person said `skip grill: <reason>` in the session; the reason is kept in `.podbay/fix/<n>.md`, never on GitLab.
+
 ## Issue format
 
 [ticket-format.md](ticket-format.md) sets the type, title, template and Definition of Ready for every issue and every `pb:triage` comment: written as a senior BA/QA would. In the skills, **Expected** means a bug's Expected bullets, a story's acceptance criteria or a task's Definition of done; **repro test** means the test in the Fix verification (bug) or Verification (story) section; **Where** means Regression risk.
