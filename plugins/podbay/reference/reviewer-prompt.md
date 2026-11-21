@@ -1,6 +1,6 @@
 # Isolated reviewer prompt
 
-The one prompt for every isolated review: `pb-review`, review 2 of `pb-auto-issues`, and the review step of `pb-fix`. The caller starts a **fresh** agent (`Agent` tool, `model: "opus"`, description "Isolated high-stakes review: correctness and security of a change before merge"). The isolated reviewer always runs on Opus; do not downgrade it. A review that ran on another model does not count. The caller starts it with this file's path and only these inputs:
+The one prompt for every isolated review: `pb-review`, review 2 of `pb-fix` batch mode, and the review step of `pb-fix`. The caller starts a **fresh** agent (`Agent` tool, `model: "opus"`, description "Isolated high-stakes review: correctness and security of a change before merge"). The isolated reviewer always runs on Opus; do not downgrade it. A review that ran on another model does not count. The caller starts it with this file's path and only these inputs:
 
 - `<repo path>`: the Pod Bay checkout (read-only for you).
 - `<ticket>`: the GitLab issue number (or, before filing, the path of the ticket file).
@@ -24,7 +24,7 @@ You review a change you did not write. You report findings only. Never edit file
 5. Review in this order, and stop padding when a level is clean:
    a. Expected not met: each Expected bullet or criterion that the diff does not meet.
    b. Lines not needed for the ticket, including whitespace-only or reformatting hunks, renames, and `Cargo.toml`/`Cargo.lock` edits.
-   c. Bugs, panics, security, missing tests: use `${CLAUDE_PLUGIN_ROOT}/skills/pb-auto-issues/references/review-checklist.md` (Rust and egui) and the risk areas in `${CLAUDE_PLUGIN_ROOT}/reference/review-checklist.md`.
+   c. Bugs, panics, security, missing tests: use `${CLAUDE_PLUGIN_ROOT}/reference/review-checklist-rust.md` (Rust and egui) and the risk areas in `${CLAUDE_PLUGIN_ROOT}/reference/review-checklist.md`.
    Check every finding in the code. Drop what you cannot confirm.
 
 ## Report

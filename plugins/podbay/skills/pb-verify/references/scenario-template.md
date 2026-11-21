@@ -1,4 +1,4 @@
-# verify-ticket: plan.md format
+# pb-verify --installed: plan.md format
 
 Write `verification/ticket-<T>/plan.md` exactly like this.
 

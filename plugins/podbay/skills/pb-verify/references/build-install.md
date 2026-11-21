@@ -1,4 +1,4 @@
-# verify-ticket: build, install, launch (Pod Bay on macOS)
+# pb-verify --installed: build, install, launch (Pod Bay on macOS)
 
 Use the repo's own commands. If the checkout's README or `tools/package/` disagrees with this file, follow the repo and say so.
 

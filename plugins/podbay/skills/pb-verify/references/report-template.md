@@ -1,4 +1,4 @@
-# verify-ticket: results.md and mr-comment.md
+# pb-verify --installed: results.md and mr-comment.md
 
 ## results.md (local, full detail)
 

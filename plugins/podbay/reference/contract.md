@@ -22,9 +22,9 @@ The advisor is the project owner who approves big changes.
 | --- | --- | --- |
 | `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md` | plugin maintainers | all: checks, verification levels, repo notes |
 | `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` | plugin maintainers | all |
-| `.podbay/triage/<yyyy-mm-dd>.md` | `pb-triage` | the approver (gate 1), `pb-file-issues`, `pb-auto-issues` |
-| `.podbay/runs/<yyyy-mm-dd>-<k>.md` | `pb-auto-issues` | the reviewer |
-| `.podbay/lessons.md` | `pb-auto-issues` (run end) | workers (with `reference/lessons.md`) |
+| `.podbay/triage/<yyyy-mm-dd>.md` | `pb-triage` | the approver (gate 1), `pb-triage --file`, `pb-fix` batch mode |
+| `.podbay/runs/<yyyy-mm-dd>-<k>.md` | `pb-fix` batch mode | the reviewer |
+| `.podbay/lessons.md` | `pb-fix` batch mode (run end) | workers (with `reference/lessons.md`) |
 | `.podbay/rust-glossary.md` | `pb-explain-mr` | the team (seeded from `reference/rust-glossary.md`) |
 
 `.podbay/` is local: `/podbay:bootstrap` adds it to `.git/info/exclude`. Nothing from it is committed to the Pod Bay repo.
@@ -33,14 +33,14 @@ The advisor is the project owner who approves big changes.
 
 Two sources, one gate. Nothing is built before gate 1.
 
-| Source | Enters through | After gate 1 (`pb-file-issues`) |
+| Source | Enters through | After gate 1 (`pb-triage --file`) |
 | --- | --- | --- |
 | Findings: a findings file given with `--source <file>` | `pb-triage` | A new issue in the ticket format |
 | GitLab issues from BA/QA, follow-ups, anyone else | `pb-triage --source gitlab` | A `<!-- pb:triage -->` comment with the ticket's sections (ticket format, without the title) and `priority::`/`type::`/`area::` labels. The reporter's title and description stay as written |
 
 Findings are filed per ticket: a findings file may group findings into tickets (`t1`, `t2`, ...), and one ticket is one issue that covers all its findings. Triage files write the item as `t<n>`; a batch without tickets holds one row per finding (`f<n>`).
 
-The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-auto-issues` works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable. The label `pb::agent-ready` shows the approval on GitLab, but it never replaces the triage file.
+The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-fix` batch mode works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable. The label `pb::agent-ready` shows the approval on GitLab, but it never replaces the triage file.
 
 ## Routing
 
@@ -48,12 +48,12 @@ One ticket, one session, one branch.
 
 | Kind | Path |
 | --- | --- |
-| 1. Found by us (our own BA/QA findings, already verified) | `pb-ticket` files it; the approver approves the ticket text; `pb-fix` in the same session (failing test, fix, isolated review, Draft MR through `pb-mr`) |
-| 2. Logged by someone else | `pb-triage` (reproduce on current `main` as a failing test, grill); the approver approves the batch; `pb-file-issues` labels approved issues `pb::agent-ready`; then one new session per ticket (`pb-fix`) or `pb-auto-issues`; isolated review; Draft MR |
+| 1. Found by us (our own BA/QA findings, already verified) | `pb-triage --verified` files it; the approver approves the ticket text; `pb-fix` in the same session (failing test, fix, isolated review, Draft MR through `pb-mr`) |
+| 2. Logged by someone else | `pb-triage` (reproduce on current `main` as a failing test, grill); the approver approves the batch; `pb-triage --file` labels approved issues `pb::agent-ready`; then one new session per ticket (`pb-fix`) or `pb-fix` batch mode; isolated review; Draft MR |
 
 A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `pb::needs-human` at filing and is not worked by an agent.
 
-Epics: an epic gets one integration branch, `feat/<epic-name>`, cut from `main`. Its child tickets branch from it, and their MRs target it, not `main`. Each child MR gets the isolated review and is merged there by a person. At the end, one MR takes `feat/<epic-name>` into `main`. Child tickets go through `pb-fix`, not `pb-auto-issues`, which always targets `main`. The branch table and epic detection are in `mr-checklist.md`.
+Epics: an epic gets one integration branch, `feat/<epic-name>`, cut from `main`. Its child tickets branch from it, and their MRs target it, not `main`. Each child MR gets the isolated review and is merged there by a person. At the end, one MR takes `feat/<epic-name>` into `main`. Child tickets go through `pb-fix`, not `pb-fix` batch mode, which always targets `main`. The branch table and epic detection are in `mr-checklist.md`.
 
 ## Issue format
 
@@ -72,7 +72,7 @@ Created on first use. One of each group, plus state labels as they apply.
 | `area::` | `workspace`, `clone`, `overview`, `tasks`, `machines`, `settings`, `net`, `other` |
 | State | `pb::ready` (MR waits for a person), `pb::needs-advisor` (on an MR: it changes behavior, architecture, or network/security, i.e. touches `src/net/`, `secure.rs`, `state.rs`, `ops.rs`, `service.rs`; on an issue: triage size is `big UX / new feature`, which includes every ticket sized L), `pb::approved` (the advisor approved a `pb::needs-advisor` issue), `pb::agent-ready` (approved at gate 1; an agent may work it), `pb::needs-human` (could not be reproduced; a person looks first), `pb::draft`, `pb::skipped`, `pb::followup` |
 
-In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until they also carry `pb::approved`. In `pilot` mode, the label is informational.
+In `live` mode, `pb-fix` batch mode skips issues labelled `pb::needs-advisor` until they also carry `pb::approved`. In `pilot` mode, the label is informational.
 
 ## Comment markers
 
@@ -86,7 +86,7 @@ In `live` mode, `pb-auto-issues` skips issues labelled `pb::needs-advisor` until
 
 ## Gates
 
-1. **Gate 1, grill then approve:** every ticket in the batch is grilled (`pb-triage` step 9) before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-file-issues` files only rows with yes.
+1. **Gate 1, grill then approve:** every ticket in the batch is grilled (`pb-triage` step 9) before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-triage --file` files only rows with yes.
 2. **Gate 2, merge:** a person merges every MR into `main` or `release/*`, and approves every MR. No `pb-*` skill approves or pushes to `main`. A skill may merge an MR whose target is another branch (for example a child MR into an epic's `feat/<epic-name>`) after its isolated review and a `pb-ci` pass; `pb-guard` checks the target and blocks when it cannot tell.
 
 ## Isolated review

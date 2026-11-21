@@ -1,13 +1,10 @@
----
-name: pb-auto-issues
-description: Run selected GitLab issues on Pod Bay (Rust/egui) end to end with no approval stops (plan, build, test, 3 reviews, MR with evidence), and stop at a merge request for a person to merge. Use when the user runs /podbay:pb-auto-issues with issue numbers or `open` plus optional filters.
-argument-hint: <issue numbers | open [priority] [type]> [--skip-preflight]
-model: sonnet
-disable-model-invocation: true
----
+# pb-fix batch mode: several issues, no approval stops
+
+Read by `pb-fix` when it gets more than one issue number, or `open` with filters (formerly the pb-auto-issues skill). Arguments: `<issue numbers | open [priority] [type]> [--skip-preflight]`. The isolated review (review 2) is the same `pb-review` prompt and round limits as single mode.
+
 Skill version: pb-1. Work the GitLab issues selected by $ARGUMENTS (see Queue) end to end with no approval stops. Never merge: a person merges every MR into `main` (contract, Gates). A person reviews the run report and the MRs afterwards.
 
-`${CLAUDE_PLUGIN_ROOT}` is the plugin root (read-only). Paths like `references/worker.md` are relative to `${CLAUDE_PLUGIN_ROOT}/skills/pb-auto-issues/`. Working files (triage files, run reports, lessons) live in `.podbay/` in `<checkout>`. `<scratch>` is your scratchpad dir.
+`${CLAUDE_PLUGIN_ROOT}` is the plugin root (read-only). Paths like `references/worker.md` are relative to `${CLAUDE_PLUGIN_ROOT}/skills/pb-fix/`. Working files (triage files, run reports, lessons) live in `.podbay/` in `<checkout>`. `<scratch>` is your scratchpad dir.
 
 **Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` first** and follow it: Target (`<repo>`, `<id>`, `<checkout>`), issue format, labels, markers, MR rules, budget, trust. Read `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md` too (checks, verification levels, repo notes). This file does not repeat them. All `glab` calls use `-R <repo>`. Every cargo command runs with `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`, `--locked`, quiet, `| tail -n 30`.
 

@@ -5,7 +5,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
 - `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 108 pass, 0 fail.
-- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 13 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 17 pass, 0 fail.
 - `claude plugin marketplace add <path to this repo>` then `claude plugin install podbay@podbay-kit` : try it locally. Edits apply on the next session or `/reload-plugins`.
 
 ## Verifying your work
@@ -26,9 +26,9 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 - Bump `version` in the changed plugin's `plugin.json` in every commit that should reach installed machines (fix 0.x.y+1, new or removed skill 0.x+1.0); `claude plugin update` ignores changes without a new version.
 
 ## Layout
-- `skills/pb-ticket`: BA/QA-verified findings to GitLab issues (no triage). `pb-triage` + `pb-file-issues`: reproduce first, then file. `pb-auto-issues`: worker, reviews, MR. `pb-fix`: one approved ticket to a Draft MR in one session. `pb-review`: isolated review in a fresh agent. `pb-ci`: local CI in Docker (`Dockerfile`, `layout.sh`, `inner.sh`, `pb-ci.sh` in the skill folder; update the Rust pin and `layout.sh` together). `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-orchestrator`: drives Pod Bay sessions (`podbay-dev`); team-specific session names live in `.podbay/orchestrator.md`, never here. `pb-release`: weekly release from freeze to the sync MR into main; checklist in `reference/release-checklist.md`, templates in `templates/release/` (not copied by bootstrap), team values in `.podbay/release.md`. `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
+- One flow, one skill per step: `pb-triage` (tickets; `--verified` and `--file` modes, files in `skills/pb-triage/references/`), `pb-fix` (one ticket, or a batch through `skills/pb-fix/references/batch.md`), `pb-review`: isolated review in a fresh agent. `pb-ci`: local CI in Docker (`Dockerfile`, `layout.sh`, `inner.sh`, `pb-ci.sh` in the skill folder; update the Rust pin and `layout.sh` together). `pb-mr`: checklist and Draft MR for a hand-made branch. `pb-orchestrator`: drives Pod Bay sessions (`podbay-dev`); team-specific session names live in `.podbay/orchestrator.md`, never here. `pb-release`: weekly release from freeze to the sync MR into main; checklist in `reference/release-checklist.md`, templates in `templates/release/` (not copied by bootstrap), team values in `.podbay/release.md`. `pb-run`: Local builds (the build script and patch stay in the private notes repo; never copy them here). `pb-verify` (`--installed` through `skills/pb-verify/references/installed.md`). `pb-explain-mr`, `bootstrap` (copies `templates/` into a repo).
 - `scripts/pb-guard.sh`: blocks `cargo fmt`, force-push, push to main, MR approve, merge into main/master/release/* (target read from `glab mr view`; unsure -> block) and unscanned GitLab publishing. `publish-check.sh` is the secret scan, `private-ref-check.sh` the private-reference scan.
-- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `release-checklist.md`, `preflight.md`, `lessons.md`, `rust-glossary.md`.
+- `reference/`: `contract.md` (rules all skills share), `ticket-format.md`, `mr-checklist.md`, `reviewer-prompt.md` (the one isolated-review prompt), `release-checklist.md`, `review-checklist.md` and `review-checklist-rust.md` (isolated reviewer), `preflight.md`, `lessons.md`, `rust-glossary.md`.
 
 ## Things Claude gets wrong
 - Putting client or private notes in this repo (journal, comms log, people, decisions, backlog, review artifacts, tokens). This repo is meant to be shareable.

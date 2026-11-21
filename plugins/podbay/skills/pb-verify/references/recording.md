@@ -1,4 +1,4 @@
-# verify-ticket: recording and ffmpeg recipes
+# pb-verify --installed: recording and ffmpeg recipes
 
 Chrome's gif recorder only sees the browser. Use it only for the GitLab/GitHub side, never for the app.
 

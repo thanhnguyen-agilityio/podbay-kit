@@ -1,9 +1,11 @@
 ---
 name: pb-verify
-description: Verify a GitLab issue against its merge request in the running Pod Bay app, record evidence, and post the report as an MR comment. GitLab is read and written through Claude in Chrome. Run as /podbay:pb-verify.
-argument-hint: <issue number> <MR number> [--dry-run]
+description: Verify a GitLab issue against its merge request in the running Pod Bay app, record evidence, and post the report as an MR comment. GitLab is read and written through Claude in Chrome. With --installed, build the MR branch as a .dmg, test the installed app and post video, gif and screenshot evidence. Run as /podbay:pb-verify.
+argument-hint: <issue number> <MR number> [--installed] [--dry-run]
 disable-model-invocation: true
 ---
+`--installed`: build the MR branch as a .dmg and test the installed app with recordings; follow `${CLAUDE_PLUGIN_ROOT}/skills/pb-verify/references/installed.md` instead of the steps below.
+
 Verify one ticket on one MR. Read GitLab only in the user's signed-in Chrome (Claude in Chrome tools). Never use `glab` or API tokens. Post nothing before approval.
 
 1. Gather. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md`. Build both URLs from `git remote get-url origin`: `<base>/-/issues/<T>` and `<base>/-/merge_requests/<M>`. Load the Chrome tools in one ToolSearch call, open each page in a new tab, and read:

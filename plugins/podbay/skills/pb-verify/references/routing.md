@@ -1,4 +1,4 @@
-# verify-ticket: CLI vs Chrome routing
+# pb-verify --installed: CLI vs Chrome routing
 
 Decide the route per step, not once per run. A CLI failure on one step moves only that step to Chrome. Always tell the user which route a step used and why.
 

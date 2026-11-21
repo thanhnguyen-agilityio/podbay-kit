@@ -1,6 +1,6 @@
 # Pod Bay preflight
 
-Read by `pb-auto-issues`. Project-specific checks, verification levels and notes; the skill runs its generic checks first.
+Read by `pb-fix` batch mode. Project-specific checks, verification levels and notes; the skill runs its generic checks first.
 
 ## Typical timings (reference, from a 2026-11 measurement on a recent Mac)
 

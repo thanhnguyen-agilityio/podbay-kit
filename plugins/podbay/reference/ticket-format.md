@@ -1,6 +1,6 @@
 # Ticket format
 
-Every GitLab issue these skills write reads as if a senior BA/QA wrote it. `/podbay:pb-triage` drafts tickets in this format for gate 1, `/podbay:pb-file-issues` files them, and `.gitlab/issue_templates/` (installed by `/podbay:bootstrap`) gives people the same sections.
+Every GitLab issue these skills write reads as if a senior BA/QA wrote it. `/podbay:pb-triage` drafts tickets in this format for gate 1, `/podbay:pb-triage --file` files them, and `.gitlab/issue_templates/` (installed by `/podbay:bootstrap`) gives people the same sections.
 
 ## 1. Classify
 
@@ -12,7 +12,7 @@ Every GitLab issue these skills write reads as if a senior BA/QA wrote it. `/pod
 | Spike | `type::spike` | Time-boxed research that settles an unknown before a story can be written. |
 | Epic | `type::epic` | A feature that needs several stories. The stories are child issues; each lists the epic under Dependencies. |
 
-`pb-auto-issues` works bugs, stories and tasks. Spikes run by hand for now; epics are never worked directly.
+`pb-fix` batch mode works bugs, stories and tasks. Spikes run by hand for now; epics are never worked directly.
 
 ## 2. Titles
 
@@ -139,7 +139,7 @@ Checked by: ... (as in Bug), with the test that fails on `main` today and its fa
 
 ## 4. Definition of Ready
 
-Rewrite the ticket until every line is yes. `pb-triage` checks it before gate 1; `pb-file-issues` checks it again before filing.
+Rewrite the ticket until every line is yes. `pb-triage` checks it before gate 1; `pb-triage --file` checks it again before filing.
 
 1. **Type and title** follow sections 1 and 2.
 2. **No blanks.** Every section is filled. "None: <why>" only after checking. A filed ticket never holds `TBD`: an open question goes back to grilling, or the ticket becomes size big with `pb::needs-advisor`.

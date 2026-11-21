@@ -2,6 +2,16 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.7.0 - 2026-11-21 (tools 0.2.0)
+
+Kit clean-up: one standard flow with one skill per step (pb-triage, pb-fix, pb-review, pb-mr, a person merges, pb-release, pb-verify).
+- `pb-ticket` and `pb-file-issues` merged into `pb-triage` (`--verified`, `--file`).
+- `pb-auto-issues` merged into `pb-fix` as batch mode (several issues or `open`); its Rust review checklist moved to `reference/review-checklist-rust.md`.
+- `verify-ticket` merged into `pb-verify` (`--installed`).
+- `pb-local-run` moved into the kit as `pb-run`.
+- `tools`: `grill-me` removed; use `grilling`.
+- New text tests: the skill list, no references to removed skills, and every plugin path named in skill text exists.
+
 ## podbay 0.6.12 - 2026-11-21
 
 - `private-ref-check.sh` (and so pb-guard) allows a link to a published artifact page, `claude.ai/artifact/<id>`. Links to sessions, chats, projects and every other `claude.ai` URL still block, and the message names the one allowed kind. The contract says to share the artifact with "Anyone with the link" first.

@@ -1,9 +1,7 @@
----
-name: pb-ticket
-description: Turn findings already verified by a BA/QA into grouped GitLab issues (one ticket per screen or flow, not per finding). No reproduction, no triage file, no failing test. Run as /podbay:pb-ticket.
-argument-hint: <findings file | artifact URL> [--no-verify] [--dry-run] [--per-finding] [--only <n,...>] [--max-group <n>]
-disable-model-invocation: true
----
+# pb-triage --verified: file findings a BA/QA already verified
+
+Read by `pb-triage` when `--verified` is given (formerly the pb-ticket skill). Arguments: `--verified <findings file | artifact URL> [--no-verify] [--dry-run] [--per-finding] [--only <n,...>] [--max-group <n>]`.
+
 File what the BA/QA already confirmed. Never reproduce, triage or fix. Create nothing before approval.
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md`. Resolve `<repo>` and `<id>` from `origin` (Target). Use its labels and shell safety.

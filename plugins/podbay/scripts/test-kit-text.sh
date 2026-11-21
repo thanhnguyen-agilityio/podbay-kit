@@ -41,7 +41,22 @@ lacks "reviewer prompt has no hard-coded target dir" reference/reviewer-prompt.m
 has   "reviewer prompt takes <target dir> as an input" reference/reviewer-prompt.md '^- `<target dir>`'
 has   "reviewer prompt sets CARGO_INCREMENTAL=0" reference/reviewer-prompt.md 'CARGO_INCREMENTAL=0'
 has   "pb-review passes <target dir>" skills/pb-review/SKILL.md '<target dir>'
-has   "pb-auto-issues passes <target dir>" skills/pb-auto-issues/SKILL.md '<target dir>'
+has   "pb-fix batch mode passes <target dir>" skills/pb-fix/references/batch.md '<target dir>'
+
+# Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
+want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-run pb-triage pb-verify"
+got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
+[ "$got" = "$want" ] && ok "podbay skills are the standard set" || bad "podbay skills are the standard set (got: $got)"
+got="$(cd "$ROOT/../tools/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
+[ "$got" = "grilling macos-cleaner unslop" ] && ok "tools skills are grilling, macos-cleaner, unslop" || bad "tools skills (got: $got)"
+old="$(grep -rnE 'pb-ticket|pb-file-issues|pb-auto-issues|verify-ticket|grill-me|pb-local-run' "$ROOT" "$ROOT/../tools" "$ROOT/../../README.md" "$ROOT/../../.claude-plugin" 2>/dev/null | grep -v 'formerly the' | grep -v '/scripts/test-kit-text.sh:')"
+[ -z "$old" ] && ok "no references to removed or renamed skills" || bad "no references to removed or renamed skills ($(printf '%s' "$old" | head -1 | cut -c1-120))"
+missing=""
+for p in $(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT/skills" "$ROOT/reference" | sed -E 's/[.,;:)]+$//' | sort -u); do
+  rel="${p#\$\{CLAUDE_PLUGIN_ROOT\}/}"
+  [ -e "$ROOT/$rel" ] || missing="$missing $rel"
+done
+[ -z "$missing" ] && ok "every \${CLAUDE_PLUGIN_ROOT} path in skill and reference text exists" || bad "missing plugin paths:$missing"
 
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

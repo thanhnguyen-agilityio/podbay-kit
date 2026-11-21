@@ -41,7 +41,7 @@ Epic detection: `glab api projects/<id>/issues/<n>` shows `.epic` (title and iid
 <the problem>. Closes #<n>
 
 ## How
-<approach, trade-offs, alternatives not taken>; pb-auto-issues adds the work log link
+<approach, trade-offs, alternatives not taken>; pb-fix batch mode adds the work log link
 | Decision | Choice | Why |
 | --- | --- | --- |
 

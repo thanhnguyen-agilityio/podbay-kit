@@ -9,7 +9,7 @@ Local setup: if `.podbay/orchestrator.md` exists in the current repo, read it fi
 
 ## Tools (verified 2026-11-13, podbay 0.1.20)
 
-Always use `podbay-dev` (the daily Pod Bay). Never use `podbay-local*` to orchestrate: those are test builds (see the `pb-local-run` skill).
+Always use `podbay-dev` (the daily Pod Bay). Never use `podbay-local*` to orchestrate: those are test builds (see the `pb-run` skill).
 
 | Need | Command |
 |---|---|
@@ -47,4 +47,4 @@ Always use `podbay-dev` (the daily Pod Bay). Never use `podbay-local*` to orches
 - Standing sessions: send each kind of work to the standing session that `.podbay/orchestrator.md` names for it, one task after another when they share files. Start an extra session only for big independent work in parallel, and stop it after. Offer the user a fresh conversation for a long-running worker daily or weekly.
 - Reviews are isolated (contract, Isolated review): never ask the session that wrote a change to review it. Before an MR leaves Draft, give the review to a fresh session or agent (`/podbay:pb-review <MR>`) with only the ticket, the branch and the repo path, never the author's summary. The reviewer reports findings only; relay them to the author session.
 - One task per session. A second task for the same repo gets its own workspace.
-- When a task needs a running Local build (UI test, screenshots), tell the session to use the `pb-local-run` skill and to put its window title (`Pod Bay-local-<branch>`) in the report.
+- When a task needs a running Local build (UI test, screenshots), tell the session to use the `pb-run` skill and to put its window title (`Pod Bay-local-<branch>`) in the report.

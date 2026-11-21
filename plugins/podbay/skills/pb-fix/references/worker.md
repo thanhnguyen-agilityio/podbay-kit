@@ -44,7 +44,7 @@ Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply onl
 - Same failure after 3 fix attempts -> push, open a **draft** MR with a `## Failure log` section (command, failing tests, trimmed output), label `pb::draft`. Reply `draft`.
 
 ## 4. Review 1
-- Read `references/review-checklist.md` and apply it to `git diff origin/main...HEAD`; a casual look does not count. Fix every item, rerun step 3, push the branch. Reply `ready`.
+- Read `${CLAUDE_PLUGIN_ROOT}/reference/review-checklist-rust.md` and apply it to `git diff origin/main...HEAD`; a casual look does not count. Fix every item, rerun step 3, push the branch. Reply `ready`.
 
 ## 6. Ship (only when told "do step 6")
 - Scope: the diff touches only planned files, or the MR description explains why.

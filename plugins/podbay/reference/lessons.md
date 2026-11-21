@@ -1,6 +1,6 @@
-# pb-auto-issues lessons
+# pb-fix batch lessons
 
-Read by every `pb-auto-issues` worker before it starts, and appended at the end of a run (see the pb-auto-issues skill, "Run improvements"; new lessons go to `.podbay/lessons.md` in the target checkout, not here). Add a lesson only after a run report confirms it; one line each, as a rule. Stack-specific rules belong in `preflight.md`.
+Read by every `pb-fix` batch mode worker before it starts, and appended at the end of a run (see `pb-fix` batch mode, `skills/pb-fix/references/batch.md`, "Run improvements"; new lessons go to `.podbay/lessons.md` in the target checkout, not here). Add a lesson only after a run report confirms it; one line each, as a rule. Stack-specific rules belong in `preflight.md`.
 
 - Find UI elements by label or text with an explicit assert message, never by position; a position-based test breaks when anything is added before it.
 - Write a test so it fails when the feature is absent, not only when it is wrong: an assertion that also holds without the change proves nothing.

@@ -1,11 +1,13 @@
 ---
 name: pb-triage
-description: Verify Pod Bay findings and incoming GitLab issues on current main by reproducing each as a failing test, grill every ticket with the user, then stop for batch approval (gate 1). For findings a BA/QA already verified, use /podbay:pb-ticket instead. Run as /podbay:pb-triage.
-argument-hint: [--source <findings file> | --source gitlab [issue numbers]] [item ids (t1 t2) | finding numbers | all]
+description: Verify Pod Bay findings and incoming GitLab issues on current main by reproducing each as a failing test, grill every ticket with the user, then stop for batch approval (gate 1). With --verified, file findings a BA/QA already verified without reproducing them; with --file, file an approved batch. Run as /podbay:pb-triage.
+argument-hint: [--source <findings file> | --source gitlab [issue numbers]] [item ids (t1 t2) | finding numbers | all] | --verified <findings file | artifact URL> | --file <triage file> [ids]
 disable-model-invocation: true
 ---
-Verify findings on `main`. Never file issues and never fix anything.
-Routing (contract, Routing): this skill is for kind 2, tickets logged by someone else. Kind 1, found and verified by us, goes to `pb-ticket` and then `pb-fix`. A ticket that already has a failing test and repro steps skips triage and goes to `pb-fix`.
+Modes: `--verified <findings>` follows `${CLAUDE_PLUGIN_ROOT}/skills/pb-triage/references/verified.md` (BA/QA-verified findings: no reproduction). `--file <triage file>` follows `${CLAUDE_PLUGIN_ROOT}/skills/pb-triage/references/file.md` (file an approved batch). Otherwise triage as below.
+
+Verify findings on `main`. Never fix anything; file only after gate 1, through references/file.md.
+Routing (contract, Routing): this skill is for kind 2, tickets logged by someone else. Kind 1, found and verified by us, goes to `pb-triage --verified` and then `pb-fix`. A ticket that already has a failing test and repro steps skips triage and goes to `pb-fix`.
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` and `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md`. Resolve the target (`<repo>`, `<id>`, `<checkout>`) as the contract's Target section says. Working files go in `.podbay/` in the target checkout (`.podbay/triage/`); create it if missing.
 2. Source of findings:
@@ -44,4 +46,4 @@ Routing (contract, Routing): this skill is for kind 2, tickets logged by someone
 10. Remove the worktree (`git worktree remove --force`). The tests live in the triage file.
 11. Reply with the batch table and the path of the triage file.
 
-Rules: the triage file follows the contract's Writing section (plain, factual, short: no filler, no marketing words); smallest test; no fixes; never `cargo fmt` or rustfmt; `--locked` always; `pb-file-issues` files the issues, not this skill.
+Rules: the triage file follows the contract's Writing section (plain, factual, short: no filler, no marketing words); smallest test; no fixes; never `cargo fmt` or rustfmt; `--locked` always; `pb-triage --file` files the issues, not this skill.
