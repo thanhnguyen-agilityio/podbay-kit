@@ -59,7 +59,7 @@ Epic detection: `glab api projects/<id>/issues/<n>` shows `.epic` (title and iid
 - Risks and follow-ups: <none, or a list>
 
 ## Pre-review
-Isolated AI review (fresh agent, ticket + diff only), <N> rounds, last on <short sha>. Human review still required.
+Isolated AI review (fresh agent, ticket + diff only), <N> rounds, last on <short sha>. Risk tier: <light | full | full, sensitive: <paths>>. Human review still required.
 - <finding> - <fixed in <sha> | not changed: <why>>
 <or "- No findings.">
 

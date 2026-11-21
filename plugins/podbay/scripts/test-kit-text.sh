@@ -51,9 +51,21 @@ step  "pb-fix grills first and refuses to code without answers" skills/pb-fix/SK
 has   "grill-me is back in tools" ../tools/skills/grill-me/SKILL.md 'tools:grilling'
 has   "wayfinder keeps its source and license" ../tools/skills/wayfinder/SKILL.md 'mattpocock/skills.*MIT'
 
+# Review proof, tiers, merge check, sweep (0.8.0).
+has   "a blocker names a failing test or command" reference/reviewer-prompt.md 'A blocker must name a failing test'
+has   "contract names the risk tiers" reference/contract.md 'Risk tier, from the changed paths'
+has   "contract requires the merge check before a skill merge" reference/contract.md 'pb-merge-check.sh <iid> -R <repo>. must pass'
+has   "orchestrator merges only on merge-check OK" skills/pb-orchestrator/SKILL.md 'Merge only on "merge-check: OK"'
+has   "pb-review names the tier" skills/pb-review/SKILL.md 'pb-tier.sh origin/<base>'
+has   "review sweep never posts or merges" skills/pb-review-sweep/SKILL.md 'never post a comment, edit an MR or issue, push, approve or merge'
+has   "review sweep never sets up its own schedule" skills/pb-review-sweep/SKILL.md 'never creates or changes a schedule'
+for c in fix-grill-first triage-verified mr-target review-blocker-proof review-seeded-bug; do
+  [ -f "$ROOT/evals/$c/prompt.md" ] && [ -f "$ROOT/evals/$c/graders/criteria.md" ] && ok "eval $c exists" || bad "eval $c exists"
+done
+
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
-want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-run pb-triage pb-verify"
-got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
+want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
+got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
 [ "$got" = "$want" ] && ok "podbay skills are the standard set" || bad "podbay skills are the standard set (got: $got)"
 got="$(cd "$ROOT/../tools/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
 [ "$got" = "grill-me grilling macos-cleaner unslop wayfinder" ] && ok "tools skills are grill-me, grilling, macos-cleaner, unslop, wayfinder" || bad "tools skills (got: $got)"

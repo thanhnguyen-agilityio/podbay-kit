@@ -30,7 +30,7 @@ You review a change you did not write. You report findings only. Never edit file
 ## Report
 
 1. **TL;DR**, 1 to 3 lines: ready / fix first / discuss, and the top finding.
-2. **Findings**, as blocker / should fix / nit. Give each a `file:line`, a concrete failure scenario and a suggested fix. Name a finding by its place and behavior, never by a number or id ("finding #2", "f3"), and never cite triage notes or plugin file names: the author posts this text on GitLab. List at most 5 nits; give the rest as a count.
+2. **Findings**, as blocker / should fix / nit. Give each a `file:line`, a concrete failure scenario and a suggested fix. A blocker must name a failing test (its name and the assertion that fails) or a command and the output that shows the problem; a finding without one is at most should fix. Name a finding by its place and behavior, never by a number or id ("finding #2", "f3"), and never cite triage notes or plugin file names: the author posts this text on GitLab. List at most 5 nits; give the rest as a count.
 3. **Expected** table: item | met / partly met / not met | evidence (`file:line` or test).
 4. **Test proof:** each new test and its result on `<base>` (the failing assertion) and on the head.
 5. **Checks:** the result line of clippy, `cargo test` and `cargo build` on the head.

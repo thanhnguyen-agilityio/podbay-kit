@@ -2,6 +2,15 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.8.0 - 2026-11-21
+
+- New skill `pb-review-sweep`: one isolated review round on each open MR whose head has no review; never posts, edits or merges; findings go to the author session or the owner list; log in `.podbay/review-sweep/<date>.md`. Meant for a weekday schedule the owner sets up.
+- `scripts/pb-merge-check.sh`: before an orchestrator merge into an integration branch, the reviewed commit, the pb-ci commit and the MR head must be the same, and a sensitive change needs `pb::human-reviewed`; prints the merge pinned with `--sha`. Tests: `test-merge-check.sh`, 17 cases.
+- Risk tiers (`scripts/pb-tier.sh`, contract): light (docs and site only, one short round) and full (full review and pb-ci); sensitive paths also need a person's review note.
+- Reviewer prompt: a blocker must name a failing test or a command with its output; otherwise it is at most should fix.
+- Five behaviour evals in `evals/` (`claude plugin eval`): pb-fix grills first, pb-triage `--verified`, pb-mr target rule, a blocker needs proof, and a seeded off-by-one bug. All score 1.00 (3 runs each); the blocker-proof case scored 0.33 before the reviewer rule.
+- `tools` wayfinder: on GitLab use `decision:*` labels; start by hand only.
+
 ## podbay 0.7.1 - 2026-11-21 (tools 0.3.0)
 
 - Grill first: every task, feature or bug, starts with grill-me before any code (contract, "Grill first"). pb-triage and pb-fix run it as step 1b; pb-fix will not code without the answers in the ticket, or a `skip grill: <reason>` from the person.
