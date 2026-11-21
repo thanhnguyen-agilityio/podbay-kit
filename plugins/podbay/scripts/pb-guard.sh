@@ -13,6 +13,8 @@
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
 #   6. Private references in that same text (finding ids, triage file names, review artifact, gate or grilling words, internal
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
+#   7. cargo build|test|clippy|run|check (and pb-ci.sh) in command position when free disk is under PB_DISK_FLOOR_GB
+#      (whole GB, default 10). Tests fake free space with PB_FREE_GB_OVERRIDE, read only when PB_GUARD_TEST=1.
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
 # Not enforced: wrappers (bash script.sh, eval, $(...)), curl or python calls to the API.
@@ -68,6 +70,13 @@ resolve() {
   else return 1; fi
 }
 
+# gb_num <text>: a whole number of GB, read in base 10 ("08" is 8), 1 to 6 digits; anything else prints nothing.
+gb_num() { case "$1" in ''|*[!0-9]*) return 0 ;; esac; [ "${#1}" -le 6 ] || return 0; echo $(( 10#$1 )); }
+# Command position: after plain or quoted VAR=value prefixes, env, time, nice [-n N], command, exec.
+CMDPOS='^(([A-Za-z_][A-Za-z0-9_]*=("[^"]*"|'"'"'[^'"'"']*'"'"'|[^[:space:]]*)|env|time|nice([[:space:]]+-n[[:space:]]*-?[0-9]+)?|command|exec)[[:space:]]+)*'
+CARGO_RE="${CMDPOS}([^[:space:]]*/)?cargo([[:space:]]+[-+][^[:space:]]*)*[[:space:]]+(build|test|clippy|run|check|nextest|b|t|r|c)([[:space:]]|\$)"
+PBCI_RE="${CMDPOS}((bash|sh|zsh)[[:space:]]+)?[^[:space:]]*pb-ci\.sh([[:space:]]|\$)"
+
 in_kit() { [ -n "$KIT_REPO" ] || return 1; case "$1" in "$KIT_REPO"|"$KIT_REPO"/*) return 0 ;; esac; return 1; }
 
 # 1. rustfmt
@@ -85,6 +94,29 @@ CUR="$CWD"
 while IFS= read -r seg; do
   seg="${seg#"${seg%%[![:space:]]*}"}"; seg="${seg#\(}"
   [ -n "$seg" ] || continue
+
+  # 7. disk floor for cargo builds and pb-ci
+  if [[ "$seg" =~ $CARGO_RE ]] || [[ "$seg" =~ $PBCI_RE ]]; then
+    floor="$(gb_num "${PB_DISK_FLOOR_GB:-}")"; [ -n "$floor" ] || floor=10
+    where="${CARGO_TARGET_DIR:-$CUR}"
+    if [[ "$seg" =~ CARGO_TARGET_DIR=(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
+      w="${BASH_REMATCH[1]}"; w="${w//\"/}"; w="${w//\'/}"
+      case "$w" in "~"|"~/"*) w="$HOME${w#\~}" ;; esac
+      w="${w//\$\{HOME\}/$HOME}"; w="${w//\$HOME/$HOME}"
+      case "$w" in *'$'*|*'`'*) ;; *) where="$w" ;; esac
+    fi
+    case "$where" in /*) ;; *) where="$CUR/$where" ;; esac
+    while [ ! -e "$where" ] && [ "$where" != / ]; do where="$(dirname "$where")"; done
+    ov=""; [ "${PB_GUARD_TEST:-}" = 1 ] && ov="$(gb_num "${PB_FREE_GB_OVERRIDE:-}")"
+    if [ -n "$ov" ]; then free_kb=$(( ov * 1048576 ))
+    else free_kb="$(df -Pk "$where" 2>/dev/null | awk 'NR == 2 { print $4 }')"; fi
+    case "$free_kb" in ''|*[!0-9]*) free_kb="" ;; esac
+    [ "${#free_kb}" -le 15 ] || free_kb=""
+    if [ -n "$free_kb" ] && [ "$free_kb" -lt $(( floor * 1048576 )) ]; then
+      free_gb="$(awk -v k="$free_kb" 'BEGIN { printf "%.1f", k / 1048576 }')"
+      block "Only $free_gb GB free on the disk that holds $where; cargo builds and pb-ci need at least $floor GB (env PB_DISK_FLOOR_GB). A full disk fails the build halfway. Free space first, then rerun: old worktrees (git worktree list, then git worktree remove <path>), stale target folders (du -sh ~/.cache/cargo-target/* */target, then remove the ones no checkout uses), and idle Docker data (docker system df; docker volume rm pb-ci-target when no pb-ci runs). Ask the user before deleting anything that is not yours."
+    fi
+  fi
 
   # track cd for the PB_KIT_REPO exception
   if [[ "$seg" =~ ^cd[[:space:]]+(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then

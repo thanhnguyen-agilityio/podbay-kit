@@ -7,6 +7,7 @@ The one prompt for every isolated review: `pb-review`, review 2 of `pb-auto-issu
 - `<change>`: an MR number, or a branch name before an MR exists.
 - `<base>`: the target branch (`main`, or `release/<version>` for a hotfix).
 - `<scratch>`: a scratch folder for worktrees.
+- `<target dir>`: the cargo target folder to build in, chosen by the caller. Every cargo command below runs with `CARGO_TARGET_DIR=<target dir> CARGO_INCREMENTAL=0`. If the caller gave none, use `<scratch>/target` and say so in the report.
 - `<plan>` (only for a plan review, before code exists): the plan file. Then skip steps 3 and 4. Read the plan against the ticket and the code it names, and report as blocker / should fix / nit: Expected items the plan misses, files or approach that will not work or are wider than the ticket, missing or wrong tests, risks (state, settings, network, security). Say whether the change looks like one MR or should split.
 - `<range-diff>` (only for a conflict round after a rebase): `<old base>..<last reviewed head>`. Then review only `git -C <repo path> range-diff <range-diff> origin/<base>..<head sha>`, mainly the conflict resolutions, and skip step 4's base-worktree test proof; still run the gates in rv-head.
 
@@ -19,7 +20,7 @@ You review a change you did not write. You report findings only. Never edit file
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md`, `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md`, and the repo's `CLAUDE.md`.
 2. Read the ticket: `glab issue view <ticket> -R <repo> --comments` (or the ticket file). Its Expected section, acceptance criteria or Definition of done, plus its Assumptions and later comments, form the spec.
 3. Read the diff: `glab mr diff <change> -R <repo>`, or `git -C <repo path> fetch origin` and then `git -C <repo path> diff origin/<base>...origin/<change>` (if the branch is not pushed: `<base>...<change>`). Open changed lines plus about 20 lines of context; read more only to confirm a finding.
-4. Prove the test. Make a worktree of the change head (`git -C <repo path> worktree add --detach <scratch>/rv-head <head sha>`) and one of `origin/<base>` (`<scratch>/rv-base`). Copy the new or changed test file(s) into rv-base and run the new tests there. Each must fail on an assertion about the ticket's behavior, not on a compile error. In rv-head, run `cargo clippy --all-targets --locked -- -D warnings`, `cargo test --locked` and `cargo build --locked`, with `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`, quiet, `| tail -n 30`. Remove both worktrees after. Never run `cargo fmt` or `rustfmt`. You may also rerun `bash ${CLAUDE_PLUGIN_ROOT}/skills/pb-ci/pb-ci.sh <scratch>/rv-head` (Docker, Linux) before removing it; it needs a clean worktree.
+4. Prove the test. Make a worktree of the change head (`git -C <repo path> worktree add --detach <scratch>/rv-head <head sha>`) and one of `origin/<base>` (`<scratch>/rv-base`). Copy the new or changed test file(s) into rv-base and run the new tests there. Each must fail on an assertion about the ticket's behavior, not on a compile error. In rv-head, run `cargo clippy --all-targets --locked -- -D warnings`, `cargo test --locked` and `cargo build --locked`, with `CARGO_TARGET_DIR=<target dir> CARGO_INCREMENTAL=0`, quiet, `| tail -n 30`. Remove both worktrees after. Never run `cargo fmt` or `rustfmt`. You may also rerun `bash ${CLAUDE_PLUGIN_ROOT}/skills/pb-ci/pb-ci.sh <scratch>/rv-head` (Docker, Linux) before removing it; it needs a clean worktree.
 5. Review in this order, and stop padding when a level is clean:
    a. Expected not met: each Expected bullet or criterion that the diff does not meet.
    b. Lines not needed for the ticket, including whitespace-only or reformatting hunks, renames, and `Cargo.toml`/`Cargo.lock` edits.
@@ -29,7 +30,7 @@ You review a change you did not write. You report findings only. Never edit file
 ## Report
 
 1. **TL;DR**, 1 to 3 lines: ready / fix first / discuss, and the top finding.
-2. **Findings**, as blocker / should fix / nit. Give each a `file:line`, a concrete failure scenario and a suggested fix. List at most 5 nits; give the rest as a count.
+2. **Findings**, as blocker / should fix / nit. Give each a `file:line`, a concrete failure scenario and a suggested fix. Name a finding by its place and behavior, never by a number or id ("finding #2", "f3"), and never cite triage notes or plugin file names: the author posts this text on GitLab. List at most 5 nits; give the rest as a count.
 3. **Expected** table: item | met / partly met / not met | evidence (`file:line` or test).
 4. **Test proof:** each new test and its result on `<base>` (the failing assertion) and on the head.
 5. **Checks:** the result line of clippy, `cargo test` and `cargo build` on the head.

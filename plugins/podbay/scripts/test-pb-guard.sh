@@ -28,6 +28,9 @@ chmod +x "$D/bin/glab"
 export PATH="$D/bin:$PATH"
 
 pass=0; fail=0
+# Free disk seen by the guard; per-case overrides below. Keeps the suite independent of this machine's disk.
+export PB_GUARD_TEST=1 PB_FREE_GB_OVERRIDE=100
+MSG_RE=""   # when set, a block must print a message matching this regex
 # check <allow|block> <label> <command> [tool]
 check() {
   local want="$1" label="$2" cmd="$3" tool="${4:-Bash}" payload rc err
@@ -39,6 +42,7 @@ print(json.dumps({"tool_name": os.environ["TOOL"], "tool_input": ti, "cwd": "/tm
   else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >/dev/null)"; rc=$?; fi
   local got=allow; [ $rc -eq 2 ] && got=block
   [ $rc -ne 0 ] && [ $rc -ne 2 ] && got="exit$rc"
+  if [ "$got" = block ] && [ -n "$MSG_RE" ] && ! printf '%s' "$err" | grep -Eq -- "$MSG_RE"; then got="block-without-/$MSG_RE/"; fi
   if [ "$got" = "$want" ]; then pass=$((pass+1)); printf 'ok    %-5s %s\n' "$want" "$label"
   else fail=$((fail+1)); printf 'FAIL  want %s got %s: %s\n' "$want" "$got" "$label"; fi
   if [ "$got" = block ] && [ -n "$err" ]; then printf '        -> %s\n' "$(printf '%s' "$err" | head -c 160 | head -1)"; fi
@@ -114,6 +118,45 @@ check block "f13_ test name" "glab issue create --title x --description-file $D/
 check block "f13.Q1 bullet" "glab issue create --title x --description-file $D/pr3.md"
 check block "verify:: label in command" "glab issue update 3 -R group/project --label 'verify::L1'"
 check allow "plain labels in command" "glab issue update 3 -R group/project --label 'priority::low,type::bug'"
+
+# disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
+MSG_RE="10 GB"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo test" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo build in a chain" "cd /tmp && CARGO_TARGET_DIR=/tmp/t cargo build --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo clippy" "cargo clippy --all-targets --locked -- -D warnings"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo run" "cargo run --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: pb-ci" "bash /x/skills/pb-ci/pb-ci.sh /y/podbay"
+MSG_RE="2 GB"
+PB_FREE_GB_OVERRIDE=1 PB_DISK_FLOOR_GB=2 check block "low disk: custom floor named" "cargo test --locked"
+MSG_RE=""
+PB_FREE_GB_OVERRIDE=3 PB_DISK_FLOOR_GB=2 check allow "custom floor under free space" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=40 check allow "40 GB free: cargo test" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: cargo --version" "cargo --version"
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: git status" "git status"
+PB_GUARD_TEST= PB_FREE_GB_OVERRIDE=100 PB_DISK_FLOOR_GB=100000 check block "override ignored outside tests" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: grep for cargo test" "grep -n 'cargo test' README.md"
+PB_FREE_GB_OVERRIDE= PB_DISK_FLOOR_GB=100000 check block "real df reading under a huge floor" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: env prefix" "env RUST_LOG=debug cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: time prefix" "time cargo build --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo check" "cargo check --locked"
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: commit message mentions cargo build" "git commit -m \"Make cargo build faster\""
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: echo mentions cargo test" "echo please run cargo test"
+# Bad values never switch the other rules off.
+PB_DISK_FLOOR_GB=7.5 check block "floor 7.5 does not disable the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=10GB check block "floor 10GB does not disable the force-push rule" "cargo build; git push --force origin feat"
+PB_FREE_GB_OVERRIDE=abc check block "bad override does not disable the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=3 PB_DISK_FLOOR_GB=ten check block "bad floor falls back to 10 GB" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=40 PB_DISK_FLOOR_GB=7.5 check allow "bad floor, 40 GB free" "cargo test --locked"
+PB_DISK_FLOOR_GB=08 check block "floor 08 (octal trap) keeps the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=09 check block "floor 09 keeps the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=08 check block "override 08 keeps the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=99999999999999999999 check block "huge floor keeps the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=9 PB_DISK_FLOOR_GB=010 check block "floor 010 means 10, not 8" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: quoted prefix value" "RUSTFLAGS=\"-D warnings\" cargo build --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: flag before subcommand" "cargo -q build"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: --locked before subcommand" "cargo --locked test"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: path to cargo" "~/.cargo/bin/cargo test"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: nice -n 10" "nice -n 10 cargo test"
 
 PRC="$HERE/private-ref-check.sh"
 # direct <want-rc> <label> <file>

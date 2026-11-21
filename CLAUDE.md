@@ -4,12 +4,14 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
-- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 65 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 98 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 12 pass, 0 fail.
 - `claude plugin marketplace add <path to this repo>` then `claude plugin install podbay@podbay-kit` : try it locally. Edits apply on the next session or `/reload-plugins`.
 
 ## Verifying your work
 - Before you say a task is done, run both validate commands and the guard tests, and paste the result lines.
-- Changed `pb-guard.sh` or a scanner: add a case to `test-pb-guard.sh` first, see it fail, then make it pass.
+- Changed `pb-guard.sh` or a scanner: add a case to `test-pb-guard.sh` first, see it fail, then make it pass. A rule that lives in skill text gets a case in `test-kit-text.sh` the same way.
+- Keep a line per version in `CHANGELOG.md`.
 - Changed a skill: run it once with `--dry-run` or on a throwaway checkout. Nothing here has an end-to-end test.
 - There is no CI. These local runs are the only gate.
 

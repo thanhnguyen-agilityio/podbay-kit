@@ -11,7 +11,7 @@ Read by `pb-auto-issues`. Project-specific checks, verification levels and notes
 | Build tests | `cargo test --no-run` | ~30 s cold, a few seconds warm |
 | Tests | `cargo test` | ~250 unit/UI + ~26 mesh tests pass, 2 ignored. ~80 s. |
 | Screenshots | `PODBAY_SHOTS=<dir> cargo test screenshots -- --ignored` | 20 PNGs of every screen (wgpu/Metal), ~11 s |
-| Disk | `du -sh ~/.cache/cargo-target/podbay` | ~2.4 GB: keep one shared target dir per machine |
+| Disk | `df -h .` and `du -sh <target dir>` | at least 10 GB free (`pb-guard` blocks cargo builds and pb-ci below `PB_DISK_FLOOR_GB`, default 10); one target dir per checkout or the one the caller passes; remove target dirs of deleted worktrees |
 
 ## Checks
 
@@ -37,7 +37,7 @@ Pick the highest level the diff needs.
 
 - Never run `cargo fmt` or `rustfmt`, not even on files you edit: `main` is not formatted and the advisor commits to it. Match the surrounding style (long lines are normal here) so diffs carry only real changes.
 - No GitLab CI (no runner allowed). The gates are local: clippy, `cargo test` and `cargo build` (`--locked`) on the final commit, results in the MR's Test evidence; review 3 reruns them. `pb-ci` runs the same gates in a pinned Linux Docker image; it does not cover macOS-only code.
-- Shared target dir per machine: `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`. Review 3 uses the same one.
+- Target dir: a session may use the shared `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay` or its own; the isolated reviewer builds in the `<target dir>` its caller passes, with `CARGO_INCREMENTAL=0`. Keep at least 10 GB free (Disk row above).
 - Tests run real peers in temporary homes with private tmux servers. They are safe while Pod Bay-dev runs on the same machine.
 - Builds default to `PODBAY_ENV=local` (Pod Bay-local, `~/.config/podbay-local`, port 7881). Never touch `~/.config/podbay-dev`.
 - Commits: one plain sentence, no prefix (the advisor's style). MRs are squash-merged; `Closes #<n>` goes in the MR description.
