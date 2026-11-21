@@ -146,6 +146,16 @@ PB_DISK_FLOOR_GB=10GB check block "floor 10GB does not disable the force-push ru
 PB_FREE_GB_OVERRIDE=abc check block "bad override does not disable the main-push rule" "cargo build; git push origin main"
 PB_FREE_GB_OVERRIDE=3 PB_DISK_FLOOR_GB=ten check block "bad floor falls back to 10 GB" "cargo test --locked"
 PB_FREE_GB_OVERRIDE=40 PB_DISK_FLOOR_GB=7.5 check allow "bad floor, 40 GB free" "cargo test --locked"
+PB_DISK_FLOOR_GB=08 check block "floor 08 (octal trap) keeps the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=09 check block "floor 09 keeps the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=08 check block "override 08 keeps the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=99999999999999999999 check block "huge floor keeps the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=9 PB_DISK_FLOOR_GB=010 check block "floor 010 means 10, not 8" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: quoted prefix value" "RUSTFLAGS=\"-D warnings\" cargo build --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: flag before subcommand" "cargo -q build"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: --locked before subcommand" "cargo --locked test"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: path to cargo" "~/.cargo/bin/cargo test"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: nice -n 10" "nice -n 10 cargo test"
 
 # variables set earlier in the same command
 check allow "var path: mr create" "S=$D; glab mr create --title x --description-file \"\$S/clean.md\""
@@ -180,6 +190,40 @@ check block "unset" "S=$D/c; unset S; $G"
 check block "single-quoted path is literal" "S=$D/c; glab mr create --title x --description-file '\$S/n.md'"
 check block "tab in the value" "S=\"$D/c	\"; $G"
 check block "HOME reassigned, ~ path" "HOME=$D/b; glab mr create --title x --description-file ~/n.md"
+# Only a strict prefix of plain assignments at the very start counts (round-2 cases). Path form: "${S}n.md".
+H="glab mr create --title x --description-file \"\${S}n.md\""
+cp "$D/secret.md" "$D/n.md"
+check block "assignment text inside quotes" "echo \"x;S=$D/c/;\"; $H"
+check block "assignment after a comment" "true #;S=$D/c/
+$H"
+check block "assignment in a group piped to cat" "{ :; S=$D/c/; } | cat; $H"
+check block "assignment in a multi-line subshell" "(
+S=$D/c/
+)
+$H"
+check block "assignment in an uncalled function" "f() {
+S=$D/c/
+}
+$H"
+check block "assignment in an if that is false" "if false; then
+S=$D/c/
+fi
+$H"
+check block "assignment after && on the next line" "false &&
+S=$D/c/
+$H"
+check block "assignment inside a multi-line quote" "echo '
+S=$D/c/
+'
+$H"
+check block "eval after the assignment" "S=$D/c/; eval \$'\\\\x53=$D/'; $H"
+check block "bash-set name \$_" "_=$D/c; true $D/b; glab mr create --title x --description-file \"\$_/n.md\""
+check block "bash-set name \$REPLY" "REPLY=$D/c; read < /dev/null; glab mr create --title x --description-file \"\$REPLY/n.md\""
+check block "value is a quoted tilde" "S=\"~\"; glab mr create --title x --description-file \"\$S/n.md\""
+check block "value is a single-quoted \$HOME" "S='\$HOME/x'; glab mr create --title x --description-file \"\$S/n.md\""
+check block "read HOME, then a ~ path" "read HOME < /dev/null; glab mr create --title x --description-file ~/n.md"
+check block "unset HOME, then a ~ path" "unset HOME; glab mr create --title x --description-file ~/n.md"
+check block "value with a space, unquoted use" "S=\"$D/c /x\"; glab mr create --title x --description-file \$S/n.md"
 check allow "one plain assignment, then use" "S=$D/c; $G"
 check allow "assignment then && use" "S=$D/c && $G"
 # Variables never widen the push-to-main exception: cd and -C take literal paths only.
