@@ -11,7 +11,7 @@ Read by `pb-auto-issues`. Project-specific checks, verification levels and notes
 | Build tests | `cargo test --no-run` | ~30 s cold, a few seconds warm |
 | Tests | `cargo test` | ~250 unit/UI + ~26 mesh tests pass, 2 ignored. ~80 s. |
 | Screenshots | `PODBAY_SHOTS=<dir> cargo test screenshots -- --ignored` | 20 PNGs of every screen (wgpu/Metal), ~11 s |
-| Disk | `du -sh ~/.cache/cargo-target/podbay` | ~2.4 GB: keep one shared target dir per machine |
+| Disk | `df -h .` and `du -sh <target dir>` | at least 10 GB free (`pb-guard` blocks cargo builds and pb-ci below `PB_DISK_FLOOR_GB`, default 10); one target dir per checkout or the one the caller passes; remove target dirs of deleted worktrees |
 
 ## Checks
 

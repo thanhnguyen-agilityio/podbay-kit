@@ -13,6 +13,8 @@
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
 #   6. Private references in that same text (finding ids, triage file names, review artifact, gate or grilling words, internal
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
+#   7. cargo build|test|clippy|run and pb-ci.sh when free disk is under PB_DISK_FLOOR_GB (default 10). PB_FREE_GB_OVERRIDE fakes free space, for tests.
+# File paths may use $VAR or ${VAR} set earlier in the same command with a plain value (S=/tmp/x; export S=...).
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
 # Not enforced: wrappers (bash script.sh, eval, $(...)), curl or python calls to the API.
@@ -53,13 +55,43 @@ block() {
   exit 2
 }
 
-# resolve <path> <base>: print the absolute physical path, or fail if it has variables or does not exist.
+# Plain variables set earlier in the same command (NAME=value; export NAME=value), one "NAME<TAB>value" per line.
+VARS=""
+VAR_RE='^([^$]*)\$(\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(.*)$'
+# expand_vars <text>: replace $NAME and ${NAME} with values from VARS (or HOME); fail on any other variable.
+expand_vars() {
+  local s="$1" out="" name val
+  while [[ "$s" =~ $VAR_RE ]]; do
+    name="${BASH_REMATCH[3]:-${BASH_REMATCH[4]}}"
+    out+="${BASH_REMATCH[1]}"; s="${BASH_REMATCH[5]}"
+    val="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 == n { v = $2; f = 1 } END { if (f) print v; else exit 1 }')" || {
+      [ "$name" = HOME ] && val="$HOME" || return 1; }
+    out+="$val"
+  done
+  printf '%s' "$out$s"
+}
+# note_assignment <segment>: record NAME=value when the segment is only an assignment with a checkable value.
+note_assignment() {
+  local seg="$1" name val
+  seg="${seg#export }"; seg="${seg#"${seg%%[![:space:]]*}"}"
+  [[ "$seg" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(\"[^\"]*\"|\'[^\']*\'|[^[:space:]\"\']*)[[:space:]]*$ ]] || return 0
+  name="${BASH_REMATCH[1]}"; val="${BASH_REMATCH[2]}"
+  case "$val" in \'*) val="${val#\'}"; val="${val%\'}" ;; *) val="${val#\"}"; val="${val%\"}"
+    case "$val" in *'$('*|*'`'*) VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')"; return 0 ;; esac
+    val="$(expand_vars "$val")" || { VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')"; return 0; } ;; esac
+  VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')
+$name	$val"
+}
+VAR_FIX="Use a literal path, or set the variable earlier in the same command with a plain value, for example: S=/path/to/scratch; glab mr create ... --description-file \"\$S/body.md\". Values from \$(...), backticks or other environment variables cannot be checked."
+
+# resolve <path> <base>: print the absolute physical path, or fail if it has unknown variables or does not exist.
 resolve() {
   local p="$1" base="$2"
   p="${p%\"}"; p="${p#\"}"; p="${p%\'}"; p="${p#\'}"
   case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#\~/}" ;; esac
-  p="${p//\$HOME/$HOME}"; p="${p//\$\{HOME\}/$HOME}"
-  case "$p" in *'$'*|*'`'*) return 1 ;; esac
+  case "$p" in *'`'*|*'$('*) return 1 ;; esac
+  p="$(expand_vars "$p")" || return 1
+  case "$p" in *'$'*) return 1 ;; esac
   case "$p" in /*) ;; *) p="$base/$p" ;; esac
   if [ -d "$p" ]; then (cd "$p" && pwd -P)
   elif [ -e "$p" ]; then
@@ -85,6 +117,24 @@ CUR="$CWD"
 while IFS= read -r seg; do
   seg="${seg#"${seg%%[![:space:]]*}"}"; seg="${seg#\(}"
   [ -n "$seg" ] || continue
+  note_assignment "$seg"
+
+  # 7. disk floor for cargo builds and pb-ci
+  if [[ "$seg" =~ (^|[[:space:]])cargo[[:space:]]+(\+[^[:space:]]+[[:space:]]+)?(build|test|clippy|run)([[:space:]]|$) ]] || [[ "$seg" =~ (^|[[:space:]/])pb-ci\.sh([[:space:]]|$) ]]; then
+    floor="${PB_DISK_FLOOR_GB:-10}"
+    where="${CARGO_TARGET_DIR:-$CUR}"
+    if [[ "$seg" =~ CARGO_TARGET_DIR=(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
+      w="${BASH_REMATCH[1]}"; w="${w//\"/}"; w="${w//\'/}"; w="$(expand_vars "$w")" && where="$w"
+    fi
+    case "$where" in /*) ;; *) where="$CUR/$where" ;; esac
+    while [ ! -e "$where" ] && [ "$where" != / ]; do where="$(dirname "$where")"; done
+    if [ -n "${PB_FREE_GB_OVERRIDE:-}" ]; then free_kb=$(( PB_FREE_GB_OVERRIDE * 1048576 ))
+    else free_kb="$(df -Pk "$where" 2>/dev/null | awk 'NR == 2 { print $4 }')"; fi
+    if [ -n "$free_kb" ] && [ "$free_kb" -lt $(( floor * 1048576 )) ] 2>/dev/null; then
+      free_gb="$(awk -v k="$free_kb" 'BEGIN { printf "%.1f", k / 1048576 }')"
+      block "Only $free_gb GB free on the disk that holds $where; cargo builds and pb-ci need at least $floor GB (env PB_DISK_FLOOR_GB). A full disk fails the build halfway. Free space first, then rerun: old worktrees (git worktree list, then git worktree remove <path>), stale target folders (du -sh ~/.cache/cargo-target/* */target, then remove the ones no checkout uses), and idle Docker data (docker system df; docker volume rm pb-ci-target when no pb-ci runs). Ask the user before deleting anything that is not yours."
+    fi
+  fi
 
   # track cd for the PB_KIT_REPO exception
   if [[ "$seg" =~ ^cd[[:space:]]+(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
@@ -161,7 +211,7 @@ except Exception: print("")' 2>/dev/null)"
         *) f="" ;;
       esac
       [ -n "$f" ] || continue
-      rf="$(resolve "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, or it uses a variable or '-'). Write the text to a scratchpad file first, pass a literal path, then run $PC <file>."
+      rf="$(resolve "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, '-', or a variable the guard cannot read). Write the text to a scratchpad file first and check it with $PC <file>. $VAR_FIX"
       FILES="$FILES
 $rf"
     done <<< "$cands"
