@@ -33,6 +33,9 @@ step  "pb-mr checks each file right before it posts" skills/pb-mr/SKILL.md 10 'p
 has   "reviewer names findings by place, never by number or id" reference/reviewer-prompt.md 'never by a number or id'
 lacks "review comment template has no finding-id field" reference/mr-checklist.md '<finding id>|finding #<'
 
+# Artifact links: only published artifact pages, shared with anyone who has the link.
+has   "contract allows claude.ai/artifact links and says to share them first" reference/contract.md 'claude\.ai/artifact/<id>.*Anyone with the link'
+
 # Item 7: the reviewer takes its target dir from the caller.
 lacks "reviewer prompt has no hard-coded target dir" reference/reviewer-prompt.md 'cargo-target/podbay|\$HOME/\.cache|~/\.cache|/Users/|/home/'
 has   "reviewer prompt takes <target dir> as an input" reference/reviewer-prompt.md '^- `<target dir>`'

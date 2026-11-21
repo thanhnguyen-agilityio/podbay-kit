@@ -4,8 +4,8 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
-- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 98 pass, 0 fail.
-- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 12 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 108 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 13 pass, 0 fail.
 - `claude plugin marketplace add <path to this repo>` then `claude plugin install podbay@podbay-kit` : try it locally. Edits apply on the next session or `/reload-plugins`.
 
 ## Verifying your work

@@ -19,14 +19,18 @@ for F in "$@"; do
     exit 2
   fi
   # Blank out the Rust float types f32 and f64 (twice, so "f32 f64" is covered); line numbers stay the same.
-  TEXT="$(LC_ALL=C sed -E -e "s/(^|$NA)f(32|64)($NA|\$)/\1 \3/g" -e "s/(^|$NA)f(32|64)($NA|\$)/\1 \3/g" "$F")"
+  # A published artifact page (claude.ai/artifact/<id>, nothing after the id) may be linked: blank it out first.
+  # Sessions, chats, projects and every other claude.ai URL stay private and still match the claude.ai rule.
+  TEXT="$(LC_ALL=C sed -E -e "s/(^|$NA)f(32|64)($NA|\$)/\1 \3/g" -e "s/(^|$NA)f(32|64)($NA|\$)/\1 \3/g" \
+    -e 's#claude\.ai/artifact/[A-Za-z0-9_-]+([^A-Za-z0-9_/-])#artifact-page\1#g' \
+    -e 's#claude\.ai/artifact/[A-Za-z0-9_-]+$#artifact-page#' "$F")"
   out="$({
     rule 'finding id' E "(^|$NA)f[0-9]{1,3}($NA|\$)"
     rule 'ticket id' E "(^|$NA)[tT][0-9]{1,2}($NA|\$)"
     rule 'feature id' E 'F-[A-Z]{3}-[0-9]{2}'
     rule 'review artifact' iE 'review artifact'
     rule 'finding number' iE 'finding #[0-9]'
-    rule 'claude.ai link' E 'claude\.ai/'
+    rule 'claude.ai link (sessions, chats and projects are private; only a published claude.ai/artifact/<id> page may be linked)' E 'claude\.ai/'
     rule 'notes file' E 'ui-ux-issues|preflight(-podbay)?\.md|contract\.md|lessons\.md|rust-glossary|run-report|\.podbay/|triage/[0-9]{4}'
     rule 'internal label' E 'verify::|pb::triaged'
     rule 'gate word' iE "(^|$NA)gate[ -]?[12]($NA|\$)"
