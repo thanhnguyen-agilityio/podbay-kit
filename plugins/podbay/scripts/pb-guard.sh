@@ -55,43 +55,98 @@ block() {
   exit 2
 }
 
-# Plain variables set earlier in the same command (NAME=value; export NAME=value), one "NAME<TAB>value" per line.
-VARS=""
+# Variables the guard may read in GitLab file paths, from the whole command at once, one "NAME<TAB>value" per line.
+# A name counts only when the command sets it exactly once, as a plain NAME=value (or export NAME=value) at the start
+# of the command or right after ";" or a newline, followed by ";", "&&", a newline or the end, before any use, and the
+# name appears nowhere else as a bare word (no +=, declare, read, printf -v, for, unset, second assignment). No variable
+# counts in a command with a heredoc. The value may use only names accepted before it; a tab, $(...) or backtick drops it.
+# A line "!HOME" means the command assigns HOME, so ~ and $HOME are not read in file paths.
+read -r -d '' VARS_PY <<'PY'
+import re, sys
+cmd = open(sys.argv[1]).read(); home = sys.argv[2]
+N = r'[A-Za-z_][A-Za-z0-9_]*'
+if re.search(r'(?<![\w$])HOME(?=\+?=)', cmd):
+    print('!HOME'); home = None
+if '<<' in cmd:
+    sys.exit(0)
+assign = re.compile(r'(?:^|(?<=[;\n]))[ \t]*(?:export[ \t]+)?(' + N + r')=("[^"\n]*"|\'[^\'\n]*\'|[^\s;&|"\'<>()`]*)(?=[ \t]*(?:;|&&|\n|$))')
+accepted = {}
+for m in assign.finditer(cmd):
+    name, raw = m.group(1), m.group(2)
+    if name == 'HOME' or name in accepted:
+        continue
+    bare = [b for b in re.finditer(r'(?<![\w$])(?<!\$\{)' + name + r'(?!\w)', cmd)]
+    if len(bare) != 1 or bare[0].start() != m.start(1):
+        continue
+    first_use = re.search(r'\$\{?' + name + r'(?!\w)', cmd)
+    if first_use and first_use.start() < m.end():
+        continue
+    if raw.startswith("'"):
+        val = raw[1:-1]
+    else:
+        val = raw[1:-1] if raw.startswith('"') else raw
+        if '`' in val or '$(' in val:
+            continue
+        if not raw.startswith('"') and (val == '~' or val.startswith('~/')):
+            if home is None:
+                continue
+            val = home + val[1:]
+        ok = True
+        def sub(mm):
+            global ok
+            n = mm.group(1) or mm.group(2)
+            if n in accepted:
+                return accepted[n]
+            if n == 'HOME' and home is not None:
+                return home
+            ok = False
+            return ''
+        val = re.sub(r'\$(?:\{(' + N + r')\}|(' + N + r'))', sub, val)
+        if not ok or '$' in val:
+            continue
+    if '\t' in val or '\n' in val:
+        continue
+    accepted[name] = val
+for k, v in accepted.items():
+    print(k + '\t' + v)
+PY
+VARS="$(python3 -c "$VARS_PY" "$CMDF" "$HOME" 2>/dev/null)"
 VAR_RE='^([^$]*)\$(\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(.*)$'
-# expand_vars <text>: replace $NAME and ${NAME} with values from VARS (or HOME); fail on any other variable.
+# expand_vars <text>: replace $NAME and ${NAME} with accepted values (or HOME); fail on any other variable.
 expand_vars() {
   local s="$1" out="" name val
   while [[ "$s" =~ $VAR_RE ]]; do
     name="${BASH_REMATCH[3]:-${BASH_REMATCH[4]}}"
     out+="${BASH_REMATCH[1]}"; s="${BASH_REMATCH[5]}"
     val="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 == n { v = $2; f = 1 } END { if (f) print v; else exit 1 }')" || {
-      [ "$name" = HOME ] && val="$HOME" || return 1; }
+      if [ "$name" = HOME ] && ! printf '%s\n' "$VARS" | grep -qx '!HOME'; then val="$HOME"; else return 1; fi; }
     out+="$val"
   done
   printf '%s' "$out$s"
 }
-# note_assignment <segment>: record NAME=value when the segment is only an assignment with a checkable value.
-note_assignment() {
-  local seg="$1" name val
-  seg="${seg#export }"; seg="${seg#"${seg%%[![:space:]]*}"}"
-  [[ "$seg" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(\"[^\"]*\"|\'[^\']*\'|[^[:space:]\"\']*)[[:space:]]*$ ]] || return 0
-  name="${BASH_REMATCH[1]}"; val="${BASH_REMATCH[2]}"
-  case "$val" in \'*) val="${val#\'}"; val="${val%\'}" ;; *) val="${val#\"}"; val="${val%\"}"
-    case "$val" in *'$('*|*'`'*) VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')"; return 0 ;; esac
-    val="$(expand_vars "$val")" || { VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')"; return 0; } ;; esac
-  VARS="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 != n')
-$name	$val"
-}
-VAR_FIX="Use a literal path, or set the variable earlier in the same command with a plain value, for example: S=/path/to/scratch; glab mr create ... --description-file \"\$S/body.md\". Values from \$(...), backticks or other environment variables cannot be checked."
+VAR_FIX="Use a literal path, or set the variable once, earlier in the same command, with a plain value: S=/path/to/scratch; glab mr create ... --description-file \"\$S/body.md\". Values from \$(...), backticks, other environment variables, heredoc commands, or a variable set or changed more than once cannot be checked."
 
-# resolve <path> <base>: print the absolute physical path, or fail if it has unknown variables or does not exist.
+# resolve_pub <path> <base>: like resolve, for GitLab file arguments: also reads the accepted variables above.
+# A single-quoted path is literal in bash, so it is never expanded.
+resolve_pub() {
+  local p="$1" base="$2"
+  case "$p" in \'*) resolve "$p" "$base"; return ;; esac
+  p="${p%\"}"; p="${p#\"}"
+  case "$p" in "~"|"~/"*) printf '%s\n' "$VARS" | grep -qx '!HOME' && return 1 ;; esac
+  case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#\~/}" ;; esac
+  case "$p" in *'`'*|*'$('*) return 1 ;; esac
+  p="$(expand_vars "$p")" || return 1
+  resolve "$p" "$base"
+}
+
+# resolve <path> <base>: print the absolute physical path, or fail if it has variables or does not exist.
+# Used as is for cd and git -C (the push-to-main exception), so it reads no command variables.
 resolve() {
   local p="$1" base="$2"
   p="${p%\"}"; p="${p#\"}"; p="${p%\'}"; p="${p#\'}"
   case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#\~/}" ;; esac
-  case "$p" in *'`'*|*'$('*) return 1 ;; esac
-  p="$(expand_vars "$p")" || return 1
-  case "$p" in *'$'*) return 1 ;; esac
+  p="${p//\$HOME/$HOME}"; p="${p//\$\{HOME\}/$HOME}"
+  case "$p" in *'$'*|*'`'*) return 1 ;; esac
   case "$p" in /*) ;; *) p="$base/$p" ;; esac
   if [ -d "$p" ]; then (cd "$p" && pwd -P)
   elif [ -e "$p" ]; then
@@ -117,20 +172,27 @@ CUR="$CWD"
 while IFS= read -r seg; do
   seg="${seg#"${seg%%[![:space:]]*}"}"; seg="${seg#\(}"
   [ -n "$seg" ] || continue
-  note_assignment "$seg"
 
-  # 7. disk floor for cargo builds and pb-ci
-  if [[ "$seg" =~ (^|[[:space:]])cargo[[:space:]]+(\+[^[:space:]]+[[:space:]]+)?(build|test|clippy|run)([[:space:]]|$) ]] || [[ "$seg" =~ (^|[[:space:]/])pb-ci\.sh([[:space:]]|$) ]]; then
+  # 7. disk floor for cargo builds and pb-ci, counted only in command position (after VAR=x, env, time, nice)
+  CMDPOS='^(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*|env|time|nice|command|exec)[[:space:]]+)*'
+  if [[ "$seg" =~ ${CMDPOS}cargo[[:space:]]+(\+[^[:space:]]+[[:space:]]+)?(build|test|clippy|run|check|nextest|b|t|r|c)([[:space:]]|$) ]] || [[ "$seg" =~ ${CMDPOS}((bash|sh|zsh)[[:space:]]+)?[^[:space:]]*pb-ci\.sh([[:space:]]|$) ]]; then
     floor="${PB_DISK_FLOOR_GB:-10}"
-    where="${CARGO_TARGET_DIR:-$CUR}"
+    case "$floor" in ''|*[!0-9]*) floor=10 ;; esac
+    where="$(printf '%s\n' "$VARS" | awk -F'\t' '$1 == "CARGO_TARGET_DIR" { print $2 }')"
+    [ -n "$where" ] || where="${CARGO_TARGET_DIR:-$CUR}"
     if [[ "$seg" =~ CARGO_TARGET_DIR=(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
       w="${BASH_REMATCH[1]}"; w="${w//\"/}"; w="${w//\'/}"; w="$(expand_vars "$w")" && where="$w"
     fi
     case "$where" in /*) ;; *) where="$CUR/$where" ;; esac
     while [ ! -e "$where" ] && [ "$where" != / ]; do where="$(dirname "$where")"; done
-    if [ -n "${PB_FREE_GB_OVERRIDE:-}" ]; then free_kb=$(( PB_FREE_GB_OVERRIDE * 1048576 ))
-    else free_kb="$(df -Pk "$where" 2>/dev/null | awk 'NR == 2 { print $4 }')"; fi
-    if [ -n "$free_kb" ] && [ "$free_kb" -lt $(( floor * 1048576 )) ] 2>/dev/null; then
+    free_kb=""
+    case "${PB_FREE_GB_OVERRIDE:-}" in
+      '') free_kb="$(df -Pk "$where" 2>/dev/null | awk 'NR == 2 { print $4 }')" ;;
+      *[!0-9]*) free_kb="" ;;
+      *) free_kb=$(( PB_FREE_GB_OVERRIDE * 1048576 )) ;;
+    esac
+    case "$free_kb" in ''|*[!0-9]*) free_kb="" ;; esac
+    if [ -n "$free_kb" ] && [ "$free_kb" -lt $(( floor * 1048576 )) ]; then
       free_gb="$(awk -v k="$free_kb" 'BEGIN { printf "%.1f", k / 1048576 }')"
       block "Only $free_gb GB free on the disk that holds $where; cargo builds and pb-ci need at least $floor GB (env PB_DISK_FLOOR_GB). A full disk fails the build halfway. Free space first, then rerun: old worktrees (git worktree list, then git worktree remove <path>), stale target folders (du -sh ~/.cache/cargo-target/* */target, then remove the ones no checkout uses), and idle Docker data (docker system df; docker volume rm pb-ci-target when no pb-ci runs). Ask the user before deleting anything that is not yours."
     fi
@@ -211,7 +273,7 @@ except Exception: print("")' 2>/dev/null)"
         *) f="" ;;
       esac
       [ -n "$f" ] || continue
-      rf="$(resolve "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, '-', or a variable the guard cannot read). Write the text to a scratchpad file first and check it with $PC <file>. $VAR_FIX"
+      rf="$(resolve_pub "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, '-', or a variable the guard cannot read). Write the text to a scratchpad file first and check it with $PC <file>. $VAR_FIX"
       FILES="$FILES
 $rf"
     done <<< "$cands"

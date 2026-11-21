@@ -37,7 +37,7 @@ Pick the highest level the diff needs.
 
 - Never run `cargo fmt` or `rustfmt`, not even on files you edit: `main` is not formatted and the advisor commits to it. Match the surrounding style (long lines are normal here) so diffs carry only real changes.
 - No GitLab CI (no runner allowed). The gates are local: clippy, `cargo test` and `cargo build` (`--locked`) on the final commit, results in the MR's Test evidence; review 3 reruns them. `pb-ci` runs the same gates in a pinned Linux Docker image; it does not cover macOS-only code.
-- Shared target dir per machine: `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay`. Review 3 uses the same one.
+- Target dir: a session may use the shared `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay` or its own; the isolated reviewer builds in the `<target dir>` its caller passes, with `CARGO_INCREMENTAL=0`. Keep at least 10 GB free (Disk row above).
 - Tests run real peers in temporary homes with private tmux servers. They are safe while Pod Bay-dev runs on the same machine.
 - Builds default to `PODBAY_ENV=local` (Pod Bay-local, `~/.config/podbay-local`, port 7881). Never touch `~/.config/podbay-dev`.
 - Commits: one plain sentence, no prefix (the advisor's style). MRs are squash-merged; `Closes #<n>` goes in the MR description.

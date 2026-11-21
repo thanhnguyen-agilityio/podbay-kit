@@ -135,6 +135,17 @@ PB_FREE_GB_OVERRIDE=3 check allow "low disk: cargo --version" "cargo --version"
 PB_FREE_GB_OVERRIDE=3 check allow "low disk: git status" "git status"
 PB_FREE_GB_OVERRIDE=3 check allow "low disk: grep for cargo test" "grep -n 'cargo test' README.md"
 PB_FREE_GB_OVERRIDE= PB_DISK_FLOOR_GB=100000 check block "real df reading under a huge floor" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: env prefix" "env RUST_LOG=debug cargo test --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: time prefix" "time cargo build --locked"
+PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo check" "cargo check --locked"
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: commit message mentions cargo build" "git commit -m \"Make cargo build faster\""
+PB_FREE_GB_OVERRIDE=3 check allow "low disk: echo mentions cargo test" "echo please run cargo test"
+# Bad values never switch the other rules off.
+PB_DISK_FLOOR_GB=7.5 check block "floor 7.5 does not disable the main-push rule" "cargo build; git push origin main"
+PB_DISK_FLOOR_GB=10GB check block "floor 10GB does not disable the force-push rule" "cargo build; git push --force origin feat"
+PB_FREE_GB_OVERRIDE=abc check block "bad override does not disable the main-push rule" "cargo build; git push origin main"
+PB_FREE_GB_OVERRIDE=3 PB_DISK_FLOOR_GB=ten check block "bad floor falls back to 10 GB" "cargo test --locked"
+PB_FREE_GB_OVERRIDE=40 PB_DISK_FLOOR_GB=7.5 check allow "bad floor, 40 GB free" "cargo test --locked"
 
 # variables set earlier in the same command
 check allow "var path: mr create" "S=$D; glab mr create --title x --description-file \"\$S/clean.md\""
@@ -147,6 +158,34 @@ MSG_RE="S=/"
 check block "var from command substitution: fix named" "S=\$(mktemp -d); glab mr create --title x --description-file \"\$S/clean.md\""
 MSG_RE=""
 check block "var set after use" "glab mr create --title x --description-file \"\$S/clean.md\"; S=$D"
+# The guard must never scan a different file than the one bash passes: $D/c/n.md is clean, $D/b/n.md has a secret.
+mkdir -p "$D/c" "$D/b"; cp "$D/clean.md" "$D/c/n.md"; cp "$D/secret.md" "$D/b/n.md"
+G="glab mr create --title x --description-file \"\$S/n.md\""
+check block "conditional reassignment &&" "S=$D/b; false && S=$D/c; $G"
+check block "conditional reassignment ||" "S=$D/b; true || S=$D/c; $G"
+check block "assignment in a pipe" "S=$D/b; S=$D/c | cat; $G"
+check block "assignment in the background" "S=$D/b; S=$D/c & $G"
+check block "assignment in a subshell" "S=$D/b; (S=$D/c); $G"
+check block "assignment line in a heredoc" "cat > /tmp/pbg-x <<EOF
+S=$D/c
+EOF
+$G"
+check block "append +=" "S=$D/c; S+=/../b; $G"
+check block "second assignment with a prefix" "S=$D/c; S=$D/b X=1; $G"
+check block "declare" "S=$D/c; declare S=$D/b; $G"
+check block "read" "S=$D/c; read S < /dev/null; $G"
+check block "printf -v" "S=$D/c; printf -v S %s $D/b; $G"
+check block "for loop variable" "S=$D/c; for S in $D/b; do $G; done"
+check block "unset" "S=$D/c; unset S; $G"
+check block "single-quoted path is literal" "S=$D/c; glab mr create --title x --description-file '\$S/n.md'"
+check block "tab in the value" "S=\"$D/c	\"; $G"
+check block "HOME reassigned, ~ path" "HOME=$D/b; glab mr create --title x --description-file ~/n.md"
+check allow "one plain assignment, then use" "S=$D/c; $G"
+check allow "assignment then && use" "S=$D/c && $G"
+# Variables never widen the push-to-main exception: cd and -C take literal paths only.
+check block "-C via a variable, push to main" "R=$KITREPO; git -C \"\$R\" push origin HEAD:main"
+check block "-C via a reassigned variable, push to main" "R=/tmp; false && R=$KITREPO; git -C \"\$R\" push origin main"
+check block "cd via a variable, push to main" "R=$KITREPO; cd \"\$R\" && git push origin HEAD:main"
 
 PRC="$HERE/private-ref-check.sh"
 # direct <want-rc> <label> <file>
