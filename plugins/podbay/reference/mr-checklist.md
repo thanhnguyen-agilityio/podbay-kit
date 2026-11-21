@@ -83,7 +83,7 @@ One MR comment per review round, posted by the author (never by the reviewer). W
 ### Isolated review, round <k>, commit <short sha>
 Fresh agent, <model>, <date>. Input: ticket, diff, repo path.
 
-<the reviewer's report: findings, Expected table, test proof, checks>
+<the round's plain-terms draft from pb-review: findings by file:line and behavior, Expected table, test proof, checks>
 
 **Handling:** <one line per finding: fixed in <sha> | not changed: <why>>
 ```

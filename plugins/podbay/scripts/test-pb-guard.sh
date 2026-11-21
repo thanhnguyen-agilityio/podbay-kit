@@ -29,7 +29,7 @@ export PATH="$D/bin:$PATH"
 
 pass=0; fail=0
 # Free disk seen by the guard; per-case overrides below. Keeps the suite independent of this machine's disk.
-export PB_FREE_GB_OVERRIDE=100
+export PB_GUARD_TEST=1 PB_FREE_GB_OVERRIDE=100
 MSG_RE=""   # when set, a block must print a message matching this regex
 # check <allow|block> <label> <command> [tool]
 check() {
@@ -119,7 +119,7 @@ check block "f13.Q1 bullet" "glab issue create --title x --description-file $D/p
 check block "verify:: label in command" "glab issue update 3 -R group/project --label 'verify::L1'"
 check allow "plain labels in command" "glab issue update 3 -R group/project --label 'priority::low,type::bug'"
 
-# disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is for tests)
+# disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
 MSG_RE="10 GB"
 PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo test" "cargo test --locked"
 PB_FREE_GB_OVERRIDE=3 check block "low disk: cargo build in a chain" "cd /tmp && CARGO_TARGET_DIR=/tmp/t cargo build --locked"
@@ -133,6 +133,7 @@ PB_FREE_GB_OVERRIDE=3 PB_DISK_FLOOR_GB=2 check allow "custom floor under free sp
 PB_FREE_GB_OVERRIDE=40 check allow "40 GB free: cargo test" "cargo test --locked"
 PB_FREE_GB_OVERRIDE=3 check allow "low disk: cargo --version" "cargo --version"
 PB_FREE_GB_OVERRIDE=3 check allow "low disk: git status" "git status"
+PB_GUARD_TEST= PB_FREE_GB_OVERRIDE=100 PB_DISK_FLOOR_GB=100000 check block "override ignored outside tests" "cargo test --locked"
 PB_FREE_GB_OVERRIDE=3 check allow "low disk: grep for cargo test" "grep -n 'cargo test' README.md"
 PB_FREE_GB_OVERRIDE= PB_DISK_FLOOR_GB=100000 check block "real df reading under a huge floor" "cargo test --locked"
 PB_FREE_GB_OVERRIDE=3 check block "low disk: env prefix" "env RUST_LOG=debug cargo test --locked"
@@ -156,80 +157,6 @@ PB_FREE_GB_OVERRIDE=3 check block "low disk: flag before subcommand" "cargo -q b
 PB_FREE_GB_OVERRIDE=3 check block "low disk: --locked before subcommand" "cargo --locked test"
 PB_FREE_GB_OVERRIDE=3 check block "low disk: path to cargo" "~/.cargo/bin/cargo test"
 PB_FREE_GB_OVERRIDE=3 check block "low disk: nice -n 10" "nice -n 10 cargo test"
-
-# variables set earlier in the same command
-check allow "var path: mr create" "S=$D; glab mr create --title x --description-file \"\$S/clean.md\""
-check allow "\${var} path: api -F @file" "S=$D; glab api -X POST projects/1/merge_requests/5/notes -F body=@\"\${S}/clean.md\""
-check allow "export var path" "export S=$D && glab issue note 3 -R group/project -F body=@\$S/clean.md"
-check allow "var built from \$HOME-free var" "A=$D; B=\$A/clean.md; glab mr create --title x --description-file \"\$B\""
-check block "var path, secret file" "S=$D; glab mr create --title x --description-file \"\$S/secret.md\""
-check block "var path, private reference" "S=$D; glab issue create --title x --description-file \"\$S/pr3.md\""
-MSG_RE="S=/"
-check block "var from command substitution: fix named" "S=\$(mktemp -d); glab mr create --title x --description-file \"\$S/clean.md\""
-MSG_RE=""
-check block "var set after use" "glab mr create --title x --description-file \"\$S/clean.md\"; S=$D"
-# The guard must never scan a different file than the one bash passes: $D/c/n.md is clean, $D/b/n.md has a secret.
-mkdir -p "$D/c" "$D/b"; cp "$D/clean.md" "$D/c/n.md"; cp "$D/secret.md" "$D/b/n.md"
-G="glab mr create --title x --description-file \"\$S/n.md\""
-check block "conditional reassignment &&" "S=$D/b; false && S=$D/c; $G"
-check block "conditional reassignment ||" "S=$D/b; true || S=$D/c; $G"
-check block "assignment in a pipe" "S=$D/b; S=$D/c | cat; $G"
-check block "assignment in the background" "S=$D/b; S=$D/c & $G"
-check block "assignment in a subshell" "S=$D/b; (S=$D/c); $G"
-check block "assignment line in a heredoc" "cat > /tmp/pbg-x <<EOF
-S=$D/c
-EOF
-$G"
-check block "append +=" "S=$D/c; S+=/../b; $G"
-check block "second assignment with a prefix" "S=$D/c; S=$D/b X=1; $G"
-check block "declare" "S=$D/c; declare S=$D/b; $G"
-check block "read" "S=$D/c; read S < /dev/null; $G"
-check block "printf -v" "S=$D/c; printf -v S %s $D/b; $G"
-check block "for loop variable" "S=$D/c; for S in $D/b; do $G; done"
-check block "unset" "S=$D/c; unset S; $G"
-check block "single-quoted path is literal" "S=$D/c; glab mr create --title x --description-file '\$S/n.md'"
-check block "tab in the value" "S=\"$D/c	\"; $G"
-check block "HOME reassigned, ~ path" "HOME=$D/b; glab mr create --title x --description-file ~/n.md"
-# Only a strict prefix of plain assignments at the very start counts (round-2 cases). Path form: "${S}n.md".
-H="glab mr create --title x --description-file \"\${S}n.md\""
-cp "$D/secret.md" "$D/n.md"
-check block "assignment text inside quotes" "echo \"x;S=$D/c/;\"; $H"
-check block "assignment after a comment" "true #;S=$D/c/
-$H"
-check block "assignment in a group piped to cat" "{ :; S=$D/c/; } | cat; $H"
-check block "assignment in a multi-line subshell" "(
-S=$D/c/
-)
-$H"
-check block "assignment in an uncalled function" "f() {
-S=$D/c/
-}
-$H"
-check block "assignment in an if that is false" "if false; then
-S=$D/c/
-fi
-$H"
-check block "assignment after && on the next line" "false &&
-S=$D/c/
-$H"
-check block "assignment inside a multi-line quote" "echo '
-S=$D/c/
-'
-$H"
-check block "eval after the assignment" "S=$D/c/; eval \$'\\\\x53=$D/'; $H"
-check block "bash-set name \$_" "_=$D/c; true $D/b; glab mr create --title x --description-file \"\$_/n.md\""
-check block "bash-set name \$REPLY" "REPLY=$D/c; read < /dev/null; glab mr create --title x --description-file \"\$REPLY/n.md\""
-check block "value is a quoted tilde" "S=\"~\"; glab mr create --title x --description-file \"\$S/n.md\""
-check block "value is a single-quoted \$HOME" "S='\$HOME/x'; glab mr create --title x --description-file \"\$S/n.md\""
-check block "read HOME, then a ~ path" "read HOME < /dev/null; glab mr create --title x --description-file ~/n.md"
-check block "unset HOME, then a ~ path" "unset HOME; glab mr create --title x --description-file ~/n.md"
-check block "value with a space, unquoted use" "S=\"$D/c /x\"; glab mr create --title x --description-file \$S/n.md"
-check allow "one plain assignment, then use" "S=$D/c; $G"
-check allow "assignment then && use" "S=$D/c && $G"
-# Variables never widen the push-to-main exception: cd and -C take literal paths only.
-check block "-C via a variable, push to main" "R=$KITREPO; git -C \"\$R\" push origin HEAD:main"
-check block "-C via a reassigned variable, push to main" "R=/tmp; false && R=$KITREPO; git -C \"\$R\" push origin main"
-check block "cd via a variable, push to main" "R=$KITREPO; cd \"\$R\" && git push origin HEAD:main"
 
 PRC="$HERE/private-ref-check.sh"
 # direct <want-rc> <label> <file>

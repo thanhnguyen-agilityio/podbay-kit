@@ -13,8 +13,8 @@
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
 #   6. Private references in that same text (finding ids, triage file names, review artifact, gate or grilling words, internal
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
-#   7. cargo build|test|clippy|run and pb-ci.sh when free disk is under PB_DISK_FLOOR_GB (default 10). PB_FREE_GB_OVERRIDE fakes free space, for tests.
-# File paths may use $VAR or ${VAR} set earlier in the same command with a plain value (S=/tmp/x; export S=...).
+#   7. cargo build|test|clippy|run|check (and pb-ci.sh) in command position when free disk is under PB_DISK_FLOOR_GB
+#      (whole GB, default 10). Tests fake free space with PB_FREE_GB_OVERRIDE, read only when PB_GUARD_TEST=1.
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
 # Not enforced: wrappers (bash script.sh, eval, $(...)), curl or python calls to the API.
@@ -55,127 +55,19 @@ block() {
   exit 2
 }
 
-# Variables the guard may read in GitLab file paths, one "NAME<TAB>value" per line. Only a strict prefix counts: the
-# command must start with plain assignments (NAME=value or export NAME=value), each followed by ";", "&&" or a newline,
-# before any other command. A name counts only if it appears nowhere else as a bare word (no second assignment, +=,
-# read, for, unset, declare, printf -v), is not one bash sets itself, and the command has no heredoc, eval, source or
-# "." command. A value may not hold a space, a tab, a backslash, $(...), a backtick, a quoted "~" or a literal "$"; it
-# may use $NAME of an earlier accepted name, and an unquoted leading "~" or $HOME while HOME is untouched.
-# A line "!HOME" means the command names HOME as a bare word, so ~ and $HOME are not read in file paths.
-# The parser runs only when a GitLab write or CARGO_TARGET_DIR meets a "$" or "~", so ordinary commands skip it.
-read -r -d '' VARS_PY <<'PY'
-import re, sys
-cmd = open(sys.argv[1]).read(); home = sys.argv[2]
-N = r'[A-Za-z_][A-Za-z0-9_]*'
-def bare(name):
-    return list(re.finditer(r'(?<![\w$])(?<!\$\{)' + name + r'(?!\w)', cmd))
-if bare('HOME'):
-    print('!HOME'); home = None
-if '<<' in cmd or re.search(r'(^|[\s;&|(){}])(eval|source|\.)(\s|$)', cmd):
-    sys.exit(0)
-SPECIAL = {'_', 'PWD', 'OLDPWD', 'REPLY', 'OPTARG', 'OPTIND', 'HOME', 'IFS', 'PATH', 'CDPATH', 'SECONDS', 'RANDOM',
-           'LINENO', 'PPID', 'UID', 'EUID', 'SHLVL', 'HOSTNAME', 'COLUMNS', 'LINES', 'PIPESTATUS', 'FUNCNAME', 'GROUPS',
-           'MAPFILE', 'COPROC', 'SHELLOPTS', 'ENV', 'PS4', 'SRANDOM', 'EPOCHSECONDS', 'EPOCHREALTIME'}
-item = re.compile(r'[ \t]*(?:export[ \t]+)?(' + N + r')=("[^"\n\\`]*"|\'[^\'\n]*\'|[^\s;&|"\'<>()`\\{}#]*)[ \t]*(?:;|&&|\n)')
-accepted = {}
-pos = 0
-while True:
-    m = item.match(cmd, pos)
-    if not m:
-        break
-    pos = m.end()
-    name, raw = m.group(1), m.group(2)
-    if name in SPECIAL or name.startswith('BASH') or name in accepted:
-        accepted.pop(name, None)
-        continue
-    b = bare(name)
-    if len(b) != 1 or b[0].start() != m.start(1):
-        continue
-    if raw.startswith("'"):
-        val = raw[1:-1]
-        if '$' in val or '~' in val:
-            continue
-    else:
-        quoted = raw.startswith('"')
-        val = raw[1:-1] if quoted else raw
-        if '$(' in val:
-            continue
-        if '~' in val:
-            if quoted or home is None or not (val == '~' or val.startswith('~/')) or '~' in val[1:]:
-                continue
-            val = home + val[1:]
-        ok = [True]
-        def sub(mm):
-            n = mm.group(1) or mm.group(2)
-            if n in accepted:
-                return accepted[n]
-            if n == 'HOME' and home is not None:
-                return home
-            ok[0] = False
-            return ''
-        val = re.sub(r'\$(?:\{(' + N + r')\}|(' + N + r'))', sub, val)
-        if not ok[0] or '$' in val:
-            continue
-    if re.search(r'\s', val) or '~' in val:
-        continue
-    accepted[name] = val
-for k, v in accepted.items():
-    print(k + '\t' + v)
-PY
-VARS=""
-if [[ "$CMD" == *'$'* || "$CMD" == *'~'* ]] && [[ "$CMD" == *glab* || "$CMD" == *CARGO_TARGET_DIR* ]]; then
-  VARS="$(python3 -c "$VARS_PY" "$CMDF" "$HOME" 2>/dev/null)"
-fi
-VAR_RE='^([^$]*)\$(\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))(.*)$'
-home_touched() { printf '%s\n' "$VARS" | grep -qx '!HOME'; }
-# expand_vars <text>: one pass, like bash: replace $NAME and ${NAME} with accepted values, or HOME while untouched;
-# fail on any other variable. Values never hold "$" or "~", so nothing is expanded twice.
-expand_vars() {
-  local s="$1" out="" name val
-  while [[ "$s" =~ $VAR_RE ]]; do
-    name="${BASH_REMATCH[3]:-${BASH_REMATCH[4]}}"
-    out+="${BASH_REMATCH[1]}"; s="${BASH_REMATCH[5]}"
-    val="$(printf '%s\n' "$VARS" | awk -F'\t' -v n="$name" '$1 == n { v = $2; f = 1 } END { if (f) print v; else exit 1 }')" || {
-      if [ "$name" = HOME ] && ! home_touched; then val="$HOME"; else return 1; fi; }
-    out+="$val"
-  done
-  printf '%s' "$out$s"
-}
-VAR_FIX="Use a literal path, or start the command with a plain assignment and use it once: S=/path/to/scratch; glab mr create ... --description-file \"\$S/body.md\". Values from \$(...), backticks, the environment, eval, heredocs, or a variable set or changed elsewhere in the command cannot be checked."
-
-# abs_path <path> <base>: the absolute physical path of an existing file or folder, with no expansion at all.
-abs_path() {
+# resolve <path> <base>: print the absolute physical path, or fail if it has variables or does not exist.
+resolve() {
   local p="$1" base="$2"
-  case "$p" in *'$'*|*'`'*|'~'*) return 1 ;; esac
+  p="${p%\"}"; p="${p#\"}"; p="${p%\'}"; p="${p#\'}"
+  case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#\~/}" ;; esac
+  p="${p//\$HOME/$HOME}"; p="${p//\$\{HOME\}/$HOME}"
+  case "$p" in *'$'*|*'`'*) return 1 ;; esac
   case "$p" in /*) ;; *) p="$base/$p" ;; esac
   if [ -d "$p" ]; then (cd "$p" && pwd -P)
   elif [ -e "$p" ]; then
     local d; d="$(cd "$(dirname "$p")" 2>/dev/null && pwd -P)" || return 1
     printf '%s/%s\n' "$d" "$(basename "$p")"
   else return 1; fi
-}
-
-# resolve_pub <path> <base>: for GitLab file arguments. Expands like bash in one pass: a leading "~", then $HOME and
-# the accepted prefix variables. A single-quoted path is literal. Fails when anything is left to expand.
-resolve_pub() {
-  local p="$1" base="$2"
-  case "$p" in \'*) p="${p#\'}"; p="${p%\'}"; abs_path "$p" "$base"; return ;; esac
-  case "$p" in \"*) p="${p#\"}"; p="${p%\"}" ;;
-    "~"|"~/"*) home_touched && return 1; p="$HOME${p#\~}" ;; esac
-  case "$p" in *'`'*|*'$('*|*'\'*) return 1 ;; esac
-  p="$(expand_vars "$p")" || return 1
-  abs_path "$p" "$base"
-}
-
-# resolve <path> <base>: for cd and git -C (the push-to-main exception). Reads no command variables: only a literal
-# path, a leading "~", or $HOME.
-resolve() {
-  local p="$1" base="$2"
-  p="${p%\"}"; p="${p#\"}"; p="${p%\'}"; p="${p#\'}"
-  case "$p" in "~") p="$HOME" ;; "~/"*) p="$HOME/${p#\~/}" ;; esac
-  p="${p//\$\{HOME\}/$HOME}"
-  [[ "$p" =~ \$HOME([^A-Za-z0-9_]|$) ]] && p="${p//\$HOME/$HOME}"
-  abs_path "$p" "$base"
 }
 
 # gb_num <text>: a whole number of GB, read in base 10 ("08" is 8), 1 to 6 digits; anything else prints nothing.
@@ -203,17 +95,19 @@ while IFS= read -r seg; do
   seg="${seg#"${seg%%[![:space:]]*}"}"; seg="${seg#\(}"
   [ -n "$seg" ] || continue
 
-  # 7. disk floor for cargo builds and pb-ci, counted only in command position (after VAR=value, env, time, nice)
+  # 7. disk floor for cargo builds and pb-ci
   if [[ "$seg" =~ $CARGO_RE ]] || [[ "$seg" =~ $PBCI_RE ]]; then
     floor="$(gb_num "${PB_DISK_FLOOR_GB:-}")"; [ -n "$floor" ] || floor=10
-    where="$(printf '%s\n' "$VARS" | awk -F'\t' '$1 == "CARGO_TARGET_DIR" { print $2 }')"
-    [ -n "$where" ] || where="${CARGO_TARGET_DIR:-$CUR}"
+    where="${CARGO_TARGET_DIR:-$CUR}"
     if [[ "$seg" =~ CARGO_TARGET_DIR=(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
-      w="${BASH_REMATCH[1]}"; w="${w//\"/}"; w="${w//\'/}"; w="$(expand_vars "$w")" && where="$w"
+      w="${BASH_REMATCH[1]}"; w="${w//\"/}"; w="${w//\'/}"
+      case "$w" in "~"|"~/"*) w="$HOME${w#\~}" ;; esac
+      w="${w//\$\{HOME\}/$HOME}"; w="${w//\$HOME/$HOME}"
+      case "$w" in *'$'*|*'`'*) ;; *) where="$w" ;; esac
     fi
     case "$where" in /*) ;; *) where="$CUR/$where" ;; esac
     while [ ! -e "$where" ] && [ "$where" != / ]; do where="$(dirname "$where")"; done
-    ov="$(gb_num "${PB_FREE_GB_OVERRIDE:-}")"
+    ov=""; [ "${PB_GUARD_TEST:-}" = 1 ] && ov="$(gb_num "${PB_FREE_GB_OVERRIDE:-}")"
     if [ -n "$ov" ]; then free_kb=$(( ov * 1048576 ))
     else free_kb="$(df -Pk "$where" 2>/dev/null | awk 'NR == 2 { print $4 }')"; fi
     case "$free_kb" in ''|*[!0-9]*) free_kb="" ;; esac
@@ -299,7 +193,7 @@ except Exception: print("")' 2>/dev/null)"
         *) f="" ;;
       esac
       [ -n "$f" ] || continue
-      rf="$(resolve_pub "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, '-', or a variable the guard cannot read). Write the text to a scratchpad file first and check it with $PC <file>. $VAR_FIX"
+      rf="$(resolve "$f" "$CUR")" || block "Cannot resolve '$f' to an existing file (missing, or it uses a variable or '-'). Write the text to a scratchpad file first, pass a literal path, then run $PC <file>."
       FILES="$FILES
 $rf"
     done <<< "$cands"

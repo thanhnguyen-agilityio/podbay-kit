@@ -34,7 +34,7 @@ has   "reviewer names findings by place, never by number or id" reference/review
 lacks "review comment template has no finding-id field" reference/mr-checklist.md '<finding id>|finding #<'
 
 # Item 7: the reviewer takes its target dir from the caller.
-lacks "reviewer prompt has no hard-coded target dir" reference/reviewer-prompt.md 'cargo-target/podbay|\$HOME/\.cache|/Users/'
+lacks "reviewer prompt has no hard-coded target dir" reference/reviewer-prompt.md 'cargo-target/podbay|\$HOME/\.cache|~/\.cache|/Users/|/home/'
 has   "reviewer prompt takes <target dir> as an input" reference/reviewer-prompt.md '^- `<target dir>`'
 has   "reviewer prompt sets CARGO_INCREMENTAL=0" reference/reviewer-prompt.md 'CARGO_INCREMENTAL=0'
 has   "pb-review passes <target dir>" skills/pb-review/SKILL.md '<target dir>'
