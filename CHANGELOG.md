@@ -10,6 +10,7 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Reviewer prompt: a blocker must name a failing test or a command with its output; otherwise it is at most should fix.
 - Six behaviour evals in `evals/` (`claude plugin eval`): pb-fix grills first, pb-triage `--verified`, pb-mr target rule, a blocker needs proof, a seeded off-by-one bug, and a raw colour in a site page. All score 1.00 (3 runs each); the blocker-proof case scored 0.33 before the reviewer rule.
 - Design system first covers the website: site pages use only parts from `site/site.css` and `site/styleguide.html`; a missing part goes to the design-system owner first; page-level `<style>`, `style=` and raw colours or sizes in a page diff are should fix (contract, pb-fix 1c, pb-triage 1c, review checklist). Eval `review-site-raw-colour`.
+- The `tools` plugin is now required with `podbay` (pb-triage and pb-fix run `tools:grilling` first); README, install steps and contract say so. pb-triage now refuses to go past its grill step without answers or `skip grill: <reason>`, like pb-fix; both stop if `tools` is missing.
 - `tools` wayfinder: on GitLab use `decision:*` labels; start by hand only.
 
 ## podbay 0.7.1 - 2026-11-21 (tools 0.3.0)

@@ -61,7 +61,7 @@ The app's UI uses only the repo's design-system parts (the rule in the repo's `C
 
 ## Grill first
 
-Every task, feature or bug, starts with grill-me (`/tools:grill-me`; a skill calls its engine, `tools:grilling`) with the person who asked, before any code, until scope, acceptance criteria and edge cases are clear. The answers go into the ticket in plain words: scope and edge cases as Assumptions, criteria as Expected (ticket-format.md). GitLab text never names the interview (Writing and publishing). When the requester is an orchestrator session, it answers from the ticket and passes open questions to the owner. `pb-fix` does not start coding until the ticket has those answers, or the person said `skip grill: <reason>` in the session; the reason is kept in `.podbay/fix/<n>.md`, never on GitLab.
+Every task, feature or bug, starts with grill-me (`/tools:grill-me`; a skill calls its engine, `tools:grilling`) with the person who asked, before any code, until scope, acceptance criteria and edge cases are clear. The answers go into the ticket in plain words: scope and edge cases as Assumptions, criteria as Expected (ticket-format.md). GitLab text never names the interview (Writing and publishing). When the requester is an orchestrator session, it answers from the ticket and passes open questions to the owner. `tools@podbay-kit` is therefore required. `pb-triage` does not go past its grill step and `pb-fix` does not start coding until the ticket has those answers, or the person said `skip grill: <reason>` in the session; the reason is kept in `.podbay/fix/<n>.md`, never on GitLab.
 
 ## Issue format
 

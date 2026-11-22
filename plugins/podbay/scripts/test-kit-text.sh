@@ -63,6 +63,10 @@ for c in fix-grill-first triage-verified mr-target review-blocker-proof review-s
   [ -f "$ROOT/evals/$c/prompt.md" ] && [ -f "$ROOT/evals/$c/graders/criteria.md" ] && ok "eval $c exists" || bad "eval $c exists"
 done
 
+# The tools plugin is required; pb-triage refuses without grill answers (0.8.0).
+step  "pb-triage refuses to go on without grill answers" skills/pb-triage/SKILL.md 1b 'Do not go on to step 2 without those answers'
+has   "README says tools is required" ../../README.md 'tools@podbay-kit   # required'
+
 # Design system first covers the website (0.8.0).
 has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'
 has   "review checklist flags raw colours in a page diff" reference/review-checklist.md 'raw colour or size'

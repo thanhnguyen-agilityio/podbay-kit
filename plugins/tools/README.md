@@ -1,6 +1,6 @@
 # tools
 
-General skills, not Pod Bay specific. Install: `claude plugin install tools@podbay-kit`. Skills run as `/tools:<name>`.
+General skills, not Pod Bay specific. Install: `claude plugin install tools@podbay-kit`. Required with `podbay`: pb-triage and pb-fix run `tools:grilling` as their first step. Skills run as `/tools:<name>`.
 
 | Skill | What it does | Source and license |
 |---|---|---|
