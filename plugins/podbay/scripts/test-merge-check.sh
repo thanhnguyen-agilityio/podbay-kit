@@ -31,11 +31,14 @@ if [ "\$1 \$2" = "mr view" ]; then
     3) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":[]}' ;;
     4) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["pb::human-reviewed"]}' ;;
     5) echo '{"state":"merged","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
+    6) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["area::net","pb::human-reviewed"]}' ;;
+    7) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
+    8) echo '{"state":"opened","sha":"feat/x","target_branch":"feat/epic","labels":[]}' ;;
     *) exit 1 ;;
   esac
   exit 0
 fi
-[ "\$1" = api ] && { case "\$2" in projects/*/notes*) echo '[]' ;; *) echo '{"id":1}' ;; esac; exit 0; }
+[ "\$1" = api ] && { case "\$2" in projects/*/merge_requests/7/notes*) echo '[{"body":"Isolated review, round 1, commit ${HEAD_SHA:0:7}\\n\\nNo findings."}]' ;; projects/*/notes*) echo '[]' ;; *) echo '{"id":1}' ;; esac; exit 0; }
 exit 1
 FAKE
 chmod +x "$D/bin/glab"; export PATH="$D/bin:$PATH"
@@ -64,6 +67,19 @@ mc 1 "MR not open: blocked" 5 "not open"
 review "$NET_SHA"; ci "$NET_SHA" pass
 mc 1 "sensitive change without pb::human-reviewed: blocked" 3 "pb::human-reviewed"
 mc 0 "sensitive change with pb::human-reviewed: pass" 4 "merge-check: OK"
+mc 0 "sensitive change with another label next to pb::human-reviewed: pass" 6 "merge-check: OK"
+mc 2 "MR head that is not a full sha: refused" 8 "no head sha"
+review "$HEAD_SHA"
+printf 'PBCI-HEAD sha=%s\npb-ci %s total=1s\n' "$HEAD_SHA" "${HEAD_SHA:0:12}" > ".podbay/ci/${HEAD_SHA:0:12}.log"
+mc 1 "pb-ci log with no build and test steps: blocked" 1 "build=pass"
+printf 'PBCI-HEAD sha=%s\nPBCI build=pass\n' "$HEAD_SHA" > ".podbay/ci/${HEAD_SHA:0:12}.log"
+mc 1 "pb-ci log with no summary (run not finished): blocked" 1 "no summary"
+ci "$HEAD_SHA" pass
+rm -f .podbay/review/*.md; printf 'Notes: we are ahead, head %s\n' "${HEAD_SHA:0:7}" > .podbay/review/other.md
+mc 1 "a line that is not the Reviewer line does not count as a review" 1 "no isolated review of head"
+rm -f .podbay/review/*.md
+mc 0 "review found in an MR note: pass" 7 "MR note"
+review "$HEAD_SHA"
 mc 2 "unknown MR: usage error" 9
 out="$("$MC" 1 --checkout "$R" 2>&1)"; [ $? -eq 2 ] && ok "missing -R: usage error" || bad "missing -R: usage error"
 
@@ -72,6 +88,16 @@ out="$("$MC" 1 --checkout "$R" 2>&1)"; [ $? -eq 2 ] && ok "missing -R: usage err
 [ "$("$TIER" --files src/ui/kit/button.rs | grep -c '^sensitive:')" = 1 ] && ok "tier: UI kit is sensitive" || bad "tier: UI kit is sensitive"
 [ "$("$TIER" --files Cargo.lock src/secure.rs src/state.rs | grep -c '^sensitive:')" = 3 ] && ok "tier: dependencies, auth, state are sensitive" || bad "tier: dependencies, auth, state are sensitive"
 [ "$("$TIER" feat/epic "$HEAD_SHA" "$R" | head -1)" = "tier=full" ] && ok "tier from git diff" || bad "tier from git diff"
+
+# Renamed and non-ASCII sensitive paths.
+git switch -q -c fix/move feat/epic; mkdir -p src/net; echo c > src/net/p.rs; git add src/net/p.rs; git -c user.name=t -c user.email=t@x commit -q -m add
+git branch -f base-move; mkdir -p docs; git mv src/net/p.rs docs/p.md; git -c user.name=t -c user.email=t@x commit -q -m move
+out="$("$TIER" base-move fix/move "$R")"
+printf '%s' "$out" | grep -q '^sensitive: src/net/p.rs' && ok "tier: a sensitive file moved away is still sensitive" || bad "tier: a sensitive file moved away is still sensitive (got: $(printf '%s' "$out" | tr '\n' ' '))"
+echo d > "src/net/p\303\251er.rs" 2>/dev/null; printf 'x' > "src/net/péer.rs"; git add src/net; git -c user.name=t -c user.email=t@x commit -q -m accent
+out="$("$TIER" fix/move~1 fix/move "$R")"
+printf '%s' "$out" | grep -q '^sensitive: src/net/p' && ok "tier: a non-ASCII sensitive path is still sensitive" || bad "tier: a non-ASCII sensitive path is still sensitive (got: $(printf '%s' "$out" | tr '\n' ' '))"
+git switch -q fix/one
 
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

@@ -67,6 +67,8 @@ done
 step  "pb-triage refuses to go on without grill answers" skills/pb-triage/SKILL.md 1b 'Do not go on to step 2 without those answers'
 has   "README says tools is required" ../../README.md 'tools@podbay-kit   # required'
 
+has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
+
 # Design system first covers the website (0.8.0).
 has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'
 has   "review checklist flags raw colours in a page diff" reference/review-checklist.md 'raw colour or size'
