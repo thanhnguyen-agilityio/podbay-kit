@@ -73,6 +73,13 @@ has   "orchestrator runs the merge check on the author's checkout" skills/pb-orc
 has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
+# pb-release covers the website (0.8.1).
+step  "pb-release has a website step" skills/pb-release/SKILL.md 4c 'marked Latest'
+step  "pb-release website step never edits generated parts" skills/pb-release/SKILL.md 4c 'never edit a generated part'
+step  "pb-release version bump allows the site pages" skills/pb-release/SKILL.md 5 'site pages changed in step 4c'
+has   "release checklist lists step 4c" reference/release-checklist.md '^\| 4c \| Website'
+[ -f "$ROOT/evals/release-site-stale/prompt.md" ] && ok "eval release-site-stale exists" || bad "eval release-site-stale exists"
+
 # Design system first covers the website (0.8.0).
 has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'
 has   "review checklist flags raw colours in a page diff" reference/review-checklist.md 'raw colour or size'
