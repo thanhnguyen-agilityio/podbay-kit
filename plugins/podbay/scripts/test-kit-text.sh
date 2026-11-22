@@ -69,6 +69,8 @@ has   "README says tools is required" ../../README.md 'tools@podbay-kit   # requ
 
 has   "a clean rebase posts a carry-over review note" reference/contract.md 'Clean rebase of the round <k> review'
 has   "the merge check is not proof of who reviewed" reference/contract.md 'consistency check, not proof of who reviewed'
+has   "orchestrator runs the merge check on the author's checkout" skills/pb-orchestrator/SKILL.md 'author checkout>. is the checkout or worktree of the session that wrote the MR'
+has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
 # Design system first covers the website (0.8.0).

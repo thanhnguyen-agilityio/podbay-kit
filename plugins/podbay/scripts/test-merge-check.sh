@@ -17,6 +17,8 @@ git switch -q -c fix/one; mkdir -p src/ui docs; echo a > src/ui/table.rs; git ad
 HEAD_SHA="$(git rev-parse HEAD)"
 git switch -q -c fix/two; mkdir -p src/net; echo b > src/net/peer.rs; git add .; git -c user.name=t -c user.email=t@x commit -q -m net
 NET_SHA="$(git rev-parse HEAD)"
+git switch -q -c fix/docs feat/epic; mkdir -p docs; echo e > docs/guide.md; git add docs/guide.md; git -c user.name=t -c user.email=t@x commit -q -m docs
+DOCS_SHA="$(git rev-parse HEAD)"
 git switch -q fix/one
 mkdir -p .podbay/review .podbay/ci; printf '.podbay/\n' >> .git/info/exclude
 
@@ -34,6 +36,7 @@ if [ "\$1 \$2" = "mr view" ]; then
     6) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["area::net","pb::human-reviewed"]}' ;;
     7) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
     8) echo '{"state":"opened","sha":"feat/x","target_branch":"feat/epic","labels":[]}' ;;
+    10) echo '{"state":"opened","sha":"$DOCS_SHA","target_branch":"feat/epic","labels":[]}' ;;
     *) exit 1 ;;
   esac
   exit 0
@@ -85,6 +88,10 @@ mc 0 "bold Reviewer line from the reviewer prompt counts" 1 "merge-check: OK"
 printf 'PBCI-HEAD sha=%s\npb-ci %s build=pass test=pass total=1s\n' "$HEAD_SHA" "${HEAD_SHA:0:12}" > ".podbay/ci/${HEAD_SHA:0:12}.log"
 mc 1 "pb-ci summary without clippy=pass: blocked" 1 "clippy=pass"
 ci "$HEAD_SHA" pass
+printf 'Reviewer: fresh agent, claude-opus-5-5, 2026-11-22, head %s\n' "${DOCS_SHA:0:7}" > .podbay/review/fix-docs-r1.md
+mc 0 "light (docs-only) change with a review and no pb-ci log: pass" 10 "pb-ci optional"
+printf 'PBCI-HEAD sha=%s\npb-ci %s build=fail total=1s\n' "$DOCS_SHA" "${DOCS_SHA:0:12}" > ".podbay/ci/${DOCS_SHA:0:12}.log"
+mc 1 "light change whose pb-ci log failed: blocked" 10 "pb-ci failed"
 mc 2 "unknown MR: usage error" 9
 out="$("$MC" 1 --checkout "$R" 2>&1)"; [ $? -eq 2 ] && ok "missing -R: usage error" || bad "missing -R: usage error"
 

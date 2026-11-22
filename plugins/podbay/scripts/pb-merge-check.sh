@@ -5,7 +5,7 @@
 #   - the MR is open and its target is not main, master or release/* (a person merges those),
 #   - an isolated review covers the head: a .podbay/review/*.md file whose "Reviewer:" line ends "head <sha prefix>",
 #     or an MR note headed "Isolated review, round <k>, commit <sha7>",
-#   - .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, clippy=pass, test=pass and no "=fail",
+#   - (skipped for a light change with no log) .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, clippy=pass, test=pass and no "=fail",
 #   - a sensitive change (pb-tier.sh) carries the label pb::human-reviewed (only a person adds it; contract).
 # It checks commits, not findings: an open blocker in a review on the head still passes this check.
 # Then it prints the merge command, pinned to the head: glab mr merge <iid> -R <repo> --sha <head>.
@@ -64,17 +64,10 @@ else
   fi
 fi
 
-log="$co/.podbay/ci/$s12.log"
-if [ ! -f "$log" ]; then fail "no pb-ci log for head ($log): run pb-ci on the head"
-elif ! grep -q "^PBCI-HEAD sha=$sha" "$log"; then fail "pb-ci log $s12 was built from another commit"
-elif ! grep -q "^pb-ci $s12 " "$log"; then fail "pb-ci log $s12 has no summary line (run not finished)"
-elif grep "^pb-ci $s12 " "$log" | tail -1 | grep -q "=fail"; then fail "pb-ci failed on head: $(grep "^pb-ci $s12 " "$log" | tail -1 | cut -c1-160)"
-elif ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " build=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " clippy=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " test=pass"; then
-  fail "pb-ci summary for $s12 lacks build=pass, clippy=pass and test=pass (steps missing): run pb-ci again"
-else ok "pb-ci passed on head $s12"; fi
-
+light=0
 if git -C "$co" cat-file -e "$sha" 2>/dev/null && git -C "$co" rev-parse -q --verify "origin/$target" >/dev/null; then
   tier="$("$HERE/pb-tier.sh" "origin/$target" "$sha" "$co")"
+  case "$tier" in tier=light*) light=1 ;; esac
   echo "      $(printf '%s' "$tier" | head -1)"
   if printf '%s' "$tier" | grep -q '^sensitive:'; then
     case ",$labels," in *,pb::human-reviewed,*) ok "sensitive change has pb::human-reviewed" ;;
@@ -83,6 +76,16 @@ if git -C "$co" cat-file -e "$sha" 2>/dev/null && git -C "$co" rev-parse -q --ve
 else
   fail "head $s7 or origin/$target is not in the checkout: git fetch origin, then rerun"
 fi
+
+log="$co/.podbay/ci/$s12.log"
+if [ ! -f "$log" ] && [ "$light" = 1 ]; then ok "pb-ci optional for a light (docs or site only) change; no log"
+elif [ ! -f "$log" ]; then fail "no pb-ci log for head ($log): run pb-ci on the head"
+elif ! grep -q "^PBCI-HEAD sha=$sha" "$log"; then fail "pb-ci log $s12 was built from another commit"
+elif ! grep -q "^pb-ci $s12 " "$log"; then fail "pb-ci log $s12 has no summary line (run not finished)"
+elif grep "^pb-ci $s12 " "$log" | tail -1 | grep -q "=fail"; then fail "pb-ci failed on head: $(grep "^pb-ci $s12 " "$log" | tail -1 | cut -c1-160)"
+elif ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " build=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " clippy=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " test=pass"; then
+  fail "pb-ci summary for $s12 lacks build=pass, clippy=pass and test=pass (steps missing): run pb-ci again"
+else ok "pb-ci passed on head $s12"; fi
 
 if [ "$fails" -eq 0 ]; then
   echo "merge-check: OK. Merge with: glab mr merge $iid -R $repo --sha $sha"
