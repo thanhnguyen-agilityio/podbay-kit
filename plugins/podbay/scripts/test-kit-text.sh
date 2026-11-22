@@ -78,9 +78,16 @@ step  "pb-release has a website step" skills/pb-release/SKILL.md 4c 'marked Late
 step  "pb-release website step never edits generated parts" skills/pb-release/SKILL.md 4c 'never edit a generated part'
 step  "pb-release version bump allows the site pages" skills/pb-release/SKILL.md 5 'site pages changed in step 4c'
 has   "release checklist lists step 4c" reference/release-checklist.md '^\| 4c \| Website'
+step  "pb-release website step greps for stale and new versions" skills/pb-release/SKILL.md 4c "grep -nF '<x.y.z>'"
+step  "pb-release step 5 calls a stale site not ready" skills/pb-release/SKILL.md 5 'is not ready'
+step  "pb-release step 9 checks the live pages" skills/pb-release/SKILL.md 9 'open the live landing and release notes pages'
+has   "release rules: generated site parts are never edited" reference/release-checklist.md 'never edited by hand'
+has   "release rules: a patch release repeats the website step" reference/release-checklist.md 'including the website step 4c'
 step  "pb-release website step checks phone and desktop widths" skills/pb-release/SKILL.md 4c 'phone .390 px. and desktop .1280 px'
 step  "pb-release website step follows the design-system rule" skills/pb-release/SKILL.md 4c 'Design system first'
-[ -f "$ROOT/evals/release-site-stale/prompt.md" ] && [ -f "$ROOT/evals/release-site-stale/graders/criteria.md" ] && ok "eval release-site-stale exists" || bad "eval release-site-stale exists"
+for c in release-site-stale release-notes-stale; do
+  [ -f "$ROOT/evals/$c/prompt.md" ] && [ -f "$ROOT/evals/$c/graders/criteria.md" ] && ok "eval $c exists" || bad "eval $c exists"
+done
 
 # Design system first covers the website (0.8.0).
 has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'
