@@ -11,6 +11,7 @@ Routing (contract, Routing): this skill is for kind 2, tickets logged by someone
 
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` and `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md`. Resolve the target (`<repo>`, `<id>`, `<checkout>`) as the contract's Target section says. Working files go in `.podbay/` in the target checkout (`.podbay/triage/`); create it if missing.
 1b. **Grill first** (contract, Grill first), in every mode except `--file`: run grill-me (call `tools:grilling`) with the person who asked until the batch's scope, acceptance criteria and edge cases are clear, before writing any test. Step 9 then grills what reproduction surfaced. If the requester is an orchestrator session, it answers from the tickets and passes open questions to the owner.
+1c. **Design system first** (contract): for a UI or site finding, the ticket names the design-system part to use (`site/site.css`, `site/styleguide.html` for the site). A part that does not exist yet becomes its own ticket for the design-system owner, ordered first.
 2. Source of findings:
    - `--source <file>`: a findings file (markdown list of findings with number, title, priority, type, screen and steps). Required unless `--source gitlab` is given; with neither, ask the user for a findings file.
    - `--source gitlab`: open issues in `<repo>` that no file in `.podbay/triage/` lists yet (BA/QA tickets, follow-ups, others), or the issue numbers given. Skip and list authors who are not project members (access level < 20).

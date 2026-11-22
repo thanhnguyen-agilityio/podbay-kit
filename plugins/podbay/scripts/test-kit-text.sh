@@ -63,6 +63,13 @@ for c in fix-grill-first triage-verified mr-target review-blocker-proof review-s
   [ -f "$ROOT/evals/$c/prompt.md" ] && [ -f "$ROOT/evals/$c/graders/criteria.md" ] && ok "eval $c exists" || bad "eval $c exists"
 done
 
+# Design system first covers the website (0.8.0).
+has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'
+has   "review checklist flags raw colours in a page diff" reference/review-checklist.md 'raw colour or size'
+step  "pb-fix applies the design-system rule" skills/pb-fix/SKILL.md 1c 'site/site.css'
+step  "pb-triage applies the design-system rule" skills/pb-triage/SKILL.md 1c 'design-system owner'
+[ -f "$ROOT/evals/review-site-raw-colour/prompt.md" ] && ok "eval review-site-raw-colour exists" || bad "eval review-site-raw-colour exists"
+
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
 want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
 got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
