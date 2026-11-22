@@ -5,7 +5,7 @@
 #   - the MR is open and its target is not main, master or release/* (a person merges those),
 #   - an isolated review covers the head: a .podbay/review/*.md file whose "Reviewer:" line ends "head <sha prefix>",
 #     or an MR note headed "Isolated review, round <k>, commit <sha7>",
-#   - .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, test=pass and no "=fail",
+#   - .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, clippy=pass, test=pass and no "=fail",
 #   - a sensitive change (pb-tier.sh) carries the label pb::human-reviewed (only a person adds it; contract).
 # It checks commits, not findings: an open blocker in a review on the head still passes this check.
 # Then it prints the merge command, pinned to the head: glab mr merge <iid> -R <repo> --sha <head>.
@@ -46,7 +46,8 @@ esac
 
 # covers <sha prefix ...>: true when one of the given short shas (7 to 40 hex) is a prefix of the head.
 covers() { local x; for x in "$@"; do case "$sha" in "$x"*) return 0 ;; esac; done; return 1; }
-rev_shas="$(grep -hE '^Reviewer:.*head [0-9a-f]{7,40}[[:space:]]*"?$' "$co"/.podbay/review/*.md 2>/dev/null | grep -oE 'head [0-9a-f]{7,40}' | cut -d' ' -f2)"
+# The Reviewer line may carry Markdown (**Reviewer:**, a list number) and end in a quote, dot or star.
+rev_shas="$(grep -hE '^[^A-Za-z]*Reviewer[^A-Za-z].*head [0-9a-f]{7,40}[^0-9A-Za-z]*$' "$co"/.podbay/review/*.md 2>/dev/null | grep -oE 'head [0-9a-f]{7,40}[^0-9A-Za-z]*$' | grep -oE '[0-9a-f]{7,40}')"
 # shellcheck disable=SC2086
 if [ -n "$rev_shas" ] && covers $rev_shas; then
   ok "isolated review covers head $s7 (.podbay/review)"
@@ -56,8 +57,10 @@ else
   # shellcheck disable=SC2086
   if [ -n "$note_shas" ] && covers $note_shas; then
     ok "isolated review covers head $s7 (MR note)"
+  elif [ -z "$pid" ]; then
+    fail "no isolated review of head $s7 in .podbay/review, and the MR notes could not be read (glab api failed)"
   else
-    fail "no isolated review of head $s7: run pb-review on the current head"
+    fail "no isolated review of head $s7: run pb-review on the current head (after a clean rebase, post the carry-over note; contract)"
   fi
 fi
 
@@ -66,8 +69,8 @@ if [ ! -f "$log" ]; then fail "no pb-ci log for head ($log): run pb-ci on the he
 elif ! grep -q "^PBCI-HEAD sha=$sha" "$log"; then fail "pb-ci log $s12 was built from another commit"
 elif ! grep -q "^pb-ci $s12 " "$log"; then fail "pb-ci log $s12 has no summary line (run not finished)"
 elif grep "^pb-ci $s12 " "$log" | tail -1 | grep -q "=fail"; then fail "pb-ci failed on head: $(grep "^pb-ci $s12 " "$log" | tail -1 | cut -c1-160)"
-elif ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " build=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " test=pass"; then
-  fail "pb-ci summary for $s12 lacks build=pass and test=pass (steps missing): run pb-ci again"
+elif ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " build=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " clippy=pass" || ! grep "^pb-ci $s12 " "$log" | tail -1 | grep -q " test=pass"; then
+  fail "pb-ci summary for $s12 lacks build=pass, clippy=pass and test=pass (steps missing): run pb-ci again"
 else ok "pb-ci passed on head $s12"; fi
 
 if git -C "$co" cat-file -e "$sha" 2>/dev/null && git -C "$co" rev-parse -q --verify "origin/$target" >/dev/null; then

@@ -22,8 +22,9 @@ while IFS= read -r -d '' f; do
   [ -n "$f" ] || continue
   n=$((n + 1))
   case "$f" in docs/*|site/*|*.md) ;; *) light=0 ;; esac
-  case "$f" in
-    src/net/*|*/secure.rs|secure.rs|*/state.rs|state.rs|*/ops.rs|*/service.rs|src/ui/kit*|*auth*|*migrat*|Cargo.toml|Cargo.lock|build.rs)
+  lf="$(printf '%s' "$f" | tr '[:upper:]' '[:lower:]')"
+  case "$lf" in
+    src/net/*|*/src/net/*|secure.rs|*/secure.rs|state.rs|*/state.rs|*/ops.rs|*/service.rs|src/ui/kit*|*/src/ui/kit*|*auth*|*migrat*|cargo.toml|*/cargo.toml|cargo.lock|*/cargo.lock|build.rs|*/build.rs)
       sens="$sens
 sensitive: $f" ;;
   esac

@@ -80,6 +80,11 @@ mc 1 "a line that is not the Reviewer line does not count as a review" 1 "no iso
 rm -f .podbay/review/*.md
 mc 0 "review found in an MR note: pass" 7 "MR note"
 review "$HEAD_SHA"
+printf '**Reviewer:** "fresh agent, claude-opus-5-5, 2026-11-22, head %s".\n' "${HEAD_SHA:0:7}" > .podbay/review/fix-one-2026-11-22-r2.md; rm -f .podbay/review/fix-one-2026-11-21-r1.md
+mc 0 "bold Reviewer line from the reviewer prompt counts" 1 "merge-check: OK"
+printf 'PBCI-HEAD sha=%s\npb-ci %s build=pass test=pass total=1s\n' "$HEAD_SHA" "${HEAD_SHA:0:12}" > ".podbay/ci/${HEAD_SHA:0:12}.log"
+mc 1 "pb-ci summary without clippy=pass: blocked" 1 "clippy=pass"
+ci "$HEAD_SHA" pass
 mc 2 "unknown MR: usage error" 9
 out="$("$MC" 1 --checkout "$R" 2>&1)"; [ $? -eq 2 ] && ok "missing -R: usage error" || bad "missing -R: usage error"
 
@@ -89,6 +94,8 @@ out="$("$MC" 1 --checkout "$R" 2>&1)"; [ $? -eq 2 ] && ok "missing -R: usage err
 [ "$("$TIER" --files Cargo.lock src/secure.rs src/state.rs | grep -c '^sensitive:')" = 3 ] && ok "tier: dependencies, auth, state are sensitive" || bad "tier: dependencies, auth, state are sensitive"
 [ "$("$TIER" feat/epic "$HEAD_SHA" "$R" | head -1)" = "tier=full" ] && ok "tier from git diff" || bad "tier from git diff"
 
+[ "$("$TIER" --files crates/x/Cargo.toml crates/x/build.rs | grep -c '^sensitive:')" = 2 ] && ok "tier: nested Cargo.toml and build.rs are sensitive" || bad "tier: nested Cargo.toml and build.rs are sensitive"
+[ "$("$TIER" --files db/Migrations/001.sql src/AuthToken.rs | grep -c '^sensitive:')" = 2 ] && ok "tier: sensitive names match in any case" || bad "tier: sensitive names match in any case"
 # Renamed and non-ASCII sensitive paths.
 git switch -q -c fix/move feat/epic; mkdir -p src/net; echo c > src/net/p.rs; git add src/net/p.rs; git -c user.name=t -c user.email=t@x commit -q -m add
 git branch -f base-move; mkdir -p docs; git mv src/net/p.rs docs/p.md; git -c user.name=t -c user.email=t@x commit -q -m move
