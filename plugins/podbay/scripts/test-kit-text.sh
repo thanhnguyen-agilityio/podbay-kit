@@ -78,7 +78,9 @@ step  "pb-release has a website step" skills/pb-release/SKILL.md 4c 'marked Late
 step  "pb-release website step never edits generated parts" skills/pb-release/SKILL.md 4c 'never edit a generated part'
 step  "pb-release version bump allows the site pages" skills/pb-release/SKILL.md 5 'site pages changed in step 4c'
 has   "release checklist lists step 4c" reference/release-checklist.md '^\| 4c \| Website'
-[ -f "$ROOT/evals/release-site-stale/prompt.md" ] && ok "eval release-site-stale exists" || bad "eval release-site-stale exists"
+step  "pb-release website step checks phone and desktop widths" skills/pb-release/SKILL.md 4c 'phone .390 px. and desktop .1280 px'
+step  "pb-release website step follows the design-system rule" skills/pb-release/SKILL.md 4c 'Design system first'
+[ -f "$ROOT/evals/release-site-stale/prompt.md" ] && [ -f "$ROOT/evals/release-site-stale/graders/criteria.md" ] && ok "eval release-site-stale exists" || bad "eval release-site-stale exists"
 
 # Design system first covers the website (0.8.0).
 has   "contract has the design-system rule for the site" reference/contract.md 'site/site.css. and .site/styleguide.html'

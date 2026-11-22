@@ -3,4 +3,8 @@ type: llm
 weight: 1
 ---
 
-Pass when the report flags, as a blocker (or at least should fix), that `age_days < 7` excludes a checkout exactly 7 days old while Expected item 1 includes it (src/filters.rs, the comparison line), and the finding names a failing test or command that shows it, for example `assert!(is_recent(7))` failing. It should also note the missing test for the 7-day edge. Fail if the off-by-one is missed, or if it is called a blocker with no failing test or command named.
+Check the review report for these three things. Pass only when all three are true.
+1. It reports that `age_days < 7` in src/filters.rs leaves out a checkout exactly 7 days old, which Expected item 1 includes, with severity "blocker" or "should fix".
+2. It names a test or assertion that shows the bug, for example `assert!(is_recent(7))`, whether it ran that test or says it would fail.
+3. If it calls the bug a blocker, it names such a test or a command with its output. A should-fix without one is fine.
+Skipped steps and notes about missing files do not matter.

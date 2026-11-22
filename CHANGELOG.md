@@ -4,7 +4,9 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 
 ## podbay 0.8.1 - 2026-11-22 (tools 0.3.1)
 
-- `pb-release` step 4c, Website: the release notes page gets a new entry marked Latest with the known issues; the landing or download page gets "What's new", the Download button version, installer file names and changed feature texts; touched guide pages are updated. Hand-written parts only (never what `deploy.sh` or the site build fills in), the site design-system rule, and a check at phone and desktop widths. Step 5's `git diff --stat` allow-list includes those site pages. Eval `release-site-stale`: 0.33 before, 1.00 after (3 runs).
+- `pb-release` step 4c, Website: the release notes page gets a new entry marked Latest with the known issues; the landing or download page gets "What's new", the Download button version, installer file names and changed feature texts; touched guide pages are updated. Hand-written parts only (never what `deploy.sh` or the site build fills in), the site design-system rule, and a check at phone and desktop widths. Step 5's `git diff --stat` allow-list includes those site pages. If the repo has `site/`, a release MR with a stale hand-written landing version is not ready. After the deploy, step 9 checks the live pages; a patch release repeats step 4c. Eval `release-site-stale` (the release notes page updated, the landing page left stale): 0.00 before, 1.00 after (3 runs each, Sonnet judge).
+- Evals now use a Sonnet judge (the default Haiku judge failed correct answers); the seeded-bug grader is a checklist. All 7 cases score 1.00.
+- Isolated review: one round by a fresh Fable agent (Opus out of quota): no blockers; its five should-fix items are fixed here.
 - `tools` 0.3.1: ships the wayfinder note from 0.8.0 (on GitLab use `decision:*` labels; start by hand only) to installed machines.
 
 ## podbay 0.8.0 - 2026-11-21

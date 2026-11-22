@@ -14,6 +14,7 @@ Test setup: there is no GitLab, git, cargo or Agent tool here; do not run comman
  Cargo.lock                 |  2 +-
  assets/credits.json        |  4 +-
  docs/guide/workspaces.md   |  9 +++--
+ site/releases.html         | 12 ++++++--
 ```
-The repo also has a `site/` folder with hand-written pages `site/releases.html` (release notes) and `site/index.html` (landing page with Download buttons); `deploy.sh` fills in only `site/downloads/latest.json`. No file under `site/` changed in this MR.
+The repo has a `site/` folder with `index.html`, `releases.html`, `styleguide.html` and `site.css`.
 The new CHANGELOG section is for 1.4.0 (previous release 1.3.2) and adds the Workspaces filter.
