@@ -35,7 +35,7 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 | 4 | CHANGELOG | Section per format below; every line traced to an MR | MR into the release branch |
 | 4b | User guide | Every user-visible change from the merged MRs is in the guide; labels match the app; site rebuilt | same MR as step 4 |
 | 4c | Website | Release notes entry marked Latest with known issues; landing "What's new", Download button version, installer names and changed feature texts; touched guide pages; no stale version left unexplained; phone and desktop checked; generated parts untouched | same MR as step 4 |
-| 5 | Version bump | `Cargo.toml`, the podbay entry in `Cargo.lock`, `assets/credits.json`; gates pass; `git diff --stat` within the allow-list (with the 4c site pages); release notes Latest entry and landing version show `<x.y.z>` | same or next MR |
+| 5 | Version bump | `Cargo.toml`, the podbay entry in `Cargo.lock`, `assets/credits.json`; gates pass; `git diff --stat` within the allow-list (with the 4c site pages); hand-written release notes Latest entry and landing version show `<x.y.z>` (generated pages skipped) | same or next MR |
 | 6 | Tag and Release | A person merged step 4/5; tag on the merge commit | tag, GitLab Release |
 | 7 | Deploy hand-off | Notes text and Slack draft shown | Slack draft only |
 | 8 | Sync to main | `git cherry` shows nothing missing after the pick; gates, `pb-ci`, isolated review | Draft MR into `main` |

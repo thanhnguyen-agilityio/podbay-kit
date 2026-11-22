@@ -80,6 +80,9 @@ step  "pb-release version bump allows the site pages" skills/pb-release/SKILL.md
 has   "release checklist lists step 4c" reference/release-checklist.md '^\| 4c \| Website'
 step  "pb-release website step greps for stale and new versions" skills/pb-release/SKILL.md 4c "grep -nF '<x.y.z>'"
 step  "pb-release step 5 calls a stale site not ready" skills/pb-release/SKILL.md 5 'is not ready'
+step  "pb-release step 5 needs a Latest release notes entry unless generated" skills/pb-release/SKILL.md 5 'no Latest entry for .<x.y.z>. .skip this when step 4c listed that page as generated'
+step  "pb-release step 4c explains every remaining stale hit" skills/pb-release/SKILL.md 4c 'explain every hit that stays'
+
 step  "pb-release step 9 checks the live pages" skills/pb-release/SKILL.md 9 'open the live landing and release notes pages'
 has   "release rules: generated site parts are never edited" reference/release-checklist.md 'never edited by hand'
 has   "release rules: a patch release repeats the website step" reference/release-checklist.md 'including the website step 4c'
