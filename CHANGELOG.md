@@ -2,6 +2,11 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.9.0 - 2026-11-25
+
+- SessionStart hook `scripts/pb-role.py`: on startup, resume, compact and clear it adds the role file for the current checkout to the session's context. The role map comes from the env var `PB_ROLE_MAP` (or a `role-map:` line in the checkout's `.podbay/roles.md`); map lines are `` - `~/path` = role ``, the longest matching path wins, the role file is `<map folder>/<role>.md`, cut at 8,000 characters. No map, no match or any error: no output. Tests: `test-pb-role.sh`, 13 cases.
+- New skill `pb-kickoff` (start by hand): after a break the orchestrator pulls, checks every session and machine, starts or restarts missing ones only after the user's yes, sends each its role, checks each read-back of the role and top 3 rules, fixes wrong ones, and reports a table. Eval `kickoff-readback`: 1.00 (3 runs, Sonnet judge).
+
 ## podbay 0.8.1 - 2026-11-22 (tools 0.3.1)
 
 - `pb-release` step 4c, Website: the release notes page gets a new entry marked Latest with the known issues and a screenshot of each user-visible change; the landing or download page gets "What's new", the Download button version, installer file names and changed feature texts; touched guide pages are updated. Hand-written parts only (never what `deploy.sh` or the site build fills in), the site design-system rule, and a check at phone and desktop widths. Step 5's `git diff --stat` allow-list includes those site pages. After the deploy, step 9 checks the live pages; a patch release repeats step 4c. The landing page must show `<x.y.z>` in every hand-written version spot. Evals `release-site-stale` (landing page left stale) and `release-notes-stale` (release notes page left stale): each 0.00 before, 1.00 after (3 runs each, Sonnet judge).

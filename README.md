@@ -53,10 +53,15 @@ Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-rev
 | Ship the weekly release | `/podbay:pb-release` |
 | Understand the Rust in an MR | `/podbay:pb-explain-mr` |
 | Drive other Pod Bay sessions | `/podbay:pb-orchestrator` |
+| Restart the standing sessions after a break and check each one knows its role | `/podbay:pb-kickoff` (`--dry-run`) |
 | Set up a repo for the kit | `/podbay:bootstrap` |
+
+## Role hook
+
+`scripts/pb-role.py` runs when a session starts, resumes or compacts. It adds the role file for the current checkout to the session's context, so a fresh session knows what it owns and its top rules. Set it up once per Mac with one line in the `env` block of `~/.claude/settings.json`: `"PB_ROLE_MAP": "<path to the team's roles/map.md>"` (or put `role-map: <path>` in a checkout's `.podbay/roles.md`). Map lines look like `` - `~/path/to/checkout` = role ``; the role file is `<role>.md` next to the map. Without a map, or for a checkout not in it, the hook does nothing. Tests: `plugins/podbay/scripts/test-pb-role.sh`.
 
 ## Guard hook
 
-`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`, `glab mr approve`, a merge into `main`/`master`/`release/*` (or any merge whose target it cannot read), GitLab writes whose text has a secret or a private reference, and cargo builds or pb-ci when free disk is under 10 GB (env `PB_DISK_FLOOR_GB`). Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Before an orchestrator merges into an integration branch, `scripts/pb-merge-check.sh <iid> -R <repo>` checks that the reviewed commit, the pb-ci commit and the MR head are the same; `scripts/pb-tier.sh` sorts a change into light, full or full-and-sensitive from its paths. Self-tests: `plugins/podbay/scripts/test-pb-guard.sh` (guard), `plugins/podbay/scripts/test-merge-check.sh` (merge check and tiers), `claude plugin eval plugins/podbay --no-publish --ablation none --judge-model sonnet` (8 behaviour evals; costs about $4) and `plugins/podbay/scripts/test-kit-text.sh` (rules in skill and reference text).
+`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`, `glab mr approve`, a merge into `main`/`master`/`release/*` (or any merge whose target it cannot read), GitLab writes whose text has a secret or a private reference, and cargo builds or pb-ci when free disk is under 10 GB (env `PB_DISK_FLOOR_GB`). Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Before an orchestrator merges into an integration branch, `scripts/pb-merge-check.sh <iid> -R <repo>` checks that the reviewed commit, the pb-ci commit and the MR head are the same; `scripts/pb-tier.sh` sorts a change into light, full or full-and-sensitive from its paths. Self-tests: `plugins/podbay/scripts/test-pb-guard.sh` (guard), `plugins/podbay/scripts/test-merge-check.sh` (merge check and tiers), `claude plugin eval plugins/podbay --no-publish --ablation none --judge-model sonnet` (9 behaviour evals; costs about $4) and `plugins/podbay/scripts/test-kit-text.sh` (rules in skill and reference text).
 
 Reference docs (contract, preflight, ticket format, lessons, Rust glossary) are in `plugins/podbay/reference/`.

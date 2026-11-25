@@ -73,6 +73,14 @@ has   "orchestrator runs the merge check on the author's checkout" skills/pb-orc
 has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
+# Roles and kickoff (0.9.0).
+has   "pb-kickoff is started by hand only" skills/pb-kickoff/SKILL.md '^disable-model-invocation: true'
+has   "pb-kickoff never starts or stops a session without a yes" skills/pb-kickoff/SKILL.md "never stops, restarts or starts a session without the user's yes"
+step  "pb-kickoff asks for a read-back of the role and top 3 rules" skills/pb-kickoff/SKILL.md 5 'top 3 rules'
+step  "pb-kickoff reports the table" skills/pb-kickoff/SKILL.md 7 'session, machine, role, read-back'
+has   "the SessionStart hook runs pb-role.py" hooks/hooks.json 'SessionStart'
+[ -f "$ROOT/evals/kickoff-readback/prompt.md" ] && [ -f "$ROOT/evals/kickoff-readback/graders/criteria.md" ] && ok "eval kickoff-readback exists" || bad "eval kickoff-readback exists"
+
 # pb-release covers the website (0.8.1).
 step  "pb-release has a website step" skills/pb-release/SKILL.md 4c 'marked Latest'
 step  "pb-release website step never edits generated parts" skills/pb-release/SKILL.md 4c 'never edit a generated part'
@@ -101,7 +109,7 @@ step  "pb-triage applies the design-system rule" skills/pb-triage/SKILL.md 1c 'd
 [ -f "$ROOT/evals/review-site-raw-colour/prompt.md" ] && ok "eval review-site-raw-colour exists" || bad "eval review-site-raw-colour exists"
 
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
-want="bootstrap pb-ci pb-explain-mr pb-fix pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
+want="bootstrap pb-ci pb-explain-mr pb-fix pb-kickoff pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
 got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
 [ "$got" = "$want" ] && ok "podbay skills are the standard set" || bad "podbay skills are the standard set (got: $got)"
 got="$(cd "$ROOT/../tools/skills" && ls -d */ | tr -d / | tr '\n' ' ' | sed 's/ $//')"
