@@ -4,7 +4,7 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 
 ## podbay 0.9.1 - 2026-11-25
 
-- Branch names follow the release date (decision of 2026-11-25): release branch `release/<yyyy.mm.dd>`, hotfix branch `hotfix/<yyyy.mm.dd>-<short-name>` (it targets the release branch of the same date), sync branch `sync/release-<yyyy.mm.dd>-<n>`. Replaces the version-based names in pb-mr, pb-fix, pb-review, the reviewer prompt, the MR checklist and the release checklist. A text test rejects version-based branch names.
+- Branch names follow the release date (decision of 2026-11-25): release branch `release/<yyyy.mm.dd>`, hotfix branch `hotfix/<yyyy.mm.dd>-<short-name>` (it targets the release branch of the same date), sync branch `sync/release-<yyyy.mm.dd>-<n>`. Replaces the version-based names in pb-mr, pb-fix, pb-review, the reviewer prompt, the MR checklist and the release checklist's sync branch. The hotfix date is the release branch's cut date; pb-mr stops and asks when that release branch does not exist. A text test (skills, references, templates, scripts, evals) rejects version-based branch names.
 
 ## podbay 0.9.0 - 2026-11-25
 

@@ -74,9 +74,11 @@ has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-ti
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
 # Branch names by date (0.9.1): release/<yyyy.mm.dd>, hotfix/<yyyy.mm.dd>-<name>, sync/release-<yyyy.mm.dd>-<n>.
-hits="$(cd "$ROOT" && grep -rnE '(release|hotfix)/<version>|sync/release-<x\.y\.z>|release/<yyyymmdd>' skills reference templates 2>/dev/null)"
+# Matches are printed with what comes before them, so .podbay/release/<x.y.z>/ state folders can be left out.
+hits="$(cd "$ROOT" && grep -rnoE '(\.podbay/)?((release|hotfix)/<(version|x\.y\.z)>|sync/release-<(x\.y\.z|version)>|release/<yyyymmdd>)' skills reference templates scripts evals --exclude=test-kit-text.sh --exclude-dir=results 2>/dev/null | grep -v ':\.podbay/')"
 [ -z "$hits" ] && ok "no branch names built from a version" || bad "no branch names built from a version ($(printf '%s' "$hits" | head -1 | cut -c1-100))"
 has   "sync branch is named by the release date" reference/release-checklist.md 'sync/release-<yyyy.mm.dd>-<n>'
+has   "the hotfix date is the cut date, not today" reference/mr-checklist.md "never today.s date"
 has   "hotfix branch is named by the release date" reference/mr-checklist.md 'hotfix/<yyyy.mm.dd>-<short-name>'
 
 # Roles and kickoff (0.9.0).

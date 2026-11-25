@@ -16,7 +16,7 @@ Repo values are here. Team values (people, hosts, channels, links) live only in 
 | User guide | here | `docs/guide/*.md`, built into the site; build steps in the repo's docs |
 | Website | here | `site/` pages: the release notes page, the landing or download page, guide pages. Which parts `deploy.sh` or the site build fills in: the repo's docs and the build script |
 | Credits | here | `python3 tools/licenses/make_credits.py` writes `assets/credits.json` |
-| Sync branch | here | `sync/release-<yyyy.mm.dd>-<n>` (the release branch's cut date) from `origin/main` |
+| Sync branch | here | `sync/release-<yyyy.mm.dd>-<n>` (the release branch's cut date; `<n>` counts the syncs of that release branch: 1, 2, ...) from `origin/main` |
 | Release playbook (human reference; wins over this skill) | `.podbay/release.md` | `playbook: <path or link>` |
 | Deploy holder (server, signing key, build Mac) | `.podbay/release.md` | `deployer: @<gitlab user>` |
 | Slack channel | `.podbay/release.md` | `channel: #<name>` |

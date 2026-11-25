@@ -5,7 +5,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
 - `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 108 pass, 0 fail.
-- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 75 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 76 pass, 0 fail.
 - `bash plugins/podbay/scripts/test-merge-check.sh` : merge check and risk tiers; 31 pass, 0 fail.
 - `bash plugins/podbay/scripts/test-pb-role.sh` : the SessionStart role hook; 23 pass, 0 fail.
 - `claude plugin eval plugins/podbay --no-publish --ablation none --judge-model sonnet` : 9 behaviour evals in `plugins/podbay/evals/` (paid, about $4; use `-j 1` when memory or disk is low). Run before each release that changes a skill; every case should score 1.00. Use the Sonnet judge: the default Haiku judge failed correct answers.
