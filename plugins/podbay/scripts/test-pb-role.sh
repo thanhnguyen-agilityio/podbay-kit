@@ -84,5 +84,15 @@ M2="$H/notes2/roles"; mkdir -p "$M2" "$H/work/rel"; printf -- '- `.` = kit\n' > 
 out="$(cd / && printf '{"cwd":"%s"}' "$H/work/rel" | HOME="$H" PB_ROLE_MAP="$M2/map.md" python3 "$HOOK")"; [ -z "$out" ] && ok "a relative map entry is skipped" || bad "a relative map entry is skipped (got: $out)"
 out="$(cd "$H" && printf '{"cwd":"%s"}' "$H/work/app" | HOME="$H" PB_ROLE_MAP="notes/roles/map.md" python3 "$HOOK")"; [ -z "$out" ] && ok "a relative PB_ROLE_MAP is refused" || bad "a relative PB_ROLE_MAP is refused (got: $out)"
 
+# PB_ROLE_MAP wins over a role-map: line.
+printf 'role-map: ~/notes2/roles/map.md\n' > "$H/work/app/.podbay/roles.md"
+out="$(run "$H/work/app")"; printf '%s' "$out" | ctx | grep -q 'Rule: tests first.' && ok "PB_ROLE_MAP wins over role-map:" || bad "PB_ROLE_MAP wins over role-map: (got: $out)"
+
+# The search for .podbay/roles.md stops at the git root.
+mkdir -p "$H/work/up/.podbay" "$H/work/up/repo"; git init -q "$H/work/up/repo"
+printf 'role-map: ~/notes/roles/map.md\n' > "$H/work/up/.podbay/roles.md"
+printf -- '- `~/work/up/repo` = kit\n' >> "$H/notes/roles/map.md"
+out="$(NOMAP=1 run "$H/work/up/repo")"; [ -z "$out" ] && ok "roles.md above the git root is not used" || bad "roles.md above the git root is not used (got: $out)"
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]
