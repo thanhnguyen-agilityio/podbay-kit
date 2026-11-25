@@ -81,6 +81,7 @@ has   "release checklist lists step 4c" reference/release-checklist.md '^\| 4c \
 step  "pb-release website step greps for stale and new versions" skills/pb-release/SKILL.md 4c "grep -nF '<x.y.z>'"
 step  "pb-release step 5 calls a stale site not ready" skills/pb-release/SKILL.md 5 'is not ready'
 step  "pb-release step 5 needs a Latest release notes entry unless generated" skills/pb-release/SKILL.md 5 'no Latest entry for .<x.y.z>. .skip this when step 4c listed that page as generated'
+step  "pb-release release notes entry has screenshots of the changes" skills/pb-release/SKILL.md 4c 'a screenshot of each user-visible change'
 step  "pb-release step 4c explains every remaining stale hit" skills/pb-release/SKILL.md 4c 'explain every hit that stays'
 
 step  "pb-release step 9 checks the live pages" skills/pb-release/SKILL.md 9 'open the live landing and release notes pages'
