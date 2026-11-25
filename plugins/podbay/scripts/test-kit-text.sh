@@ -145,6 +145,29 @@ step  "pb-triage's own screenshot points to the Screen Recording caveat" skills/
 step  "pb-verify recordings point to the Screen Recording caveat" skills/pb-verify/SKILL.md 5 'could not create image from window'
 has   "recording reference has the Screen Recording caveat" skills/pb-verify/references/recording.md 'could not create image from window'
 
+# Unattended UI test in four tiers (0.9.3): tiers 1-3 run without computer use; tier 3 is a real-window check.
+has   "ui-tiers: tier 1 runs the UI tests with a temp HOME" skills/pb-verify/references/ui-tiers.md 'HOME="\$H" cargo test --bin podbay ui::'
+has   "ui-tiers: tier 2 diffs screenshots against the previous release head" skills/pb-verify/references/ui-tiers.md 'previous release head.*'
+has   "ui-tiers: tier 2 makes a difference picture" skills/pb-verify/references/ui-tiers.md 'blend=all_mode=difference'
+has   "ui-tiers: tier 3 uses ui-window-check.sh" skills/pb-verify/references/ui-tiers.md 'ui-window-check\.sh'
+has   "ui-tiers: tier 3 asks the user before the appearance changes" skills/pb-verify/references/ui-tiers.md 'only after they agree'
+has   "ui-tiers: never save an unblanked real-window capture" skills/pb-verify/references/ui-tiers.md 'Never save or post an unblanked'
+has   "ui-tiers: tier 4 is only for OS and real-machine rows" skills/pb-verify/references/ui-tiers.md 'Tier 4.*OS and real-machine rows only'
+has   "pb-verify runs tiers 1 to 3 before computer use" skills/pb-verify/SKILL.md 'ui-tiers\.md.*tiers 1 to 3'
+has   "pb-verify --installed runs tiers 1 to 3 before computer use" skills/pb-verify/references/installed.md 'ui-tiers\.md'
+step  "pb-release step 3 runs the four tiers" skills/pb-release/SKILL.md 3 'ui-tiers\.md'
+lacks "pb-release step 3 no longer starts with a computer-use click-through" skills/pb-release/SKILL.md 'ask the user to run a desktop computer-use session for the UI click-through'
+has   "release checklist step 3 names the tiers" reference/release-checklist.md '^\| 3 \| Verify \|.*tiers'
+has   "ui-window-check refuses without --yes" skills/pb-verify/ui-window-check.sh 'rerun with --yes after they agree'
+has   "ui-window-check restores the appearance in a trap" skills/pb-verify/ui-window-check.sh "trap 'rc=\\\$\?; restore"
+has   "ui-window-check blanks the bottom bar before saving" skills/pb-verify/ui-window-check.sh 'drawbox=x=0:y=\$\(\(h - bb\)\)'
+has   "contract caveat: the grant goes to the tmux server, not the terminal" reference/contract.md 'tmux server.*responsible'
+has   "contract caveat: start the tmux server from the granted terminal" reference/contract.md 'tmux kill-server.*from a new window of the granted terminal'
+has   "contract caveat: names the display error too" reference/contract.md 'could not create image from display'
+has   "recording reference: caveat points to the tmux server" skills/pb-verify/references/recording.md 'responsible for the tmux server'
+has   "pb-shot.sh: caveat points to the tmux server" scripts/pb-shot.sh 'tmux server'
+[ -d "$ROOT/evals/verify-ui-tiers" ] && ok "eval verify-ui-tiers exists" || bad "eval verify-ui-tiers exists"
+
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
 want="bootstrap pb-ci pb-explain-mr pb-fix pb-kickoff pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
 got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"

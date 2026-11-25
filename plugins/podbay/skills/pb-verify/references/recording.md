@@ -23,7 +23,7 @@ Computer-use screenshots hide apps that are not granted, which can include syste
 
 Screenshots at key steps: `bash ${CLAUDE_PLUGIN_ROOT}/scripts/pb-shot.sh <app pid> "<out>/s<n>-<step>.png"` (`screencapture -l <window id>`: the app window only, never the whole screen), or save the computer-use screenshot. Take them yourself, never ask the user to. Open each one and check it for private data; blur or crop it as "Blur personal data" below says.
 
-Screen Recording caveat: macOS applies a Screen Recording grant only to processes started after it. A session inside an older tmux server keeps failing with "could not create image from window" (or a probe with no duration) until the terminal app and the tmux server restart. Then report the exact `screencapture` command for the user to run, and try no workarounds.
+Screen Recording caveat (full text in `${CLAUDE_PLUGIN_ROOT}/reference/contract.md`): the grant is checked against the app responsible for the tmux server, the terminal that started it, and reaches only a server started from the granted terminal after the grant. Until the user restarts the tmux server that way, captures fail with "could not create image from window" or "from display" (or a probe with no duration). Then report the exact `screencapture` command for the user to run, and try no workarounds.
 
 Permission probe (step 0): `screencapture -v -x -V 2 <scratchpad>/probe.mov`. Exit 0 and a file with a duration (`ffprobe -v error -show_entries format=duration -of csv=p=0 <file>`) means Screen Recording is granted. Delete the probe after.
 

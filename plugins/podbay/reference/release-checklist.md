@@ -31,7 +31,7 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 | --- | --- | --- | --- |
 | 1 | Freeze | Cut-off draft shown; list of MRs merged into the release branch since the cut | Slack draft only |
 | 2 | Release-head health | build, test, clippy `-D warnings` (no `--all-targets`) pass on the head; `pb-ci` pass with `PBCI-HEAD sha=` equal to the head | none |
-| 3 | Verify | Go / No-go verdict; release verify page updated | page update |
+| 3 | Verify | UI tiers 1 to 3 run without computer use (tier 2 diff against the previous release head, tier 3 real window with the appearance restored and the account blanked); tier 4 checklist done by a person; Go / No-go verdict; release verify page updated | page update |
 | 4 | CHANGELOG | Section per format below; every line traced to an MR | MR into the release branch |
 | 4b | User guide | Every user-visible change from the merged MRs is in the guide; labels match the app; site rebuilt | same MR as step 4 |
 | 4c | Website | Release notes entry marked Latest with known issues and a screenshot per user-visible change; landing "What's new", Download button version, installer names and changed feature texts; touched guide pages; no stale version left unexplained; phone and desktop checked; generated parts untouched | same MR as step 4 |

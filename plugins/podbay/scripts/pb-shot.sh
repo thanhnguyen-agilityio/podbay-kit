@@ -3,9 +3,10 @@
 # Usage: pb-shot.sh <pid> <out.png>   (env PBSHOT_UNAME overrides uname -s, for tests)
 # Finds the window id with CoreGraphics (swift, from the Xcode command line tools), then runs screencapture -x -o -l <id>.
 # Exit 0 saved, 1 no window or the capture failed, 2 bad usage.
-# The capture needs the Screen Recording permission for the terminal app. macOS applies a new grant only to processes
-# started after it: a session inside an older tmux server keeps failing with "could not create image from window"
-# until the terminal app and the tmux server restart. Then report the printed command for the user to run; no workarounds.
+# The capture needs the Screen Recording grant. macOS checks it against the app responsible for the tmux server (the
+# terminal that started it), and only for a server started after the grant: an older server, or one started by a service,
+# fails with "could not create image from window/display" until the user restarts it from the granted terminal
+# (reference/contract.md, Screen Recording caveat). Then report the printed command for the user to run; no workarounds.
 set -u
 pid="${1:-}"; out="${2:-}"
 case "$pid" in ''|*[!0-9]*) echo "usage: pb-shot.sh <pid> <out.png>" >&2; exit 2 ;; esac
@@ -36,7 +37,7 @@ fi
 mkdir -p "$(dirname "$out")"
 if ! err="$(screencapture -x -o -l "$wid" "$out" 2>&1)" || [ ! -s "$out" ]; then
   echo "pb-shot: screencapture failed: ${err:-no file written}" >&2
-  echo "pb-shot: if it says 'could not create image from window', this process started before the Screen Recording grant. Ask the user to run: screencapture -x -o -l $wid $(printf '%q' "$out")" >&2
+  echo "pb-shot: if it says 'could not create image from window' (or 'from display'), the tmux server this runs under has no Screen Recording grant (see the Screen Recording caveat). Ask the user to run: screencapture -x -o -l $wid $(printf '%q' "$out")" >&2
   exit 1
 fi
 echo "pb-shot: saved $out (window $wid)"
