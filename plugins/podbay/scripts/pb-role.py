@@ -3,8 +3,8 @@
 
 The role map is a Markdown file with lines like:  - `~/path/to/checkout` = role-name
 Its path comes from the env var PB_ROLE_MAP, else from a line `role-map: <path>` in
-<checkout>/.podbay/roles.md (resolved against the checkout; a map inside the checkout is
-ignored, so a repo cannot bring its own "role"). The role file is <map folder>/<role-name>.md. The longest
+<checkout>/.podbay/roles.md (an absolute or ~ path only; a map inside the git checkout is ignored, so a repo
+cannot bring its own "role"). Map entries must be absolute or start with ~. The role file is <map folder>/<role-name>.md. The longest
 matching checkout path wins. Any problem (no map, no match, no file, bad input) means
 no output and exit 0: the hook never blocks or slows a session start.
 """
@@ -28,19 +28,45 @@ def inside(path, folder):
     return path == folder or path.startswith(folder.rstrip(os.sep) + os.sep)
 
 
+def absolute(p):
+    """Only `~/...` or absolute paths: a relative one would depend on the hook's folder."""
+    p = p.strip()
+    return p.startswith("~") or os.path.isabs(p)
+
+
+def checkout_root(cwd):
+    d = cwd
+    while True:
+        if os.path.exists(os.path.join(d, ".git")):
+            return d
+        parent = os.path.dirname(d)
+        if parent == d:
+            return None
+        d = parent
+
+
 def map_path(cwd):
     env = os.environ.get("PB_ROLE_MAP", "").strip()
     if env:
-        return expand(env)
+        return expand(env) if absolute(env) else None
+    # .podbay/roles.md is looked for from cwd up to the checkout root (the first folder
+    # with .git), or only in cwd outside git. A map inside that root is ignored.
+    root = checkout_root(cwd)
     d = cwd
     while True:
         f = os.path.join(d, ".podbay", "roles.md")
         if os.path.isfile(f):
-            for line in open(f, encoding="utf-8", errors="replace"):
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                lines = fh.read(16384).splitlines()
+            for line in lines:
                 m = re.match(r"^\s*role-map:\s*(\S.*)$", line)
                 if m:
-                    mp = expand(m.group(1), d)
-                    return None if inside(mp, os.path.realpath(d)) else mp
+                    if not absolute(m.group(1)):
+                        return None
+                    mp = expand(m.group(1))
+                    return None if inside(mp, os.path.realpath(root or d)) else mp
+            return None
+        if root is None or d == root:
             return None
         parent = os.path.dirname(d)
         if parent == d:
@@ -58,9 +84,11 @@ def main():
     if not mp or not os.path.isfile(mp):
         return
     best, role = "", None
-    for line in open(mp, encoding="utf-8", errors="replace"):
-        m = LINE.match(line.rstrip("\n"))
-        if not m:
+    with open(mp, encoding="utf-8", errors="replace") as fh:
+        map_lines = fh.read(65536).splitlines()
+    for line in map_lines:
+        m = LINE.match(line)
+        if not m or not absolute(m.group(1)):
             continue
         path = expand(m.group(1))
         if inside(cwd, path) and len(path) > len(best):

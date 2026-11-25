@@ -16,7 +16,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/pb-role.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/pb-role.py",
+            "timeout": 5
           }
         ]
       }
