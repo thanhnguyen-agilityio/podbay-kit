@@ -3,7 +3,8 @@
 
 The role map is a Markdown file with lines like:  - `~/path/to/checkout` = role-name
 Its path comes from the env var PB_ROLE_MAP, else from a line `role-map: <path>` in
-<checkout>/.podbay/roles.md. The role file is <map folder>/<role-name>.md. The longest
+<checkout>/.podbay/roles.md (resolved against the checkout; a map inside the checkout is
+ignored, so a repo cannot bring its own "role"). The role file is <map folder>/<role-name>.md. The longest
 matching checkout path wins. Any problem (no map, no match, no file, bad input) means
 no output and exit 0: the hook never blocks or slows a session start.
 """
@@ -16,8 +17,15 @@ CAP = 8000
 LINE = re.compile(r"^- `([^`]+)`\s*=\s*([a-z0-9][a-z0-9-]*)\s*$")
 
 
-def expand(p):
-    return os.path.realpath(os.path.expanduser(p.strip()))
+def expand(p, base=None):
+    p = os.path.expanduser(p.strip())
+    if base and not os.path.isabs(p):
+        p = os.path.join(base, p)
+    return os.path.realpath(p)
+
+
+def inside(path, folder):
+    return path == folder or path.startswith(folder.rstrip(os.sep) + os.sep)
 
 
 def map_path(cwd):
@@ -31,7 +39,8 @@ def map_path(cwd):
             for line in open(f, encoding="utf-8", errors="replace"):
                 m = re.match(r"^\s*role-map:\s*(\S.*)$", line)
                 if m:
-                    return expand(m.group(1))
+                    mp = expand(m.group(1), d)
+                    return None if inside(mp, os.path.realpath(d)) else mp
             return None
         parent = os.path.dirname(d)
         if parent == d:
@@ -54,14 +63,16 @@ def main():
         if not m:
             continue
         path = expand(m.group(1))
-        if (cwd == path or cwd.startswith(path + os.sep)) and len(path) > len(best):
+        if inside(cwd, path) and len(path) > len(best):
             best, role = path, m.group(2)
     if not role:
         return
-    rf = os.path.join(os.path.dirname(mp), role + ".md")
-    if not os.path.isfile(rf):
+    roles_dir = os.path.dirname(mp)
+    rf = os.path.realpath(os.path.join(roles_dir, role + ".md"))
+    if os.path.dirname(rf) != roles_dir or not os.path.isfile(rf):
         return
-    text = open(rf, encoding="utf-8", errors="replace").read()
+    with open(rf, encoding="utf-8", errors="replace") as fh:
+        text = fh.read(CAP + 1)
     if len(text) > CAP:
         text = text[:CAP] + "\n[role file cut at %d characters]" % CAP
     ctx = "Your role in this checkout is \"%s\" (from the team's role map). Follow it:\n\n%s" % (role, text)

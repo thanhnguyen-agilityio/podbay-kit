@@ -78,7 +78,8 @@ has   "pb-kickoff is started by hand only" skills/pb-kickoff/SKILL.md '^disable-
 has   "pb-kickoff never starts or stops a session without a yes" skills/pb-kickoff/SKILL.md "never stops, restarts or starts a session without the user's yes"
 step  "pb-kickoff asks for a read-back of the role and top 3 rules" skills/pb-kickoff/SKILL.md 5 'top 3 rules'
 step  "pb-kickoff reports the table" skills/pb-kickoff/SKILL.md 7 'session, machine, role, read-back'
-has   "the SessionStart hook runs pb-role.py" hooks/hooks.json 'SessionStart'
+has   "the SessionStart hook runs pb-role.py" hooks/hooks.json '"SessionStart"'
+has   "the SessionStart hook command is pb-role.py" hooks/hooks.json 'scripts/pb-role.py'
 [ -f "$ROOT/evals/kickoff-readback/prompt.md" ] && [ -f "$ROOT/evals/kickoff-readback/graders/criteria.md" ] && ok "eval kickoff-readback exists" || bad "eval kickoff-readback exists"
 
 # pb-release covers the website (0.8.1).

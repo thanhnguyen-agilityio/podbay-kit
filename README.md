@@ -58,7 +58,7 @@ Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-rev
 
 ## Role hook
 
-`scripts/pb-role.py` runs when a session starts, resumes or compacts. It adds the role file for the current checkout to the session's context, so a fresh session knows what it owns and its top rules. Set it up once per Mac with one line in the `env` block of `~/.claude/settings.json`: `"PB_ROLE_MAP": "<path to the team's roles/map.md>"` (or put `role-map: <path>` in a checkout's `.podbay/roles.md`). Map lines look like `` - `~/path/to/checkout` = role ``; the role file is `<role>.md` next to the map. Without a map, or for a checkout not in it, the hook does nothing. Tests: `plugins/podbay/scripts/test-pb-role.sh`.
+`scripts/pb-role.py` runs when a session starts, resumes, compacts or clears. It adds the role file for the current checkout to the session's context, so a fresh session knows what it owns and its top rules. Set it up once per Mac with one line in the `env` block of `~/.claude/settings.json`: `"PB_ROLE_MAP": "<path to the team's roles/map.md>"` (or put `role-map: <path>` in a checkout's `.podbay/roles.md`). Map lines look like `` - `~/path/to/checkout` = role ``; the role file is `<role>.md` next to the map. Without a map, or for a checkout not in it, the hook does nothing. A `role-map:` that points inside the checkout is ignored, so a repo cannot bring its own role. Role names are lowercase letters, digits and hyphens. Tests: `plugins/podbay/scripts/test-pb-role.sh`.
 
 ## Guard hook
 

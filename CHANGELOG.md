@@ -4,8 +4,9 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 
 ## podbay 0.9.0 - 2026-11-25
 
-- SessionStart hook `scripts/pb-role.py`: on startup, resume, compact and clear it adds the role file for the current checkout to the session's context. The role map comes from the env var `PB_ROLE_MAP` (or a `role-map:` line in the checkout's `.podbay/roles.md`); map lines are `` - `~/path` = role ``, the longest matching path wins, the role file is `<map folder>/<role>.md`, cut at 8,000 characters. No map, no match or any error: no output. Tests: `test-pb-role.sh`, 13 cases.
-- New skill `pb-kickoff` (start by hand): after a break the orchestrator pulls, checks every session and machine, starts or restarts missing ones only after the user's yes, sends each its role, checks each read-back of the role and top 3 rules, fixes wrong ones, and reports a table. Eval `kickoff-readback`: 1.00 (3 runs, Sonnet judge).
+- SessionStart hook `scripts/pb-role.py`: on startup, resume, compact and clear it adds the role file for the current checkout to the session's context. The role map comes from the env var `PB_ROLE_MAP` (or a `role-map:` line in the checkout's `.podbay/roles.md`); map lines are `` - `~/path` = role ``, the longest matching path wins, the role file is `<map folder>/<role>.md`, cut at 8,000 characters. A map inside the checkout, or a role file that leads out of the map folder (a symlink), is ignored. No map, no match or any error: no output. Tests: `test-pb-role.sh`, 17 cases.
+- New skill `pb-kickoff` (start by hand): after a break the orchestrator pulls, checks every session and machine, starts or restarts missing ones only after the user's yes, sends each its role, checks each read-back of the role and top 3 rules, fixes wrong ones, and reports a table. Eval `kickoff-readback`: 1.00 (3 runs, Sonnet judge); the first run scored 0.67 until one grader point accepted any wording for a stuck session.
+- Isolated review: fresh Opus agent, round 1: no blockers; its should-fix items (repo-supplied role maps, symlinked role files, missing tests, free disk on other machines, team names in the eval) are fixed here.
 
 ## podbay 0.8.1 - 2026-11-22 (tools 0.3.1)
 
