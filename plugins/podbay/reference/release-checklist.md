@@ -16,7 +16,7 @@ Repo values are here. Team values (people, hosts, channels, links) live only in 
 | User guide | here | `docs/guide/*.md`, built into the site; build steps in the repo's docs |
 | Website | here | `site/` pages: the release notes page, the landing or download page, guide pages. Which parts `deploy.sh` or the site build fills in: the repo's docs and the build script |
 | Credits | here | `python3 tools/licenses/make_credits.py` writes `assets/credits.json` |
-| Sync branch | here | `sync/release-<x.y.z>-<n>` from `origin/main` |
+| Sync branch | here | `sync/release-<yyyy.mm.dd>-<n>` (the release branch's cut date) from `origin/main` |
 | Release playbook (human reference; wins over this skill) | `.podbay/release.md` | `playbook: <path or link>` |
 | Deploy holder (server, signing key, build Mac) | `.podbay/release.md` | `deployer: @<gitlab user>` |
 | Slack channel | `.podbay/release.md` | `channel: #<name>` |
@@ -65,4 +65,4 @@ Template: `${CLAUDE_PLUGIN_ROOT}/templates/release/changelog-section.md`.
 
 ## Sync to main
 
-Branch `sync/release-<x.y.z>-<n>` from `origin/main`. List commits missing on `main` with `git cherry -v origin/main origin/<release branch>` (`+` lines). Pick them with `git cherry-pick -x` in release merge order (`git log --reverse --first-parent` on the release branch, picking merge commits with `-m 1` only when the MR was not squashed). Keep the original authors (cherry-pick does). After picking, rerun `git cherry` and compare patch-ids (`git patch-id`) for each pair; resolve conflicts keeping the release's intent, or stop and ask. Then gates, `pb-ci`, isolated review (`pb-review`, Opus), and a Draft MR into `main` without `--squash-before-merge`, so each picked commit stays. A person merges.
+Branch `sync/release-<yyyy.mm.dd>-<n>` from `origin/main`. List commits missing on `main` with `git cherry -v origin/main origin/<release branch>` (`+` lines). Pick them with `git cherry-pick -x` in release merge order (`git log --reverse --first-parent` on the release branch, picking merge commits with `-m 1` only when the MR was not squashed). Keep the original authors (cherry-pick does). After picking, rerun `git cherry` and compare patch-ids (`git patch-id`) for each pair; resolve conflicts keeping the release's intent, or stop and ask. Then gates, `pb-ci`, isolated review (`pb-review`, Opus), and a Draft MR into `main` without `--squash-before-merge`, so each picked commit stays. A person merges.

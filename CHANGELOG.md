@@ -2,6 +2,10 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.9.1 - 2026-11-25
+
+- Branch names follow the release date (decision of 2026-11-25): release branch `release/<yyyy.mm.dd>`, hotfix branch `hotfix/<yyyy.mm.dd>-<short-name>` (it targets the release branch of the same date), sync branch `sync/release-<yyyy.mm.dd>-<n>`. Replaces the version-based names in pb-mr, pb-fix, pb-review, the reviewer prompt, the MR checklist and the release checklist. A text test rejects version-based branch names.
+
 ## podbay 0.9.0 - 2026-11-25
 
 - SessionStart hook `scripts/pb-role.py`: on startup, resume, compact and clear it adds the role file for the current checkout to the session's context. The role map comes from the env var `PB_ROLE_MAP` (or a `role-map:` line in the checkout's `.podbay/roles.md`); map lines are `` - `~/path` = role ``, the longest matching path wins, the role file is `<map folder>/<role>.md`, cut at 8,000 characters. Paths must be absolute or start with `~`; a `role-map:` inside the git checkout, or a role file that leads out of the map folder (a symlink), is ignored; the hook has a 5-second timeout. No map, no match or any error: no output. Tests: `test-pb-role.sh`, 23 cases. Known limit: a `role-map:` line can name a map in another checkout; `PB_ROLE_MAP` is the recommended setup.

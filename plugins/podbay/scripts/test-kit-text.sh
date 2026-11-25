@@ -73,6 +73,12 @@ has   "orchestrator runs the merge check on the author's checkout" skills/pb-orc
 has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
+# Branch names by date (0.9.1): release/<yyyy.mm.dd>, hotfix/<yyyy.mm.dd>-<name>, sync/release-<yyyy.mm.dd>-<n>.
+hits="$(cd "$ROOT" && grep -rnE '(release|hotfix)/<version>|sync/release-<x\.y\.z>|release/<yyyymmdd>' skills reference templates 2>/dev/null)"
+[ -z "$hits" ] && ok "no branch names built from a version" || bad "no branch names built from a version ($(printf '%s' "$hits" | head -1 | cut -c1-100))"
+has   "sync branch is named by the release date" reference/release-checklist.md 'sync/release-<yyyy.mm.dd>-<n>'
+has   "hotfix branch is named by the release date" reference/mr-checklist.md 'hotfix/<yyyy.mm.dd>-<short-name>'
+
 # Roles and kickoff (0.9.0).
 has   "pb-kickoff is started by hand only" skills/pb-kickoff/SKILL.md '^disable-model-invocation: true'
 has   "pb-kickoff never starts or stops a session without a yes" skills/pb-kickoff/SKILL.md "never stops, restarts or starts a session without the user's yes"

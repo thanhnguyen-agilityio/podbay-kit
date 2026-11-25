@@ -5,7 +5,7 @@ The one prompt for every isolated review: `pb-review`, review 2 of `pb-fix` batc
 - `<repo path>`: the Pod Bay checkout (read-only for you).
 - `<ticket>`: the GitLab issue number (or, before filing, the path of the ticket file).
 - `<change>`: an MR number, or a branch name before an MR exists.
-- `<base>`: the target branch (`main`, or `release/<version>` for a hotfix).
+- `<base>`: the target branch (`main`, or `release/<yyyy.mm.dd>` for a hotfix).
 - `<scratch>`: a scratch folder for worktrees.
 - `<target dir>`: the cargo target folder to build in, chosen by the caller. Every cargo command below runs with `CARGO_TARGET_DIR=<target dir> CARGO_INCREMENTAL=0`. If the caller gave none, use `<scratch>/target` and say so in the report.
 - `<plan>` (only for a plan review, before code exists): the plan file. Then skip steps 3 and 4. Read the plan against the ticket and the code it names, and report as blocker / should fix / nit: Expected items the plan misses, files or approach that will not work or are wider than the ticket, missing or wrong tests, risks (state, settings, network, security). Say whether the change looks like one MR or should split.
