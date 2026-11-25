@@ -35,6 +35,6 @@
 -
 
 ## Evidence
-<!-- Screenshot or screen recording. Drag the file into this box. -->
+<!-- Required. At least one screenshot, video or GIF that shows the problem. Drag the file into this box. If nothing shows on screen (service, network, command line), add a screenshot of the terminal or log that shows the failure. A bug report without one is not filed. -->
 
 /label ~"type::bug"

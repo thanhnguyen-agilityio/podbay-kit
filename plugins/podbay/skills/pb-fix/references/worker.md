@@ -55,6 +55,7 @@ Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply onl
 - Follow-ups: file up to 3 as issues (`references/decisions.md` "Follow-ups") and add `Refs #<f>`. Set the work log's **Result** to the MR link and follow-ups.
 - `## Test evidence`, only results from commands you ran:
   - each gate on the final commit with its result line (e.g. `test result: ok. 250 passed`);
+  - for a bug fix (issue `type::bug`): at least one screenshot, video or GIF of the fixed behavior, taken by you (contract, Screenshots), uploaded and embedded;
   - new or changed tests, and the fail-on-main proof (command and the failing assertion) in a `<details>` block;
   - "No CI configured; gates ran locally";
   - review 1 and 2 verdicts and what was fixed;

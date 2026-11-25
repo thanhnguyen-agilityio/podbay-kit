@@ -49,7 +49,7 @@ One ticket, one session, one branch.
 | Kind | Path |
 | --- | --- |
 | 1. Found by us (our own BA/QA findings, already verified) | `pb-triage --verified` files it; the approver approves the ticket text; `pb-fix` in the same session (failing test, fix, isolated review, Draft MR through `pb-mr`) |
-| 2. Logged by someone else | `pb-triage` (reproduce on current `main` as a failing test, grill); the approver approves the batch; `pb-triage --file` labels approved issues `pb::agent-ready`; then one new session per ticket (`pb-fix`) or `pb-fix` batch mode; isolated review; Draft MR |
+| 2. Logged by someone else | `pb-triage` (reproduce on current `main` as a failing test, grill); the approver approves the batch; `pb-triage --file` labels approved issues `pb::agent-ready` (a bug with no visual evidence gets "ask: visual evidence" instead); then one new session per ticket (`pb-fix`) or `pb-fix` batch mode; isolated review; Draft MR |
 
 A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `pb::needs-human` at filing and is not worked by an agent.
 
@@ -116,7 +116,8 @@ In `live` mode, `pb-fix` batch mode skips issues labelled `pb::needs-advisor` un
 - Branch `<fix|feat>/issue-<n>-<short-slug>` from `origin/main` (from `origin/feat/<epic-name>` for an epic's child ticket; see Routing), in a git worktree under the scratchpad.
 - Commits: one plain sentence, no prefix, plus the `Co-Authored-By` trailer the session gives. Small commits; the repro test first.
 - MR: title = plain sentence ending in `(#<n>)`; description per the template in `${CLAUDE_PLUGIN_ROOT}/reference/mr-checklist.md`: `## What`, `## Why` (`Closes #<n>`), `## How` (approach, trade-offs, Decisions table + work log link), `## Test evidence`, `## Impact` (settings/state, breaking, rollback, risks and follow-ups), `## Pre-review`, `## Rust in this diff`, `## Checklist`. Hotfix branches and targets: same file. Created with `--remove-source-branch --squash-before-merge`.
-- Screenshots: upload with `glab api -X POST projects/<id>/uploads -F file=@<png>` and embed the returned markdown, before/after side by side.
+- Screenshots: the session takes them itself, never asks the user to: the `screenshots` test (preflight) for app screens, `bash ${CLAUDE_PLUGIN_ROOT}/scripts/pb-shot.sh <pid> <out.png>` (`screencapture -l <window id>`) for a running window, the same `pb-shot.sh` with the terminal app's pid for a terminal or log (never the whole screen). Open each image and check it for private data (email addresses, user names, machine or network names, tokens); blur or crop that data (`${CLAUDE_PLUGIN_ROOT}/skills/pb-verify/references/recording.md`, "Blur personal data"), then save it under `.podbay/` or the scratchpad. Upload with `glab api -X POST projects/<id>/uploads -F file=@<png>` and embed the returned markdown, before/after side by side.
+- Screen Recording caveat: macOS applies a Screen Recording grant only to processes started after it. A session inside an older tmux server keeps failing with "could not create image from window" until the terminal app and the tmux server restart. Then report the exact `screencapture` command (pb-shot.sh prints it) for the user to run, and try no workarounds.
 - Never: run `cargo fmt`/`rustfmt`, add dependencies (`--locked` everywhere), force-push, push to `main`, merge, print secrets. The `pb-guard` hook (plugin `hooks/hooks.json`) blocks most of these; a block message names the allowed route.
 
 ## Writing and publishing

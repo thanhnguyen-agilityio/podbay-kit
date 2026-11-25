@@ -62,7 +62,7 @@ Fails on `main` at <short sha> with: `<assertion message>`.
 - <One plain sentence per choice made while writing the ticket. Reviewers may challenge it in the MR.>
 
 ## Evidence
-<Screenshots uploaded to GitLab.>
+<Required: at least one screenshot, video or GIF that shows the problem, uploaded to GitLab and embedded here. With nothing on screen (service, network, command line): a screenshot of the terminal or log that shows the failure.>
 ```
 
 ### Story
@@ -152,3 +152,4 @@ Rewrite the ticket until every line is yes. `pb-triage` checks it before gate 1;
 9. **Verification** has a test that fails on `main` today, or says why it can't be scripted and what to check by hand.
 10. **Stands alone.** Plain language for someone who has never seen the triage notes; `${CLAUDE_PLUGIN_ROOT}/scripts/private-ref-check.sh` is clean (contract, Writing and publishing).
 11. **Safe to post.** No secrets (`${CLAUDE_PLUGIN_ROOT}/scripts/publish-check.sh` is clean), and every `@name` is in backticks.
+12. **Visual evidence.** A bug has at least one screenshot, video or GIF (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.mp4`, `.mov`, `.webm`) embedded in `## Evidence` that shows the problem; with nothing on screen, a screenshot of the terminal or log that shows the failure. No exceptions: a bug without one is not filed ("not filed: no visual evidence").

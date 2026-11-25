@@ -18,7 +18,7 @@ full_sha="$(git -C "$checkout" rev-parse HEAD)"
 # file mtime, so inner.sh cleans the podbay crate when the checkout or commit changes.
 target_vol="pb-ci-target"
 bash "$here/layout.sh" "$checkout" || exit 3
-docker info >/dev/null 2>&1 || { echo "pb-ci: Docker is not running. Start Docker Desktop (open -a Docker) and rerun."; exit 4; }
+bash "$here/docker-up.sh" || exit 4
 
 image="pb-ci:$(shasum -a 256 "$here/Dockerfile" | cut -c1-12)"
 if ! docker image inspect "$image" >/dev/null 2>&1; then

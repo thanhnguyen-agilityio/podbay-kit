@@ -119,6 +119,32 @@ step  "pb-fix applies the design-system rule" skills/pb-fix/SKILL.md 1c 'site/si
 step  "pb-triage applies the design-system rule" skills/pb-triage/SKILL.md 1c 'design-system owner'
 [ -f "$ROOT/evals/review-site-raw-colour/prompt.md" ] && ok "eval review-site-raw-colour exists" || bad "eval review-site-raw-colour exists"
 
+# Visual evidence on every bug report (0.9.2): a screenshot, video or GIF.
+has   "bug template marks Evidence as required, with a screenshot, video or GIF" templates/issue_templates/Bug.md '^<!-- Required\..*screenshot, video or GIF'
+has   "ticket format marks the bug's Evidence as required" reference/ticket-format.md 'Required: at least one screenshot, video or GIF'
+has   "Definition of Ready requires visual evidence on a bug" reference/ticket-format.md '^12\. \*\*Visual evidence\.\*\*'
+step  "pb-triage flags a bug with no visual evidence at gate 1" skills/pb-triage/SKILL.md 6b 'no visual evidence'
+has   "pb-triage --verified refuses to file a bug with no visual evidence" skills/pb-triage/references/verified.md 'not filed: no visual evidence'
+has   "pb-triage --file refuses to file a bug with no visual evidence" skills/pb-triage/references/file.md 'A bug with none is not created.*not filed: no visual evidence'
+step  "pb-mr flags a bug MR with no visual evidence" skills/pb-mr/SKILL.md 7 'no visual evidence'
+step  "pb-mr blocks --ready on a bug MR with no visual evidence, and keeps the Draft" skills/pb-mr/SKILL.md 7 'no visual evidence.*do not allow .--ready.: the MR stays Draft'
+step  "pb-triage --verified checks visual evidence before the approval question" skills/pb-triage/references/verified.md 5 'no visual evidence'
+has   "batch review 3 needs visual evidence on a bug fix" skills/pb-fix/references/review-3.md 'no visual evidence'
+has   "MR checklist asks a bug MR for a screenshot, video or GIF" reference/mr-checklist.md 'bug fix.*screenshot, video or GIF'
+for c in triage-bug-evidence ci-docker-start; do [ -f "$ROOT/evals/$c/prompt.md" ] && [ -f "$ROOT/evals/$c/graders/criteria.md" ] && ok "eval $c exists" || bad "eval $c exists"; done
+
+step  "pb-triage --file uploads triage's own evidence to a GitLab row" skills/pb-triage/references/file.md 4 'Internal block lists.*## Evidence'
+# Sessions start Docker and take screenshots themselves (0.9.2).
+hits="$(grep -rnE 'tell the user to start Docker|Start Docker Desktop|only the user starts Docker' "$ROOT/skills" "$ROOT/reference" "$ROOT/scripts" | grep -v '/scripts/test-kit-text.sh:')"
+[ -z "$hits" ] && ok "no text leaves starting Docker to the user" || bad "no text leaves starting Docker to the user ($(printf '%s' "$hits" | head -1 | cut -c1-120))"
+has   "pb-ci starts Docker through docker-up.sh" skills/pb-ci/pb-ci.sh 'docker-up\.sh'
+has   "contract: sessions take their own screenshots with pb-shot.sh" reference/contract.md 'Screenshots: the session takes them itself.*pb-shot\.sh'
+has   "contract: Screen Recording caveat names the error and the hand-off" reference/contract.md 'could not create image from window.*exact .screencapture. command'
+has   "pb-run takes window screenshots with pb-shot.sh and checks private data" skills/pb-run/SKILL.md 'pb-shot\.sh.*private data'
+step  "pb-triage's own screenshot points to the Screen Recording caveat" skills/pb-triage/SKILL.md 6b 'Screen Recording caveat'
+step  "pb-verify recordings point to the Screen Recording caveat" skills/pb-verify/SKILL.md 5 'could not create image from window'
+has   "recording reference has the Screen Recording caveat" skills/pb-verify/references/recording.md 'could not create image from window'
+
 # Kit clean-up (0.7.0): one skill per flow step, no dangling names or paths.
 want="bootstrap pb-ci pb-explain-mr pb-fix pb-kickoff pb-mr pb-orchestrator pb-release pb-review pb-review-sweep pb-run pb-triage pb-verify"
 got="$(cd "$ROOT/skills" && ls -d */ | tr -d / | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
