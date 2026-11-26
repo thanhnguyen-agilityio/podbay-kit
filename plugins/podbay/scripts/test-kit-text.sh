@@ -73,13 +73,47 @@ has   "orchestrator runs the merge check on the author's checkout" skills/pb-orc
 has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
 has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
 
-# Branch names by date (0.9.1): release/<yyyy.mm.dd>, hotfix/<yyyy.mm.dd>-<name>, sync/release-<yyyy.mm.dd>-<n>.
+# No branch name is built from a version (0.9.1).
 # Matches are printed with what comes before them, so .podbay/release/<x.y.z>/ state folders can be left out.
 hits="$(cd "$ROOT" && grep -rnoE '(\.podbay/)?((release|hotfix)/<(version|x\.y\.z)>|sync/release-<(x\.y\.z|version)>|release/<yyyymmdd>)' skills reference templates scripts evals --exclude=test-kit-text.sh --exclude-dir=results 2>/dev/null | grep -v ':\.podbay/')"
 [ -z "$hits" ] && ok "no branch names built from a version" || bad "no branch names built from a version ($(printf '%s' "$hits" | head -1 | cut -c1-100))"
-has   "sync branch is named by the release date" reference/release-checklist.md 'sync/release-<yyyy.mm.dd>-<n>'
-has   "the hotfix date is the cut date, not today" reference/mr-checklist.md "never today.s date"
-has   "hotfix branch is named by the release date" reference/mr-checklist.md 'hotfix/<yyyy.mm.dd>-<short-name>'
+# develop branch model (0.10.0): all work goes to develop; a release is a Draft MR from develop into main.
+step  "pb-mr: the default target is develop" skills/pb-mr/SKILL.md 2 'Else the target is .develop.'
+lacks "pb-mr: no release branch target" skills/pb-mr/SKILL.md 'release/<yyyy\.mm\.dd>'
+has   "pb-mr: asks first only for a person-merge target in pb-targets.sh" skills/pb-mr/SKILL.md 'PB_PERSON_MERGES. in .*pb-targets\.sh'
+step  "pb-mr flags a user-visible MR into develop with no CHANGELOG line" skills/pb-mr/SKILL.md 7 'no CHANGELOG line'
+has   "routing: a fix or feature branches from develop" reference/mr-checklist.md '^\| Feature or fix \| .origin/develop. \|'
+has   "routing: an urgent fix branches from main and goes into main" reference/mr-checklist.md '^\| Urgent fix .*\| .origin/main. \| .hotfix/<short-name>. \| .main. \|'
+has   "routing: main is merged back into develop after an urgent fix" reference/mr-checklist.md 'backmerge/main-<yyyy\.mm\.dd>'
+has   "routing: old release branches are read-only" reference/mr-checklist.md 'release/\*. branches are read-only'
+lacks "routing: no cherry-pick route" reference/mr-checklist.md 'cherry-pick/'
+has   "a feature MR adds its own CHANGELOG line under [Unreleased]" reference/mr-checklist.md 'under .## \[Unreleased\]. in .CHANGELOG\.md.'
+has   "the pb-fix worker adds the CHANGELOG line" skills/pb-fix/references/worker.md '\[Unreleased\]'
+lacks "pb-fix has no hotfix cherry-pick step" skills/pb-fix/SKILL.md 'cherry-pick'
+for f in skills/pb-fix/references/worker.md skills/pb-fix/references/batch.md skills/pb-fix/references/review-3.md skills/pb-triage/SKILL.md reference/preflight.md reference/review-checklist-rust.md; do
+  lacks "$f works from develop, not main" "$f" 'origin/main'
+done
+has   "pb-review: the default base is develop" skills/pb-review/SKILL.md 'else .develop.'
+has   "contract: protected branches come from pb-targets.sh" reference/contract.md 'pb-targets\.sh'
+has   "contract: develop is team-shared for merges" reference/contract.md 'develop. is team-shared'
+has   "orchestrator merges only outside the person-merge list" skills/pb-orchestrator/SKILL.md 'pb-targets\.sh'
+lacks "pb-release: no --branch option" skills/pb-release/SKILL.md '\-\-branch'
+lacks "pb-release: no release branch" skills/pb-release/SKILL.md 'release branch'
+lacks "pb-release: no sync step" skills/pb-release/SKILL.md 'Sync to main|sync branch'
+lacks "release checklist: no sync section or sync branch" reference/release-checklist.md 'Sync to main|Sync branch|Release branch'
+step  "pb-release step 1 checks main has nothing develop lacks" skills/pb-release/SKILL.md 1 'git log --oneline --no-merges origin/develop\.\.origin/main'
+step  "pb-release step 3 verifies the develop head" skills/pb-release/SKILL.md 3 'on the .develop. head'
+step  "pb-release step 4 turns [Unreleased] into the version section" skills/pb-release/SKILL.md 4 'Turn .## \[Unreleased\]. into'
+step  "pb-release step 5 opens one release-prep MR into develop" skills/pb-release/SKILL.md 5 'release-prep MR into .develop.'
+step  "pb-release step 6 opens a Draft MR from develop into main" skills/pb-release/SKILL.md 6 'Draft MR from .develop. into .main.'
+step  "pb-release step 6 keeps develop and every commit" skills/pb-release/SKILL.md 6 'no .--squash-before-merge. and no .--remove-source-branch.'
+step  "pb-release step 6: a person merges after the team agrees" skills/pb-release/SKILL.md 6 'A person merges it after the team agrees'
+step  "pb-release step 7 drafts the tag and Release only" skills/pb-release/SKILL.md 7 'never creates, moves or deletes a tag'
+lacks "pb-release never calls the tag API" skills/pb-release/SKILL.md 'repository/tags'
+has   "pb-release keeps the release host" skills/pb-release/SKILL.md 'host'
+has   "release checklist names the host" reference/release-checklist.md '^\| Release host \|'
+[ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
+[ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"
 
 # Roles and kickoff (0.9.0).
 has   "pb-kickoff is started by hand only" skills/pb-kickoff/SKILL.md '^disable-model-invocation: true'
@@ -147,7 +181,7 @@ has   "recording reference has the Screen Recording caveat" skills/pb-verify/ref
 
 # Unattended UI test in four tiers (0.9.3): tiers 1-3 run without computer use; tier 3 is a real-window check.
 has   "ui-tiers: tier 1 runs the UI tests with a temp HOME" skills/pb-verify/references/ui-tiers.md 'HOME="\$H" cargo test --bin podbay ui::'
-has   "ui-tiers: tier 2 diffs screenshots against the previous release head" skills/pb-verify/references/ui-tiers.md 'previous release head.*'
+has   "ui-tiers: tier 2 diffs screenshots against the previous release tag" skills/pb-verify/references/ui-tiers.md 'previous release tag.*'
 has   "ui-tiers: tier 2 makes a difference picture" skills/pb-verify/references/ui-tiers.md 'blend=all_mode=difference'
 has   "ui-tiers: tier 3 uses ui-window-check.sh" skills/pb-verify/references/ui-tiers.md 'ui-window-check\.sh'
 has   "ui-tiers: tier 3 asks the user before the appearance changes" skills/pb-verify/references/ui-tiers.md 'only after they agree'

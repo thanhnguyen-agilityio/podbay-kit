@@ -32,7 +32,7 @@ Area is the screen as the app names it: Workspace, Overview, Tasks, Machines, Cl
 
 ```markdown
 ## Environment
-- Pod Bay <version> (`main` <short sha>), <OS and version>
+- Pod Bay <version> (`develop` <short sha>), <OS and version>
 - Machines: <how many on the network, which one shows it>
 - State needed: <signed in, sessions, checkouts, filters, theme>
 
@@ -51,9 +51,9 @@ Area is the screen as the app names it: Workspace, Overview, Tasks, Machines, Cl
 ## Fix verification
 Checked by: UI test | unit test | screenshot of <screen> | manual steps on the app.
 ```rust
-// test that fails on main today
+// test that fails on develop today
 ```
-Fails on `main` at <short sha> with: `<assertion message>`.
+Fails on `develop` at <short sha> with: `<assertion message>`.
 
 ## Out of scope
 - <At least one line.>
@@ -93,7 +93,7 @@ Then <observable result>
 - <Code paths and screens the change touches.>
 
 ## Verification
-Checked by: ... (as in Bug), with the test that fails on `main` today and its failure line.
+Checked by: ... (as in Bug), with the test that fails on `develop` today and its failure line.
 
 ## Out of scope
 ## Assumptions
@@ -149,7 +149,7 @@ Rewrite the ticket until every line is yes. `pb-triage` checks it before gate 1;
 6. **INVEST.** A story is independent, negotiable, valuable, estimable, small and testable. One too big to be small splits into stories under an epic.
 7. **Steps** start from opening Pod Bay and work for someone new to the screen.
 8. **Regression risk** names at least one code path, and the other screens that share it.
-9. **Verification** has a test that fails on `main` today, or says why it can't be scripted and what to check by hand.
+9. **Verification** has a test that fails on `develop` today, or says why it can't be scripted and what to check by hand.
 10. **Stands alone.** Plain language for someone who has never seen the triage notes; `${CLAUDE_PLUGIN_ROOT}/scripts/private-ref-check.sh` is clean (contract, Writing and publishing).
 11. **Safe to post.** No secrets (`${CLAUDE_PLUGIN_ROOT}/scripts/publish-check.sh` is clean), and every `@name` is in backticks.
 12. **Visual evidence.** A bug has at least one screenshot, video or GIF (`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.mp4`, `.mov`, `.webm`) embedded in `## Evidence` that shows the problem; with nothing on screen, a screenshot of the terminal or log that shows the failure. No exceptions: a bug without one is not filed ("not filed: no visual evidence").

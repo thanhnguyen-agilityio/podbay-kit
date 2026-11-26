@@ -4,10 +4,10 @@
 # Sibling scripts (publish-check.sh, private-ref-check.sh) are resolved from this script's own directory.
 # Exit 0 = allow. Exit 2 = block, with the reason and the allowed route on stderr.
 # Blocks:
-#   1. cargo fmt / rustfmt anywhere in the command (main is not rustfmt-formatted).
+#   1. cargo fmt / rustfmt anywhere in the command (the code is not rustfmt-formatted).
 #   2. git push with --force, -f, --force-with-lease, +refspec, --all or --mirror.
-#   3. git push to main or master. Allowed only when env PB_KIT_REPO is set to a repo path and the push targets that repo (git -C <path> inside it, or cd into it first). Unset: never allowed.
-#   4. glab mr merge, glab mr approve, glab api calls to /merge or /approve endpoints. Merge is allowed only into a target that is not main, master or release/*, read from glab mr view; unsure -> block (Gate 2).
+#   3. git push to a branch in PB_NO_PUSH (pb-targets.sh: main, master, develop, release/*). A push to main or master is allowed only when env PB_KIT_REPO is set to a repo path and the push targets that repo (git -C <path> inside it, or cd into it first). Unset: never allowed.
+#   4. glab mr merge, glab mr approve, glab api calls to /merge or /approve endpoints. Merge is allowed only into a target that is not in PB_PERSON_MERGES (pb-targets.sh: main, master, release/*), read from glab mr view; unsure -> block (Gate 2).
 #   5. Publishing to GitLab without a secret scan: glab issue|mr create|note|update and glab api with a non-GET method or
 #      field flags. Runs scripts/publish-check.sh on each --description-file / -F key=@file / --input file, and on the whole
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
@@ -24,6 +24,9 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 KIT_REPO=""
 if [ -n "${PB_KIT_REPO:-}" ] && [ -d "$PB_KIT_REPO" ]; then KIT_REPO="$(cd "$PB_KIT_REPO" && pwd -P)"; fi
 PC="$HERE/publish-check.sh"
+# Protected branch lists. If the file is missing, every push and merge is blocked (errs toward blocking).
+# shellcheck source=pb-targets.sh
+. "$HERE/pb-targets.sh" 2>/dev/null || { PB_PERSON_MERGES="*"; PB_NO_PUSH="*"; pb_in_list() { return 0; }; }
 PR="$HERE/private-ref-check.sh"
 
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/pb-guard.XXXXXX")" || exit 0
@@ -81,7 +84,7 @@ in_kit() { [ -n "$KIT_REPO" ] || return 1; case "$1" in "$KIT_REPO"|"$KIT_REPO"/
 
 # 1. rustfmt
 if printf '%s' "$CMD" | grep -Eq '(^|[^[:alnum:]_-])(cargo[[:space:]]+(\+[^[:space:]]+[[:space:]]+)?fmt|rustfmt)([^[:alnum:]_-]|$)'; then
-  block "cargo fmt / rustfmt is never run here: main is not rustfmt-formatted and reformatting creates churn. Match the surrounding style by hand; check with clippy and cargo test --locked."
+  block "cargo fmt / rustfmt is never run here: the code is not rustfmt-formatted and reformatting creates churn. Match the surrounding style by hand; check with clippy and cargo test --locked."
 fi
 
 SEGS="$(printf '%s' "$CMD" | sed -E 's/(&&|\|\||;|\||&)/\
@@ -134,41 +137,48 @@ while IFS= read -r seg; do
     if [[ "$seg" =~ (^|[[:space:]])-C[[:space:]]*(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
       target="$(resolve "${BASH_REMATCH[2]}" "$CUR")" || target=""
     fi
-    to_main=0
-    if printf '%s' "$rest" | grep -Eq '(^|[[:space:]:])(refs/heads/)?(main|master)([[:space:]]|$)'; then
-      to_main=1
-    else
-      # No main/master named: a bare push, or a HEAD refspec, pushes the current branch.
-      args="$(set -f; printf '%s\n' $rest | grep -v '^-')"
-      if [ "$(printf '%s\n' "$args" | grep -c .)" -lt 2 ] || [ "$(printf '%s\n' "$args" | sed -n 2p)" = HEAD ]; then
-        case "$(git -C "${target:-$CUR}" symbolic-ref --short -q HEAD 2>/dev/null)" in main|master) to_main=1 ;; esac
-      fi
+    # Destination of each refspec word after the remote (the part after ":", without refs/heads/);
+    # a bare push or a HEAD refspec pushes the current branch.
+    dests=""
+    args="$(set -f; printf '%s\n' $rest | grep -v '^-')"
+    for w in $(set -f; printf '%s\n' "$args" | sed 1d); do d="${w##*:}"; dests="$dests ${d#refs/heads/}"; done
+    if [ "$(printf '%s\n' "$args" | grep -c .)" -lt 2 ] || [ "$(printf '%s\n' "$args" | sed -n 2p)" = HEAD ]; then
+      dests="$dests $(git -C "${target:-$CUR}" symbolic-ref --short -q HEAD 2>/dev/null)"
     fi
-    if [ "$to_main" = 1 ] && ! { [ -n "$target" ] && in_kit "$target"; }; then
-      block "git push to main or master is never allowed (Gate 2: a person merges). Push a branch (git push -u origin fix/issue-<n>-<slug>) and open an MR. Main is pushable only in the repo named by env PB_KIT_REPO, if set."
-    fi
+    for d in $dests; do
+      [ "$d" = HEAD ] && continue
+      pb_in_list "$d" "$PB_NO_PUSH" || continue
+      case "$d" in
+        main|master)
+          if [ -n "$target" ] && in_kit "$target"; then continue; fi
+          block "git push to $d is never allowed (Gate 2: a person merges). Push a branch (git push -u origin fix/issue-<n>-<slug>) and open an MR. Main is pushable only in the repo named by env PB_KIT_REPO, if set." ;;
+        *) block "git push to $d is never allowed: it changes only by MR (contract, Gate 2). Push your own branch (git push -u origin fix/issue-<n>-<slug>) and open a Draft MR into $d." ;;
+      esac
+    done
   fi
 
   # 4. glab merge / approve
   if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?mr[[:space:]]+approve([[:space:]]|$)'; then
     block "glab mr approve is never allowed (Gate 2: a person approves every MR). Leave the MR open and report its URL."
   fi
-  # Merge is allowed only into a branch that is not main, master or release/* (for example an
+  # Merge is allowed only into a branch that is not in PB_PERSON_MERGES (for example develop or an
   # epic's feat/<name>). The target comes from `glab mr view <n> --output json`; unsure -> block.
   if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?mr[[:space:]]+merge([[:space:]]|$)'; then
     margs="${seg#*mr merge}"; margs="${margs//\"/}"; margs="${margs//\'/}"
     mrid="$(set -f; printf '%s\n' $margs | grep -E '^!?[0-9]+$' | head -1)"; mrid="${mrid#!}"
     mrepo=""
     if [[ "$seg" =~ (^|[[:space:]])(-R|--repo)[[:space:]=]+([^[:space:]]+) ]]; then mrepo="${BASH_REMATCH[3]}"; fi
-    [ -n "$mrid" ] || block "glab mr merge needs an explicit MR number, so the guard can check its target branch (Gate 2: a person merges into main and release/*)."
+    [ -n "$mrid" ] || block "glab mr merge needs an explicit MR number, so the guard can check its target branch (Gate 2: a person merges into main)."
     mtarget="$(cd "$CUR" 2>/dev/null && glab mr view "$mrid" ${mrepo:+-R "$mrepo"} --output json 2>/dev/null |
       python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("target_branch") or "")
 except Exception: print("")' 2>/dev/null)"
     case "$mtarget" in
-      "") block "glab mr merge: could not read the target branch of MR !$mrid, so it is blocked (Gate 2: a person merges into main and release/*)." ;;
-      main|master|release/*) block "glab mr merge into $mtarget is never allowed (Gate 2: a person merges into main and release/*). Leave the MR open and report its URL." ;;
+      "") block "glab mr merge: could not read the target branch of MR !$mrid, so it is blocked (Gate 2: a person merges into main)." ;;
     esac
+    if pb_in_list "$mtarget" "$PB_PERSON_MERGES"; then
+      block "glab mr merge into $mtarget is never allowed (Gate 2: a person merges into $PB_PERSON_MERGES). Leave the MR open and report its URL."
+    fi
   fi
   if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?api[[:space:]]' &&
      printf '%s' "$seg" | grep -Eq '/(merge|approve|unapprove)([^[:alnum:]_-]|$)'; then

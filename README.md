@@ -38,7 +38,7 @@ Run `/podbay:bootstrap` once in the target repo. It copies `CLAUDE.md` and `.git
 
 Every task starts with `/tools:grill-me` (scope, acceptance criteria, edge cases) before any code; pb-triage and pb-fix do it as their first step.
 
-Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-review`, `pb-mr`) -> a person merges -> `pb-release` -> `pb-verify`.
+Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-review`, `pb-mr`) -> merged into `develop` (a team member or the orchestrator) -> `pb-release` (release MR into `main`, a person merges) -> `pb-verify`.
 
 | I want to... | Skill |
 | --- | --- |
@@ -46,7 +46,7 @@ Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-rev
 | Fix an approved ticket and open a Draft MR | `/podbay:pb-fix <issue>` (several issues or `open [filters]`: batch, one worker per issue, no approval stops) |
 | Get an isolated review of a branch or MR | `/podbay:pb-review` |
 | Review open MRs whose head has no review (one round, posts nothing; for a schedule) | `/podbay:pb-review-sweep` (`--dry-run`, `--max <n>`) |
-| Open a Draft MR for a branch made by hand | `/podbay:pb-mr` (asks before the push only for `main` and `release/*`) |
+| Open a Draft MR for a branch made by hand | `/podbay:pb-mr` (targets `develop` by default; asks before the push only for `main`) |
 | Run CI locally (Docker, Linux) | `/podbay:pb-ci` |
 | Run a Local build of the app from this branch | `/podbay:pb-run` |
 | Check in the app that an MR does what its ticket asks | `/podbay:pb-verify` (`--installed`: build a .dmg and record video) |
@@ -62,6 +62,6 @@ Standard flow: idea or finding -> `pb-triage` -> `pb-fix` (runs `pb-ci`, `pb-rev
 
 ## Guard hook
 
-`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`, `glab mr approve`, a merge into `main`/`master`/`release/*` (or any merge whose target it cannot read), GitLab writes whose text has a secret or a private reference, and cargo builds or pb-ci when free disk is under 10 GB (env `PB_DISK_FLOOR_GB`). Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Before an orchestrator merges into an integration branch, `scripts/pb-merge-check.sh <iid> -R <repo>` checks that the reviewed commit, the pb-ci commit and the MR head are the same; `scripts/pb-tier.sh` sorts a change into light, full or full-and-sensitive from its paths. Self-tests: `plugins/podbay/scripts/test-pb-guard.sh` (guard), `plugins/podbay/scripts/test-merge-check.sh` (merge check and tiers), `claude plugin eval plugins/podbay --no-publish --ablation none --judge-model sonnet` (12 behaviour evals; costs about $5.50), `plugins/podbay/scripts/test-pb-helpers.sh` (Docker start, window screenshot and real-window check helpers) and `plugins/podbay/scripts/test-kit-text.sh` (rules in skill and reference text).
+`scripts/pb-guard.sh` runs before every Bash call and blocks: `cargo fmt`, force-push, push to `main`/`master`/`develop`/`release/*`, `glab mr approve`, a merge into `main`/`master`/`release/*` (or any merge whose target it cannot read; the lists are in `scripts/pb-targets.sh`; `develop` is team-shared for merges), GitLab writes whose text has a secret or a private reference, and cargo builds or pb-ci when free disk is under 10 GB (env `PB_DISK_FLOOR_GB`). Pushing to `main` is allowed only in the repo named by the env var `PB_KIT_REPO` (unset by default: never allowed). Before an orchestrator merges into an integration branch, `scripts/pb-merge-check.sh <iid> -R <repo>` checks that the reviewed commit, the pb-ci commit and the MR head are the same; `scripts/pb-tier.sh` sorts a change into light, full or full-and-sensitive from its paths. Self-tests: `plugins/podbay/scripts/test-pb-guard.sh` (guard), `plugins/podbay/scripts/test-merge-check.sh` (merge check and tiers), `claude plugin eval plugins/podbay --no-publish --ablation none --judge-model sonnet` (13 behaviour evals; costs about $6), `plugins/podbay/scripts/test-pb-helpers.sh` (Docker start, window screenshot and real-window check helpers) and `plugins/podbay/scripts/test-kit-text.sh` (rules in skill and reference text).
 
 Reference docs (contract, preflight, ticket format, lessons, Rust glossary) are in `plugins/podbay/reference/`.

@@ -9,9 +9,9 @@ H="$(mktemp -d)"; CARGO_HOME="${CARGO_HOME:-$HOME/.cargo}" RUSTUP_HOME="${RUSTUP
 ```
 Set `CARGO_HOME` and `RUSTUP_HOME` before `HOME` in the same command, as above, so they still point to the real toolchain. A temp `HOME` keeps the tests away from the user's real `~/.config/podbay/settings.json`. Report passed, failed and ignored. A failure is a FAIL of the matching scenario. The harness has no OS window, OS theme ("System"), tmux, notifications, real clipboard or second machine: rows that need them are tier 3 or 4.
 
-## Tier 2: screenshot run and a PNG diff against the previous release head (every release head; about 2.5 min per head once built, plus a cold build of the previous head)
+## Tier 2: screenshot run and a PNG diff against the previous release tag (every release, on the `develop` head; about 2.5 min per head once built, plus a cold build of the previous head)
 
-1. Run the screenshot test at the head under test and at the previous release head (a `git worktree` of the previous release tag, removed after):
+1. Run the screenshot test at the head under test and at the previous release tag (a `git worktree` of that tag, removed after):
    ```bash
    H="$(mktemp -d)"; CARGO_HOME=... RUSTUP_HOME=... HOME="$H" PODBAY_SHOTS=<dir>/<head|prev> cargo test screenshots -- --ignored
    ```
@@ -23,7 +23,7 @@ Set `CARGO_HOME` and `RUSTUP_HOME` before `HOME` in the same command, as above, 
    Pictures with a different size, and files only on one side, are listed as changed. Every change must trace to a merged MR, or, on an MR branch, to that MR's own ticket; one that does not is a FAIL to report.
 3. List: unchanged count, changed files (with the MR that explains each), unexplained changes.
 
-## Tier 3: the real window, no clicks (release head, and any theme or window bug)
+## Tier 3: the real window, no clicks (the `develop` head before a release, and any theme or window bug)
 
 The only automatic check that sees the real window (title bar, rail, status bar against the page). Use `${CLAUDE_PLUGIN_ROOT}/skills/pb-verify/ui-window-check.sh`.
 

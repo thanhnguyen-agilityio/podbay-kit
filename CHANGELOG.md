@@ -2,6 +2,25 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.10.0 - 2026-11-26
+
+- Branch model with `develop` (team decision of 2026-11-26): all work goes into `develop`; `develop` reaches `main` only through the release MR. No more release, hotfix, cherry-pick or sync branches; old `release/*` branches are read-only.
+- New `scripts/pb-targets.sh`: the one list of protected branches, sourced by `pb-guard.sh` and `pb-merge-check.sh`. `PB_PERSON_MERGES` is `main master release/*`, so only a person merges there; `develop` is team-shared, so a team member or the orchestrator may merge into it, and adding it to that line makes it person-only. `PB_NO_PUSH` is `main master develop release/*`, so the guard now also blocks a direct push to `develop` and to old release branches (the `PB_KIT_REPO` exception stays for `main` only). When the file is missing, every push and merge is blocked.
+- `pb-mr`, `pb-fix`, `pb-triage`, `pb-review`, the batch worker, preflight, the ticket format and the contract work from `origin/develop`, with `develop` as the default target. A Draft MR into `develop` is pushed and opened without asking. Urgent fix: a `hotfix/<short-name>` branch from `main` into `main`, which a person merges, then a `backmerge/main-<yyyy.mm.dd>` MR into `develop` with no squash.
+- CHANGELOG between releases: each user-visible MR into `develop` adds its own line under `## [Unreleased]`, and `pb-mr` flags "no CHANGELOG line".
+- `pb-release`, with its weekly host:
+  - start notice and merged list since the last tag on `develop`, plus a check that `main` has no commits `develop` lacks;
+  - `develop`-head health and verify (UI tiers, unchanged);
+  - one release-prep MR into `develop`, which turns `[Unreleased]` into the version section and holds the guide, site and version bump;
+  - a Draft release MR from `develop` into `main`: a merge commit, no squash, `develop` kept; a person merges it after the team agrees, and it is checked for anything merged after verify;
+  - tag and GitLab Release drafts for the person who tags (`tagger:`); the skill never creates, moves or deletes a tag.
+  - The freeze template is replaced by `slack-release-start.md`; `release-checklist.md` adds the `host:` and `tagger:` values and drops the sync section.
+- Tests: test-pb-guard.sh 119 pass (11 new: merge into `develop` allowed, pushes to `develop` and old release branches blocked, the lists, and a flipped copy that makes `develop` person-only); test-merge-check.sh 33 pass (2 new); test-kit-text.sh 155 pass (3 old branch-name cases replaced by 39 develop-model cases).
+- Evals:
+  - new `release-develop-flow`;
+  - `mr-target` now covers the `develop` default and the missing CHANGELOG line;
+  - `release-notes-stale`, `release-site-stale` and the three review evals now use `develop`.
+
 ## podbay 0.9.3 - 2026-11-25
 
 - Unattended UI test in four tiers (decision of 2026-11-25), so verify runs without computer use: new `skills/pb-verify/references/ui-tiers.md`. Tier 1: `cargo test --bin podbay ui::` with a temp `HOME`. Tier 2: the screenshot test at the head and at the previous release head, with a difference picture per changed PNG; every change must trace to a merged MR. Tier 3: the real window, no clicks, through the new `skills/pb-verify/ui-window-check.sh`: it presets `"theme"` in the build's `settings.json`, sets the macOS appearance, starts the window, captures it with `screencapture -l` checks that the page follows the theme, and compares the title bar and status bar with the page. With `--start` it finds the window by the started process group (macOS hides window titles without the grant) and refuses while an old window with that title is open. It refuses to run without `--yes` (the user agrees first, because their desktop appearance changes), restores the appearance and the settings file in a trap on every exit (exit 5 if the restore does not take), and blanks the status bar (it names the signed-in account) and any `--blank` box before the picture is saved; the raw capture is never kept. Tier 4: a short checklist for OS and real-machine rows only. pb-verify (both modes) and pb-release step 3 run tiers 1 to 3 first; the release checklist row 3 names the tiers.

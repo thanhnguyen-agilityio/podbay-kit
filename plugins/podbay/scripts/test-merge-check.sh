@@ -12,7 +12,7 @@ bad() { fail=$((fail+1)); printf 'FAIL  %s\n' "$1"; }
 # Repo: origin/feat/epic, then a change on top (head). A second change touches a sensitive path.
 R="$D/repo"; git init -q -b main "$R"; cd "$R" || exit 1
 git -c user.name=t -c user.email=t@x commit -q --allow-empty -m base
-git branch feat/epic; git update-ref refs/remotes/origin/feat/epic feat/epic
+git branch feat/epic; git update-ref refs/remotes/origin/feat/epic feat/epic; git update-ref refs/remotes/origin/develop feat/epic
 git switch -q -c fix/one; mkdir -p src/ui docs; echo a > src/ui/table.rs; git add .; git -c user.name=t -c user.email=t@x commit -q -m change
 HEAD_SHA="$(git rev-parse HEAD)"
 git switch -q -c fix/two; mkdir -p src/net; echo b > src/net/peer.rs; git add .; git -c user.name=t -c user.email=t@x commit -q -m net
@@ -37,6 +37,8 @@ if [ "\$1 \$2" = "mr view" ]; then
     7) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
     8) echo '{"state":"opened","sha":"feat/x","target_branch":"feat/epic","labels":[]}' ;;
     10) echo '{"state":"opened","sha":"$DOCS_SHA","target_branch":"feat/epic","labels":[]}' ;;
+    11) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"develop","labels":[]}' ;;
+    12) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"release/2026.11.20","labels":[]}' ;;
     *) exit 1 ;;
   esac
   exit 0
@@ -66,6 +68,8 @@ printf 'PBCI-HEAD sha=%s\npb-ci %s build=pass total=1s\n' "$NET_SHA" "${HEAD_SHA
 mc 1 "pb-ci log built from another commit: blocked" 1 "another commit"
 ci "$HEAD_SHA" pass
 mc 1 "target main: a person merges" 2 "a person merges"
+mc 0 "target develop: team-shared, the orchestrator may merge" 11 "not person-only (pb-targets.sh)"
+mc 1 "target old release branch: a person merges" 12 "a person merges"
 mc 1 "MR not open: blocked" 5 "not open"
 review "$NET_SHA"; ci "$NET_SHA" pass
 mc 1 "sensitive change without pb::human-reviewed: blocked" 3 "pb::human-reviewed"

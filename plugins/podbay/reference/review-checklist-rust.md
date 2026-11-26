@@ -1,10 +1,10 @@
 # Review checklist (Rust / egui)
 
-Used by the worker in review 1, and a good guide for reviews 2 and 3. Read it, then review `git diff origin/main...HEAD`. Review in this order; stop padding when a level is clean.
+Used by the worker in review 1, and a good guide for reviews 2 and 3. Read it, then review `git diff origin/develop...HEAD`. Review in this order; stop padding when a level is clean.
 
 1. **Correctness:** wrong output, empty states, off-by-one, `Option`/`Result` mishandled. In non-test code, flag every new `unwrap()`, `expect()`, indexing `[i]` or slicing that can panic: a panic kills the whole app.
 2. **UI thread and async:** blocking or long work (disk, network, `ops::exec`, sleeps, big loops) inside a frame or `draw`; a lock (`Mutex` guard from `app.shared.lock()`) held across `.await` or across slow work; work that should go through the runtime handle.
-3. **Tests:** a test that fails on `main` and passes here. UI tests use only labels or roles to find widgets (never index).
+3. **Tests:** a test that fails on `develop` and passes here. UI tests use only labels or roles to find widgets (never index).
 4. **egui specifics:**
    - id collisions: two widgets or scroll areas with the same label or `id_salt` in one `Ui`, or an id built from data that can repeat; use `ui.push_id` or an explicit unique `id_salt`.
    - new widgets (buttons, fields, toggles) reachable by a stable label so kittest can find them; icon-only widgets get accessible text.

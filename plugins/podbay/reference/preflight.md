@@ -18,7 +18,7 @@ Read by `pb-fix` batch mode. Project-specific checks, verification levels and no
 Each has a tag. `always` runs in preflight; the others run the first time an issue needs them, once per run.
 
 1. `always`: `git fetch origin` works; `glab auth status` passes; access level on the target repo ≥ 40 (`glab api projects/<id> --jq .permissions`).
-2. `always`: in a worktree of `origin/main`, with the shared target dir, `cargo clippy --all-targets --locked -- -D warnings` and `cargo test --locked` pass.
+2. `always`: in a worktree of `origin/develop`, with the shared target dir, `cargo clippy --all-targets --locked -- -D warnings` and `cargo test --locked` pass.
 3. `screenshots`: the screenshots command above writes 20 PNGs.
 4. `app`: `cargo build` succeeds and the built Pod Bay-local opens (computer-use can see its window).
 
@@ -28,14 +28,14 @@ Pick the highest level the diff needs.
 
 | Level | When | Evidence |
 | --- | --- | --- |
-| tests | Logic outside `src/ui/` (net, ops, state, forge, git) | Clippy and `cargo test` results, plus a unit test that fails on `main` |
-| L1 ui-test | Any behavior change under `src/ui/` | A kittest test in `src/ui/tests.rs` that fails on `main`, using the existing helpers (`app(...)`, `harness(&mut app)`), finding widgets by label or role (`get_by_label`, `get_by_role_and_label`, `query_by_label_contains`), never by index |
-| L2 screenshots | Anything visual: layout, spacing, color, wording on screen | Screenshots on `main` and on the branch, changed screens uploaded before/after into the MR description. A screen missing from the `screenshots` test gets a new case there. |
+| tests | Logic outside `src/ui/` (net, ops, state, forge, git) | Clippy and `cargo test` results, plus a unit test that fails on `develop` |
+| L1 ui-test | Any behavior change under `src/ui/` | A kittest test in `src/ui/tests.rs` that fails on `develop`, using the existing helpers (`app(...)`, `harness(&mut app)`), finding widgets by label or role (`get_by_label`, `get_by_role_and_label`, `query_by_label_contains`), never by index |
+| L2 screenshots | Anything visual: layout, spacing, color, wording on screen | Screenshots on `develop` and on the branch, changed screens uploaded before/after into the MR description. A screen missing from the `screenshots` test gets a new case there. |
 | L3 app | Needs real tmux, `claude` or peers (session link timing, real clone) | Built app plus computer-use steps and screenshots, or **unverified** with the reason |
 
 ## Notes
 
-- Never run `cargo fmt` or `rustfmt`, not even on files you edit: `main` is not formatted and the advisor commits to it. Match the surrounding style (long lines are normal here) so diffs carry only real changes.
+- Never run `cargo fmt` or `rustfmt`, not even on files you edit: the code is not formatted, and the advisor commits to it. Match the surrounding style (long lines are normal here) so diffs carry only real changes.
 - No GitLab CI (no runner allowed). The gates are local: clippy, `cargo test` and `cargo build` (`--locked`) on the final commit, results in the MR's Test evidence; review 3 reruns them. `pb-ci` runs the same gates in a pinned Linux Docker image; it does not cover macOS-only code.
 - Target dir: a session may use the shared `CARGO_TARGET_DIR=$HOME/.cache/cargo-target/podbay` or its own; the isolated reviewer builds in the `<target dir>` its caller passes, with `CARGO_INCREMENTAL=0`. Keep at least 10 GB free (Disk row above).
 - Tests run real peers in temporary homes with private tmux servers. They are safe while Pod Bay-dev runs on the same machine.

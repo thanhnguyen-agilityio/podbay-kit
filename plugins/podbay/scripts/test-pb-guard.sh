@@ -19,7 +19,7 @@ cat > "$D/bin/glab" <<'FAKE'
 #!/bin/bash
 [ "$1 $2" = "mr view" ] || exit 1
 case "${3#!}" in
-  4) t=main ;; 5) t=release/2026.11.13 ;; 6) t=feat/switch-account ;; 8) t=master ;;
+  4) t=main ;; 5) t=release/2026.11.13 ;; 6) t=feat/switch-account ;; 8) t=master ;; 10) t=develop ;;
   9) echo '{"iid":9}'; exit 0 ;; *) echo "not found" >&2; exit 1 ;;
 esac
 printf '{"iid":%s,"target_branch":"%s"}\n' "${3#!}" "$t"
@@ -106,6 +106,29 @@ check block "bare push while on main" "git -C $D/onmain push"
 check block "push origin HEAD while on main" "cd $D/onmain && git push origin HEAD"
 check allow "bare push on a branch" "git -C $D/onbranch push"
 check allow "push -u origin HEAD on a branch" "git -C $D/onbranch push -u origin HEAD"
+
+# develop model (0.10.0): develop is team-shared for merges, but nobody pushes to it directly; old release/* branches are read-only.
+git init -q -b develop "$D/ondevelop"
+check allow "merge into develop (team-shared)" "glab mr merge 10"
+check block "push origin develop" "git push origin develop"
+check block "push HEAD:develop" "git push origin HEAD:develop"
+check block "push HEAD:refs/heads/develop" "git push origin HEAD:refs/heads/develop"
+check block "bare push while on develop" "git -C $D/ondevelop push"
+check block "kit repo does not unlock develop" "git -C $KITREPO push origin HEAD:develop"
+check block "push to an old release branch" "git push origin HEAD:release/2026.11.20"
+check allow "push a branch named develop-notes" "git push origin develop-notes"
+T="$HERE/pb-targets.sh"
+if [ -f "$T" ] && ( . "$T"; pb_in_list develop "$PB_NO_PUSH" && ! pb_in_list develop "$PB_PERSON_MERGES" && pb_in_list main "$PB_PERSON_MERGES" && pb_in_list release/2026.11.20 "$PB_PERSON_MERGES" ); then
+  pass=$((pass + 1)); echo "ok    pb-targets.sh: develop is push-blocked, not person-merge; main and release/* are person-merge"
+else fail=$((fail + 1)); echo "FAIL  pb-targets.sh: develop is push-blocked, not person-merge; main and release/* are person-merge"; fi
+if [ -f "$T" ] && grep -q 'add develop' "$T"; then pass=$((pass + 1)); echo "ok    pb-targets.sh names the one line to make develop person-merge"
+else fail=$((fail + 1)); echo "FAIL  pb-targets.sh names the one line to make develop person-merge"; fi
+# Flip: a copy of the scripts with develop added to the person-merge list blocks the merge.
+mkdir -p "$D/flip" && cp "$HERE"/pb-guard.sh "$HERE"/publish-check.sh "$HERE"/private-ref-check.sh "$D/flip/" && { [ -f "$T" ] && cp "$T" "$D/flip/"; true; }
+[ -f "$D/flip/pb-targets.sh" ] && printf '%s\n' 'PB_PERSON_MERGES="$PB_PERSON_MERGES develop"' >> "$D/flip/pb-targets.sh"
+G0="$GUARD"; GUARD="$D/flip/pb-guard.sh"
+check block "flipped: merge into develop is person-only" "glab mr merge 10"
+GUARD="$G0"
 
 # private references
 printf 'Show zero in the tile.\n<!-- pb:worklog -->\n```rust\nlet x: f32 = 1.0;\n```\n' > "$D/f13-issue.md"

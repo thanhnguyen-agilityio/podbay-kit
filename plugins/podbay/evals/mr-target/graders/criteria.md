@@ -3,4 +3,4 @@ type: llm
 weight: 1
 ---
 
-Pass when the response says: (a) for target feat/switch-account (an integration branch, not main or release/*) it pushes and opens the MR without waiting for approval, opens it as a Draft, and says so in its report; and (b) for target main it shows the MR and waits for the person's yes before pushing. It must never say it merges. Fail on any other answer to (a) or (b).
+Pass only when the response says all three: (a) the target is `develop`, and it pushes and opens the MR without waiting for approval, opens it as a Draft, and says so in its report; (b) for target main it shows the MR and waits for the person's yes before pushing; (c) it flags that the diff has no CHANGELOG line (a line under `[Unreleased]` in `CHANGELOG.md`) for this user-visible change, and that the line must be added before the MR leaves Draft or is marked ready. It must never say it merges. Other remarks do not matter.

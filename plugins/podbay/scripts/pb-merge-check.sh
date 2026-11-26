@@ -2,7 +2,7 @@
 # Check an MR before the orchestrator merges it: the reviewed commit, the pb-ci commit and the MR head are the same.
 # Usage: pb-merge-check.sh <mr iid> -R <group/project> [--checkout <path>]
 # Passes when:
-#   - the MR is open and its target is not main, master or release/* (a person merges those),
+#   - the MR is open and its target is not in PB_PERSON_MERGES in pb-targets.sh (main, master, release/*: a person merges those),
 #   - an isolated review covers the head: a .podbay/review/*.md file whose "Reviewer:" line ends "head <sha prefix>",
 #     or an MR note headed "Isolated review, round <k>, commit <sha7>",
 #   - (skipped for a light change with no log) .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, clippy=pass, test=pass and no "=fail",
@@ -12,6 +12,8 @@
 # Exit 0 pass, 1 a check failed, 2 bad usage or unreadable MR.
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# shellcheck source=pb-targets.sh
+. "$HERE/pb-targets.sh" || { echo "pb-merge-check: cannot read pb-targets.sh" >&2; exit 2; }
 iid=""; repo=""; co="."
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -38,11 +40,13 @@ ok()   { echo "ok    $1"; }
 fail() { echo "FAIL  $1"; fails=$((fails + 1)); }
 
 [ "$state" = opened ] && ok "MR !$iid is open" || fail "MR !$iid is $state, not open"
-case "$target" in
-  main|master|release/*) fail "target $target: a person merges into main, master and release/* (contract, Gate 2)" ;;
-  "") fail "no target branch" ;;
-  *) ok "target $target is an integration branch" ;;
-esac
+if [ -z "$target" ]; then
+  fail "no target branch"
+elif pb_in_list "$target" "$PB_PERSON_MERGES"; then
+  fail "target $target: a person merges into $PB_PERSON_MERGES (contract, Gate 2)"
+else
+  ok "target $target is not person-only (pb-targets.sh)"
+fi
 
 # covers <sha prefix ...>: true when one of the given short shas (7 to 40 hex) is a prefix of the head.
 covers() { local x; for x in "$@"; do case "$sha" in "$x"*) return 0 ;; esac; done; return 1; }

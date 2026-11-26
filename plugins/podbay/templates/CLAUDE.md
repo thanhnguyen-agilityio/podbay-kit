@@ -17,7 +17,7 @@ Rust desktop app (egui 0.37, edition 2024) that shows Claude sessions and checko
 - There is no CI. These local runs are the only gate.
 
 ## Conventions
-- Never run `cargo fmt` or `rustfmt`, not even on files you edit. `main` is not formatted. Match the surrounding style; long lines are normal here. The diff should hold only real changes.
+- Never run `cargo fmt` or `rustfmt`, not even on files you edit. The code is not formatted. Match the surrounding style; long lines are normal here. The diff should hold only real changes.
 - No new dependencies without asking. Keep `Cargo.lock` unchanged and build with `--locked`.
 - Commit messages are one plain sentence with no prefix, for example "Show a finished action at once, without waiting for the machine to report".
 - Builds default to `PODBAY_ENV=local` (settings in `~/.config/podbay-local`, port 7881). Never read or write `~/.config/podbay-dev`.
