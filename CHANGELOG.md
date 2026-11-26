@@ -22,6 +22,12 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
   - new `release-develop-flow`;
   - `mr-target` now covers the `develop` default and the missing CHANGELOG line;
   - `release-notes-stale`, `release-site-stale` and the three review evals now use `develop`.
+  - Results: `release-develop-flow` scored 0.00 on 0.9.3 and 1.00 on 0.10.0. All 13 cases score 1.00 on 0.10.0. `mr-target`'s grader was rewritten as a checklist after the judge failed correct answers twice; two runs that timed out at 300 s were rerun.
+- Review: 3 isolated rounds on Opus, no blockers.
+  - Round 1, 4 should-fix: wildcard and matching refspecs passed the guard, a back-merge could be rebased, step 6 checked against a head that step 2 overwrote, and a release MR that moved after it opened.
+  - Round 2, 5 should-fix: a later `HEAD` refspec, the contract still squashing back-merges, squash `default_on`, no version bump or tag path for urgent fixes, and no review for the back-merge head.
+  - Round 3, 1 should-fix: step 6 did not repeat the check that `main` has nothing `develop` lacks.
+  - All are fixed, along with most nits. Not done: guard blocks for tag pushes and `glab release` (the skill text forbids them); an eval for the urgent route.
 
 ## podbay 0.9.3 - 2026-11-25
 
