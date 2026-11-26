@@ -15,7 +15,8 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
   - a Draft release MR from `develop` into `main`: a merge commit, no squash, `develop` kept; a person merges it after the team agrees, and it is checked for anything merged after verify;
   - tag and GitLab Release drafts for the person who tags (`tagger:`); the skill never creates, moves or deletes a tag.
   - The freeze template is replaced by `slack-release-start.md`; `release-checklist.md` adds the `host:` and `tagger:` values and drops the sync section.
-- Tests: test-pb-guard.sh 119 pass (11 new: merge into `develop` allowed, pushes to `develop` and old release branches blocked, the lists, and a flipped copy that makes `develop` person-only); test-merge-check.sh 33 pass (2 new); test-kit-text.sh 155 pass (3 old branch-name cases replaced by 39 develop-model cases).
+- Guard: a wildcard or matching refspec (`refs/heads/*`, `:`) is blocked; the value of `-o`/`--push-option` is no longer read as the remote, and `@` counts as the current branch, so these no longer slip a push to `develop` or `main` through.
+- Tests: test-pb-guard.sh 128 pass (20 new: merge into `develop` allowed, pushes to `develop` and old release branches blocked, wildcard and matching refspecs, push options, `@`, the lists, a flipped copy that makes `develop` person-only, and the block-everything fallback without `pb-targets.sh`); test-merge-check.sh 33 pass (2 new); test-kit-text.sh 164 pass (3 old branch-name cases replaced by 48 develop-model cases).
 - Evals:
   - new `release-develop-flow`;
   - `mr-target` now covers the `develop` default and the missing CHANGELOG line;

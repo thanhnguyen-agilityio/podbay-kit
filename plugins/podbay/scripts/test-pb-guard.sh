@@ -129,6 +129,19 @@ mkdir -p "$D/flip" && cp "$HERE"/pb-guard.sh "$HERE"/publish-check.sh "$HERE"/pr
 G0="$GUARD"; GUARD="$D/flip/pb-guard.sh"
 check block "flipped: merge into develop is person-only" "glab mr merge 10"
 GUARD="$G0"
+check block "wildcard refspec pushes every branch" "git push origin 'refs/heads/*:refs/heads/*'"
+check block "wildcard source refspec" "git push origin 'refs/heads/*'"
+check block "matching refspec (:)" "git push origin :"
+check allow "delete a feature branch with :name" "git push origin :fix/old"
+check block "push option value is not the refspec, on develop" "git -C $D/ondevelop push -o ci.skip origin"
+check block "@ pushes the current branch, on develop" "cd $D/ondevelop && git push origin @"
+check allow "push option on a feature branch" "git -C $D/onbranch push -o ci.skip origin"
+# Without pb-targets.sh the guard blocks every push and merge.
+mkdir -p "$D/nolist" && cp "$HERE"/pb-guard.sh "$HERE"/publish-check.sh "$HERE"/private-ref-check.sh "$D/nolist/"
+G0="$GUARD"; GUARD="$D/nolist/pb-guard.sh"
+check block "no pb-targets.sh: a feature push is blocked" "git push origin fix/x"
+check block "no pb-targets.sh: a merge into an epic branch is blocked" "glab mr merge 6"
+GUARD="$G0"
 
 # private references
 printf 'Show zero in the tile.\n<!-- pb:worklog -->\n```rust\nlet x: f32 = 1.0;\n```\n' > "$D/f13-issue.md"

@@ -137,16 +137,36 @@ while IFS= read -r seg; do
     if [[ "$seg" =~ (^|[[:space:]])-C[[:space:]]*(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
       target="$(resolve "${BASH_REMATCH[2]}" "$CUR")" || target=""
     fi
-    # Destination of each refspec word after the remote (the part after ":", without refs/heads/);
-    # a bare push or a HEAD refspec pushes the current branch.
-    dests=""
-    args="$(set -f; printf '%s\n' $rest | grep -v '^-')"
-    for w in $(set -f; printf '%s\n' "$args" | sed 1d); do d="${w##*:}"; dests="$dests ${d#refs/heads/}"; done
-    if [ "$(printf '%s\n' "$args" | grep -c .)" -lt 2 ] || [ "$(printf '%s\n' "$args" | sed -n 2p)" = HEAD ]; then
+    # Words after "push", without options; the value of -o/--push-option/--repo/--receive-pack/--exec is
+    # skipped too. Globbing stays off so a * in a refspec is not expanded.
+    set -f
+    args=""; skip=0
+    for w in $rest; do
+      if [ "$skip" = 1 ]; then skip=0; continue; fi
+      case "$w" in
+        -o|--push-option|--repo|--receive-pack|--exec) skip=1 ;;
+        -*) ;;
+        *) args="$args $w" ;;
+      esac
+    done
+    # Destination of each refspec after the remote (the part after ":", without refs/heads/). A wildcard
+    # or an empty destination (":", the matching refspec) can reach any branch: block it. A bare push,
+    # or a HEAD or @ refspec, pushes the current branch.
+    dests=""; n=0; second=""
+    for w in $args; do
+      n=$((n + 1)); [ "$n" = 2 ] && second="$w"
+      [ "$n" = 1 ] && continue
+      d="${w##*:}"; d="${d#refs/heads/}"
+      case "$d" in
+        *'*'*|"") block "git push with a wildcard or matching refspec ($w) can push main or develop and is never allowed. Push one named branch (git push -u origin <branch>)." ;;
+      esac
+      dests="$dests $d"
+    done
+    if [ "$n" -lt 2 ] || [ "$second" = HEAD ] || [ "$second" = @ ]; then
       dests="$dests $(git -C "${target:-$CUR}" symbolic-ref --short -q HEAD 2>/dev/null)"
     fi
     for d in $dests; do
-      [ "$d" = HEAD ] && continue
+      case "$d" in HEAD|@) continue ;; esac
       pb_in_list "$d" "$PB_NO_PUSH" || continue
       case "$d" in
         main|master)
@@ -155,6 +175,7 @@ while IFS= read -r seg; do
         *) block "git push to $d is never allowed: it changes only by MR (contract, Gate 2). Push your own branch (git push -u origin fix/issue-<n>-<slug>) and open a Draft MR into $d." ;;
       esac
     done
+    set +f
   fi
 
   # 4. glab merge / approve

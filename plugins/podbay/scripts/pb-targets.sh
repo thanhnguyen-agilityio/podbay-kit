@@ -12,12 +12,13 @@ PB_NO_PUSH="main master develop release/*"
 
 # pb_in_list <branch> "<patterns>": true when the branch matches one of the patterns.
 pb_in_list() {
-  local b="$1" p hit=1
+  local b="$1" p hit=1 noglob=0
+  case "$-" in *f*) noglob=1 ;; esac
   set -f
   for p in $2; do
     # shellcheck disable=SC2254
     case "$b" in $p) hit=0; break ;; esac
   done
-  set +f
+  [ "$noglob" = 1 ] || set +f
   return $hit
 }

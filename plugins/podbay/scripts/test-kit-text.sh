@@ -112,6 +112,15 @@ step  "pb-release step 7 drafts the tag and Release only" skills/pb-release/SKIL
 lacks "pb-release never calls the tag API" skills/pb-release/SKILL.md 'repository/tags'
 has   "pb-release keeps the release host" skills/pb-release/SKILL.md 'host'
 has   "release checklist names the host" reference/release-checklist.md '^\| Release host \|'
+step  "pb-mr never rebases a back-merge branch" skills/pb-mr/SKILL.md 3 'backmerge/main-.. branch is never rebased'
+has   "urgent fix bumps the patch version" reference/mr-checklist.md 'also bumps the patch version'
+step  "pb-release step 3 records the verify head" skills/pb-release/SKILL.md 3 'verify head'
+step  "pb-release step 6 checks against the verify head" skills/pb-release/SKILL.md 6 '<verify head>\.\.origin/develop'
+step  "pb-release step 7 checks the merge brought exactly the release head" skills/pb-release/SKILL.md 7 'merge_commit_sha>\^2. equals .<release head>'
+step  "pb-release step 0 checks the project's merge method" skills/pb-release/SKILL.md 0 'merge_method'
+step  "pb-release step 5: its approval rule wins over pb-mr's" skills/pb-release/SKILL.md 5 "this skill's approval rule wins"
+has   "orchestrator holds develop merges while a release MR is open" skills/pb-orchestrator/SKILL.md 'While a release MR from .develop. into .main. is open'
+has   "batch worker opens MRs as Drafts" skills/pb-fix/references/worker.md 'glab mr create .*--draft'
 [ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
 [ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"
 

@@ -10,7 +10,7 @@ Repo values are here. Team values (people, hosts, channels, links) live only in 
 | --- | --- | --- |
 | Work branch | here | `develop`: every MR goes here; it reaches `main` only through the release MR |
 | Release-prep branch | here | `release-prep/<yyyy.mm.dd>` (release date) from `origin/develop`; one MR into `develop` |
-| Release MR | here | Draft MR from `develop` into `main`, a merge commit (no squash; `develop` stays) |
+| Release MR | here | Draft MR from `develop` into `main`, a merge commit (no squash; `develop` stays); the project's merge method must be "Merge commit" |
 | App version | here | `version` in `Cargo.toml`, SemVer 2.0.0 |
 | Tag | here | `v<x.y.z>`, annotated, on the merge commit of the release MR; created by a person |
 | GitLab Release name | here | `Pod Bay <x.y.z>`; created by a person |
@@ -39,8 +39,8 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 | 4b | User guide | Every user-visible change from the merged MRs is in the guide; labels match the app; site rebuilt | same MR as step 4 |
 | 4c | Website | Release notes entry marked Latest with known issues and a screenshot per user-visible change; landing "What's new", Download button version, installer names and changed feature texts; touched guide pages; no stale version left unexplained; phone and desktop checked; generated parts untouched | same MR as step 4 |
 | 5 | Version bump | `Cargo.toml`, the podbay entry in `Cargo.lock`, `assets/credits.json`; gates pass; `git diff --stat` within the allow-list (with the 4c site pages); hand-written release notes Latest entry and landing version show `<x.y.z>` (generated pages skipped); isolated review | same MR as step 4 |
-| 6 | Release MR | Step 5 merged; step 2 and tier 1 pass on the new head; only the release-prep MR and listed fixes since the verified head | Draft MR from `develop` into `main` |
-| 7 | Tag and Release hand-off | The release MR merged; tag does not exist yet; tag and Release text drafted and scanned | drafts only |
+| 6 | Release MR | Step 5 merged; step 2 and tier 1 pass on the new head; only the release-prep MR and listed fixes since the verify head | Draft MR from `develop` into `main` |
+| 7 | Tag and Release hand-off | The release MR merged at the release head (the merge commit's second parent); tag does not exist yet; tag and Release text drafted and scanned | drafts only |
 | 8 | Deploy hand-off | Notes text and Slack draft shown; the tag exists on the merge commit | Slack draft only |
 | 9 | Announce | Live landing and release notes pages match the version; drafts shown | Slack drafts only |
 
@@ -48,7 +48,7 @@ If `.podbay/release.md` is missing a value a step needs, ask once and offer to w
 
 - A blocker found during the release is fixed by an MR into `develop`. Then rerun step 2 and tier 1 on the new head, step 3 when the fix touches the screens, and steps 4 to 5 again, including the website step 4c, when it changes user-visible text. After the tag, a blocker means a new patch version (`x.y.z+1`) through `develop`, or an urgent fix into `main` (mr-checklist.md). A skill never creates, moves, deletes or force-pushes a tag.
 - Build the `develop` head after every fix merged during the release: a fix can pass on its own branch and still break the combined branch.
-- Merges into `develop` during the release: other work may wait until the release MR merges, if the playbook asks for it. The release MR's check (step 6) catches anything that came in after verify.
+- Merges into `develop` during the release: other work may wait until the release MR merges, if the playbook asks for it. Step 6 catches anything merged after verify; step 7 catches anything merged after the release MR opened. While the release MR is open, skills merge nothing into `develop` without the host's yes.
 - The version bump is required: the app's update check offers only a newer version, and `deploy.sh` refuses a version the server already has.
 - `Cargo.lock`: change only the `version` line of the `podbay` package. Never `cargo update`. Then `cargo build --locked` must pass, and `credits_match_cargo_lock` must pass after the credits regenerate.
 - The user guide and the website are updated once per release, in the release-prep MR, not in each feature MR. Parts that `deploy.sh` or the site build fills in are never edited by hand.
