@@ -138,6 +138,10 @@ check block "@ pushes the current branch, on develop" "cd $D/ondevelop && git pu
 check block "a later HEAD refspec pushes the current branch, on develop" "cd $D/ondevelop && git push origin fix/y HEAD"
 check block "a later @ refspec pushes the current branch, on develop" "cd $D/ondevelop && git push origin fix/y @"
 check allow "two named feature branches" "cd $D/ondevelop && git push origin fix/y fix/z"
+check block "bare push at the end of a subshell, on develop" "(cd $D/ondevelop; git push)"
+check block "bare push with an unresolvable -C path" "git -C \$WT push"
+check block "heads/develop is develop" "git push origin heads/develop"
+check allow "named feature push with an unresolvable -C path" "git -C \$WT push origin fix/y"
 check allow "push option on a feature branch" "git -C $D/onbranch push -o ci.skip origin"
 # Without pb-targets.sh the guard blocks every push and merge.
 mkdir -p "$D/nolist" && cp "$HERE"/pb-guard.sh "$HERE"/publish-check.sh "$HERE"/private-ref-check.sh "$D/nolist/"

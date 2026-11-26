@@ -128,14 +128,14 @@ while IFS= read -r seg; do
   fi
 
   # 2 and 3. git push
-  if [[ "$seg" =~ (^|[[:space:]])git[[:space:]]+(.*[[:space:]])?push([[:space:]]|$) ]]; then
-    rest="${seg#* push}"; rest="${rest//\"/}"; rest="${rest//\'/}"
+  if [[ "$seg" =~ (^|[[:space:]])git[[:space:]]+(.*[[:space:]])?push([[:space:]]|\)|$) ]]; then
+    rest="${seg#* push}"; rest="${rest//\"/}"; rest="${rest//\'/}"; rest="${rest//)/}"
     if printf '%s' "$rest" | grep -Eq '(^|[[:space:]])(--force[a-z-]*|--all|--mirror|-[a-zA-Z]*f[a-zA-Z]*|\+[^[:space:]]+)([[:space:]=]|$)'; then
       block "git push with --force, -f, --force-with-lease, +refspec, --all or --mirror is never allowed. Push the branch normally (git push -u origin <branch>) and let a person handle history."
     fi
-    target="$CUR"
+    target="$CUR"; cbad=0
     if [[ "$seg" =~ (^|[[:space:]])-C[[:space:]]*(\"[^\"]+\"|\'[^\']+\'|[^[:space:]]+) ]]; then
-      target="$(resolve "${BASH_REMATCH[2]}" "$CUR")" || target=""
+      target="$(resolve "${BASH_REMATCH[2]}" "$CUR")" || { target=""; cbad=1; }
     fi
     # Words after "push", without options; the value of -o/--push-option/--repo/--receive-pack/--exec is
     # skipped too. Globbing stays off so a * in a refspec is not expanded.
@@ -157,13 +157,14 @@ while IFS= read -r seg; do
       n=$((n + 1))
       [ "$n" = 1 ] && continue
       case "$w" in HEAD|@) cur=1 ;; esac
-      d="${w##*:}"; d="${d#refs/heads/}"
+      d="${w##*:}"; d="${d#refs/heads/}"; d="${d#heads/}"
       case "$d" in
         *'*'*|"") block "git push with a wildcard or matching refspec ($w) can push main or develop and is never allowed. Push one named branch (git push -u origin <branch>)." ;;
       esac
       dests="$dests $d"
     done
     if [ "$n" -lt 2 ] || [ "$cur" = 1 ]; then
+      [ "$cbad" = 1 ] && block "git push of the current branch with a -C path the guard cannot resolve (a variable or a missing folder) is blocked: it cannot tell whether that checkout is on main or develop. Name the branch (git -C <path> push origin <branch>) or use a literal path."
       dests="$dests $(git -C "${target:-$CUR}" symbolic-ref --short -q HEAD 2>/dev/null)"
     fi
     for d in $dests; do

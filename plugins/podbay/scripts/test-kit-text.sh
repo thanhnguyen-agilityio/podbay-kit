@@ -129,6 +129,9 @@ step  "pb-mr: an urgent fix needs a version section, a back-merge no line" skill
 step  "pb-release step 7 has an urgent-fix variant" skills/pb-release/SKILL.md 7 '--urgent <iid>'
 has   "a back-merge MR gets its own review on its head" reference/mr-checklist.md 'pb-review. on the back-merge MR'
 has   "back-merge version conflict keeps develop's version" reference/mr-checklist.md "keep .develop.'s version"
+step  "pb-release step 6 repeats the main-has-nothing-develop-lacks check" skills/pb-release/SKILL.md 6 'git log --oneline --no-merges origin/develop\.\.origin/main'
+step  "pb-release --urgent still runs step 0" skills/pb-release/SKILL.md 7 'after step 0, start here'
+has   "back-merge places the urgent CHANGELOG section by version" reference/mr-checklist.md 'in version order'
 [ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
 [ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"
 
