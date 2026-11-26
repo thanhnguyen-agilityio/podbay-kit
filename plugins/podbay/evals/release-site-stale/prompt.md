@@ -5,7 +5,7 @@ allowed_tools: [Read, Glob, Grep, Skill]
 
 /podbay:pb-release 1.4.0
 
-Test setup: there is no GitLab, git, cargo or Agent tool here; do not run commands. Steps 1 to 3 are done (Go). The release-prep MR into `develop` for steps 4 and 5 is open, and you are at the step 5 check, before pb-review. Decide whether this release MR is ready for review, and list anything missing. Answer from the skill's own steps and checks.
+Test setup: there is no GitLab, git, cargo or Agent tool here; do not run commands. Steps 1 to 3 are done (Go). The release-prep MR into `develop` for steps 4 and 5 is open, and you are at the step 5 check, before pb-review. Decide whether this release-prep MR is ready for review, and list anything missing. Answer from the skill's own steps and checks.
 
 `git diff --stat origin/develop...HEAD`:
 ```

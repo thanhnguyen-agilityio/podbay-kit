@@ -121,6 +121,14 @@ step  "pb-release step 0 checks the project's merge method" skills/pb-release/SK
 step  "pb-release step 5: its approval rule wins over pb-mr's" skills/pb-release/SKILL.md 5 "this skill's approval rule wins"
 has   "orchestrator holds develop merges while a release MR is open" skills/pb-orchestrator/SKILL.md 'While a release MR from .develop. into .main. is open'
 has   "batch worker opens MRs as Drafts" skills/pb-fix/references/worker.md 'glab mr create .*--draft'
+has   "contract: back-merge and release MRs are never squashed" reference/contract.md 'except a back-merge MR and the release MR'
+step  "pb-release step 0 needs squash never or default_off" skills/pb-release/SKILL.md 0 'squash_option. must be .never. or .default_off.'
+step  "pb-release step 6 tells the merger not to squash" skills/pb-release/SKILL.md 6 'do not tick Squash'
+step  "pb-fix: an urgent fix bumps the patch version" skills/pb-fix/SKILL.md 6 'hotfix/.. branch.*patch version'
+step  "pb-mr: an urgent fix needs a version section, a back-merge no line" skills/pb-mr/SKILL.md 7 'hotfix/.. branch needs'
+step  "pb-release step 7 has an urgent-fix variant" skills/pb-release/SKILL.md 7 '--urgent <iid>'
+has   "a back-merge MR gets its own review on its head" reference/mr-checklist.md 'pb-review. on the back-merge MR'
+has   "back-merge version conflict keeps develop's version" reference/mr-checklist.md "keep .develop.'s version"
 [ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
 [ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"
 

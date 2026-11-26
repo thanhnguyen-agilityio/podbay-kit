@@ -8,7 +8,7 @@ Teach only what the diff uses.
 1. Read `${CLAUDE_PLUGIN_ROOT}/reference/contract.md` for the target repo.
 2. Get the diff:
    - MR number: `glab mr diff <n> -R <repo>`.
-   - Range (e.g. `main..HEAD`): `git diff <range>` in the target checkout.
+   - Range (e.g. `origin/develop..HEAD`): `git diff <range>` in the target checkout.
 3. Write a `## Rust in this diff` section for a TypeScript/C# developer:
    - Up to 10 bullets. Each has: the concept, what it does here, a TS or C# analogy, and `file:line`.
    - Pick only concepts the diff actually uses: ownership and borrowing, `Option` / `Result` / `?`, `match`, traits and `impl`, lifetimes, `Arc<Mutex<_>>`, closures and `move`, egui immediate mode, kittest queries.

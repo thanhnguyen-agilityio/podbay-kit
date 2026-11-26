@@ -152,17 +152,18 @@ while IFS= read -r seg; do
     # Destination of each refspec after the remote (the part after ":", without refs/heads/). A wildcard
     # or an empty destination (":", the matching refspec) can reach any branch: block it. A bare push,
     # or a HEAD or @ refspec, pushes the current branch.
-    dests=""; n=0; second=""
+    dests=""; n=0; cur=0
     for w in $args; do
-      n=$((n + 1)); [ "$n" = 2 ] && second="$w"
+      n=$((n + 1))
       [ "$n" = 1 ] && continue
+      case "$w" in HEAD|@) cur=1 ;; esac
       d="${w##*:}"; d="${d#refs/heads/}"
       case "$d" in
         *'*'*|"") block "git push with a wildcard or matching refspec ($w) can push main or develop and is never allowed. Push one named branch (git push -u origin <branch>)." ;;
       esac
       dests="$dests $d"
     done
-    if [ "$n" -lt 2 ] || [ "$second" = HEAD ] || [ "$second" = @ ]; then
+    if [ "$n" -lt 2 ] || [ "$cur" = 1 ]; then
       dests="$dests $(git -C "${target:-$CUR}" symbolic-ref --short -q HEAD 2>/dev/null)"
     fi
     for d in $dests; do
