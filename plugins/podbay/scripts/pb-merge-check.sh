@@ -6,7 +6,7 @@
 #   - an isolated review covers the head: a .podbay/review/*.md file whose "Reviewer:" line ends "head <sha prefix>",
 #     or an MR note headed "Isolated review, round <k>, commit <sha7>",
 #   - (skipped for a light change with no log) .podbay/ci/<sha12>.log has "PBCI-HEAD sha=<head>" and a summary with build=pass, clippy=pass, test=pass and no "=fail",
-#   - a sensitive change (pb-tier.sh) carries the label pb::human-reviewed (only a person adds it; contract).
+#   - a sensitive change (pb-tier.sh) carries the label human-reviewed (only a person adds it; contract).
 # It checks commits, not findings: an open blocker in a review on the head still passes this check.
 # Then it prints the merge command, pinned to the head: glab mr merge <iid> -R <repo> --sha <head>.
 # Exit 0 pass, 1 a check failed, 2 bad usage or unreadable MR.
@@ -74,8 +74,8 @@ if git -C "$co" cat-file -e "$sha" 2>/dev/null && git -C "$co" rev-parse -q --ve
   case "$tier" in tier=light*) light=1 ;; esac
   echo "      $(printf '%s' "$tier" | head -1)"
   if printf '%s' "$tier" | grep -q '^sensitive:'; then
-    case ",$labels," in *,pb::human-reviewed,*) ok "sensitive change has pb::human-reviewed" ;;
-      *) fail "sensitive change ($(printf '%s' "$tier" | grep -c '^sensitive:') paths): needs a person's review note and the label pb::human-reviewed" ;; esac
+    case ",$labels," in *,human-reviewed,*) ok "sensitive change has human-reviewed" ;;
+      *) fail "sensitive change ($(printf '%s' "$tier" | grep -c '^sensitive:') paths): needs a person's review note and the label human-reviewed" ;; esac
   fi
 else
   fail "head $s7 or origin/$target is not in the checkout: git fetch origin, then rerun"

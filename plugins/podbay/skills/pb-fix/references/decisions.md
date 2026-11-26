@@ -55,5 +55,5 @@ One comment per issue that keeps the analysis, plan and decisions after the sess
 
 ## Follow-ups
 Anything beyond the Expected section is not built; at ship time each one becomes an issue:
-a short ticket per `${CLAUDE_PLUGIN_ROOT}/reference/ticket-format.md` (title format, Description or Observed/Expected, Out of scope) ending with `Follow-up from #<n> (MR !<mr>). <!-- pb:followup-of #<n> -->`, written to a file, checked with publish-check and private-ref-check, then `glab issue create -R <repo> --title '<title>' --label 'type::<type>' --description-file <file>`.
-No `priority::` label: a person triages it. Link them as `Refs #<f>` in the MR and the work log's Result. Nice-to-haves with no clear value: mention them in the MR, don't file them.
+a short ticket per `${CLAUDE_PLUGIN_ROOT}/reference/ticket-format.md` (title format, Description or Observed/Expected, Out of scope) ending with `Follow-up from #<n> (MR !<mr>). <!-- pb:followup-of #<n> -->`, written to a file, checked with publish-check and private-ref-check, then `glab issue create -R <repo> --title '<title>' --label '<type>' --description-file <file>` (`<type>` is `bug`, `feature` or `improvement`, an existing label; leave out `--label` for a task).
+No priority label (`P1` to `P3`): a person triages it. Link them as `Refs #<f>` in the MR and the work log's Result. Nice-to-haves with no clear value: mention them in the MR, don't file them.

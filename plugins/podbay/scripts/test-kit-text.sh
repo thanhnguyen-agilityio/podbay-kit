@@ -71,7 +71,7 @@ has   "a clean rebase posts a carry-over review note" reference/contract.md 'Cle
 has   "the merge check is not proof of who reviewed" reference/contract.md 'consistency check, not proof of who reviewed'
 has   "orchestrator runs the merge check on the author's checkout" skills/pb-orchestrator/SKILL.md 'author checkout>. is the checkout or worktree of the session that wrote the MR'
 has   "needs-advisor uses the pb-tier list" reference/contract.md 'a path .pb-tier.sh. prints as .sensitive:'
-has   "only a person adds pb::human-reviewed" reference/contract.md 'a skill or session never adds it'
+has   "only a person adds human-reviewed" reference/contract.md 'a skill or session never adds it'
 
 # No branch name is built from a version (0.9.1).
 # Matches are printed with what comes before them, so .podbay/release/<x.y.z>/ state folders can be left out.
@@ -132,6 +132,21 @@ has   "back-merge version conflict keeps develop's version" reference/mr-checkli
 step  "pb-release step 6 repeats the main-has-nothing-develop-lacks check" skills/pb-release/SKILL.md 6 'git log --oneline --no-merges origin/develop\.\.origin/main'
 step  "pb-release --urgent still runs step 0" skills/pb-release/SKILL.md 7 'after step 0, start here'
 has   "back-merge places the urgent CHANGELOG section by version" reference/mr-checklist.md 'in version order'
+# Old label scheme (0.10.1): bug|feature|improvement, P1|P2|P3, area:<name>; skills never create labels.
+hits="$(cd "$ROOT" && grep -rnE 'type::|priority::|area::|glab label create|pb::agent-ready' skills reference templates 2>/dev/null)"
+[ -z "$hits" ] && ok "no new-scheme labels and no label creation in skills, references or templates" || bad "no new-scheme labels and no label creation ($(printf '%s' "$hits" | head -1 | cut -c1-100))"
+has   "contract: type labels are bug, feature, improvement" reference/contract.md '^\| Type \| .bug., .feature., .improvement.'
+has   "contract: priority labels are P1, P2, P3" reference/contract.md '^\| Priority \| .P1., .P2., .P3.'
+has   "contract: area labels are the repo's area:<name> labels" reference/contract.md '^\| Area \| .*area:<name>'
+has   "contract: skills never create a label" reference/contract.md 'never creates a label'
+has   "contract: the merge gate label is human-reviewed, added by a person" reference/contract.md 'a person adds .human-reviewed.'
+has   "contract: needs-human is never approval" reference/contract.md '.needs-human. .*is never approval'
+hits="$(cd "$ROOT" && grep -rn 'pb::human-reviewed' skills reference templates scripts --exclude='test-*.sh' 2>/dev/null)"
+[ -z "$hits" ] && ok "the gate label is human-reviewed everywhere" || bad "the gate label is human-reviewed everywhere ($(printf '%s' "$hits" | head -1 | cut -c1-100))"
+has   "batch mode orders by P1, P2, P3" skills/pb-fix/references/batch.md '.P1. -> .P2. -> .P3.'
+has   "batch mode stops when a state label is missing" skills/pb-fix/references/batch.md 'state label .*does not exist.*stop and report'
+has   "filing uses agent-ready" skills/pb-triage/references/file.md '.agent-ready.'
+has   "ticket format: type table uses the old labels" reference/ticket-format.md '^\| Bug \| .bug. \|'
 [ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
 [ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"
 

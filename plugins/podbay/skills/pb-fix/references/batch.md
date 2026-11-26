@@ -18,7 +18,7 @@ Skill version: pb-1. Work the GitLab issues selected by $ARGUMENTS (see Queue) e
 
 If any check fails, stop the run: start no issue, write the report with only a Preflight section (check, pass/fail, error, fix), reply with what I must fix.
 1. Run the `always` checks in `${CLAUDE_PLUGIN_ROOT}/reference/preflight.md` (fetch, `glab auth status`, access level, clippy and `cargo test` on `origin/develop` in `<scratch>/wt-develop`). Keep that worktree for the run; remove it at the end.
-2. Create the labels from the contract's Labels table that are missing (`glab label create --name <name> --color <hex> -R <repo>`).
+2. Check that the labels this run may add exist (`glab label list -R <repo>`; contract, Labels). If a state label it needs (`pb::ready`, `pb::draft`, `pb::skipped`) does not exist, stop and report it before any work: a skill never creates a label.
 3. Create an empty `<scratch>/preflight-checks.md`. The `screenshots` and `app` checks run later, only when a worker first needs them; workers record results there.
 
 Record each result for the report and the run start (`date -u +%Y-%m-%dT%H:%M:%SZ`).
@@ -27,21 +27,21 @@ Record each result for the report and the run start (`date -u +%Y-%m-%dT%H:%M:%S
 Select issues from $ARGUMENTS (`--skip-preflight` is not part of the selection):
 - **Numbers** (`6 20 8`): those issues.
 - **`open`**: `glab issue list -R <repo> --opened --per-page 100 -F json`, then keep only issues a file in `.podbay/triage/` lists as approved with that issue number. Words after `open` are scoped-label filters:
-  - priority: `high`, `medium`, `low` (= `priority::<word>`);
-  - type: `bug`, `story`, `task` (= `type::<word>`);
-  - area: write the full label (`area::workspace`).
+  - priority: `P1`, `P2`, `P3`;
+  - type: `bug`, `feature`, `improvement`;
+  - area: write the full label (`area:workspace`).
   - Several values in one group match any of them; groups combine with AND.
   - A word that matches no label (`glab label list -R <repo>`): stop before preflight and reply with the valid labels.
   - Also drop issues with an open MR whose description says `Closes #<n>` (`glab mr list -R <repo> --search "<n>"`).
   - Also drop issues whose latest comment contains `<!-- pb:skipped -->` with no newer comment from a member.
-  - Also drop issues labelled `pb::needs-human`: a person looks at them first.
+  - Also drop issues labelled `needs-human`: a person looks at them first.
   - Also drop child tickets of an epic (`glab api projects/<id>/issues/<n> --jq .epic` not null): they target `feat/<epic-name>` through `pb-fix` (contract, Routing).
-  - Also drop `type::spike` and `type::epic` issues: spikes run by hand, epics through their stories.
+  - Also drop spikes and epics (the description starts with `Kind: Spike` or `Kind: Epic`): spikes run by hand, epics through their stories.
   - Follow-ups (`<!-- pb:followup-of #`) need their own triage like any issue, so they never chain into the same run.
   - In `live` mode only (contract, Target), also drop issues labelled `pb::needs-advisor` without `pb::approved`: the advisor has not approved them yet.
   - At most 10 issues per run, highest priority first; list the rest in the report as "not reached".
 - Then for each: `glab issue view <n> -R <repo> --comments`. Drop closed issues, those with an open MR (as above), and those no triage file lists as approved (contract, Intake). Untriaged issues never drive writes. List dropped ones in the report.
-- Order: `priority::high` -> `medium` -> `low` -> none; ties by lowest number. One issue at a time, each from the latest `origin/develop`.
+- Order: `P1` -> `P2` -> `P3` -> none; ties by lowest number. One issue at a time, each from the latest `origin/develop`.
 
 ## Per issue
 Record start and end time. **Budget:** 60 minutes wall clock per issue (contract); the worker checks it, and over budget it pushes what is done, opens a draft MR with `pb::draft`, and replies `draft`.

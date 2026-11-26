@@ -2,6 +2,13 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.10.1 - 2026-11-26
+
+- Old label scheme (team decision of 2026-11-26): type `bug`, `feature` or `improvement` (a task, spike or epic gets no type label and starts its description with `Kind: <kind>`); priority `P1`, `P2`, `P3`; the repo's existing `area:<name>` labels; `feature::high` is read, never added. Replaces `type::*`, `priority::*` and `area::*` in the contract, ticket format, pb-triage filing, pb-fix batch mode and follow-ups, the bug checks in pb-mr and pb-fix, and the issue templates.
+- `agent-ready` and `needs-human` replace `pb::agent-ready` and `pb::needs-human`. The person-reviewed merge gate is now `human-reviewed` (a new label a person created) in `pb-merge-check.sh`, `pb-tier.sh` and the contract; `needs-human` is never approval.
+- Skills never create a label: the filing and batch steps that ran `glab label create` are gone, and a missing state label (`pb::ready`, `pb::draft`, `pb::skipped`, `pb::approved`) stops the run. `pb-guard` blocks `glab label create|edit|delete`, `glab api` writes to `/labels`, and any label added by `glab issue|mr create|update` or a `glab api` write that the repo does not have (read with `glab label list`; unreadable -> block), because GitLab creates a missing label silently.
+- Tests: test-pb-guard.sh 149 pass (14 new), test-merge-check.sh 35 pass (2 new: `needs-human` and the old `pb::human-reviewed` do not pass the gate), test-kit-text.sh 187 pass (12 new).
+
 ## podbay 0.10.0 - 2026-11-26
 
 - Branch model with `develop` (team decision of 2026-11-26): all work goes into `develop`; `develop` reaches `main` only through the release MR. No more release, hotfix, cherry-pick or sync branches; old `release/*` branches are read-only.

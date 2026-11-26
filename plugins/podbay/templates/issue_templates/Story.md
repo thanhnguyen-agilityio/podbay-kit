@@ -46,4 +46,4 @@ Then
 ## Evidence
 <!-- Screenshot, screen recording or a sketch. Drag the file into this box. -->
 
-/label ~"type::story"
+/label ~feature

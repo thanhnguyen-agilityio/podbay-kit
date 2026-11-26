@@ -6,11 +6,11 @@ Every GitLab issue these skills write reads as if a senior BA/QA wrote it. `/pod
 
 | Type | Label | When |
 | --- | --- | --- |
-| Bug | `type::bug` | The app does something other than what it is meant to: its own text, docs, the platform's convention, or how its other screens behave. |
-| Story | `type::story` | A user-facing change that is worth shipping on its own (UI/UX improvements, small features). |
-| Task | `type::task` | Work users don't see: tests, refactors, build, docs. |
-| Spike | `type::spike` | Time-boxed research that settles an unknown before a story can be written. |
-| Epic | `type::epic` | A feature that needs several stories. The stories are child issues; each lists the epic under Dependencies. |
+| Bug | `bug` | The app does something other than what it is meant to: its own text, docs, the platform's convention, or how its other screens behave. |
+| Story | `feature` (a new capability) or `improvement` (something that works but should be better) | A user-facing change that is worth shipping on its own (UI/UX improvements, small features). |
+| Task | none (the description starts with `Kind: Task`) | Work users don't see: tests, refactors, build, docs. |
+| Spike | none (`Kind: Spike`) | Time-boxed research that settles an unknown before a story can be written. |
+| Epic | none (`Kind: Epic`) | A feature that needs several stories. The stories are child issues; each lists the epic under Dependencies. |
 
 `pb-fix` batch mode works bugs, stories and tasks. Spikes run by hand for now; epics are never worked directly.
 
@@ -24,7 +24,7 @@ Every GitLab issue these skills write reads as if a senior BA/QA wrote it. `/pod
 | Spike | `[Spike] Investigate <question>` | `[Spike] Investigate equal-height cards in egui` |
 | Epic | `[Epic] <outcome>` | `[Epic] Search across every machine` |
 
-Area is the screen as the app names it: Workspace, Overview, Tasks, Machines, Clone, Settings, or Network for things with no screen. It matches the `area::` label.
+Area is the screen as the app names it: Workspace, Overview, Tasks, Machines, Clone, Settings, or Network for things with no screen. It maps to one of the repo's existing `area:<name>` labels (`glab label list`); when none fits, no area label.
 
 ## 3. Templates
 

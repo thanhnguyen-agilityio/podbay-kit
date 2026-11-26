@@ -6,7 +6,7 @@
 #   light: every path is docs or site text (docs/, site/, *.md). One short review round; pb-ci optional.
 #   full:  anything else. Full isolated review and a pb-ci pass on the head.
 #   sensitive (any tier, even light): auth, network, saved state, migrations, service, UI kit, dependencies, build script.
-#            A person's review note is also needed before merge (label pb::human-reviewed).
+#            A person's review note is also needed before merge (label human-reviewed).
 # Exit 0, or 2 on bad usage / git error.
 set -u
 # Paths are read NUL-separated with renames split into delete + add, so a moved or

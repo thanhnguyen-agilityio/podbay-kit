@@ -17,6 +17,10 @@ printf 'token: "%s"\n' "glpat-""abcdefghijklmnopqrstuv" > "$D/secret.md"
 mkdir -p "$D/bin"
 cat > "$D/bin/glab" <<'FAKE'
 #!/bin/bash
+if [ "$1 $2" = "label list" ]; then
+  case "$*" in *other/fail*) exit 1 ;; esac
+  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"}]'; exit 0
+fi
 [ "$1 $2" = "mr view" ] || exit 1
 case "${3#!}" in
   4) t=main ;; 5) t=release/2026.11.13 ;; 6) t=feat/switch-account ;; 8) t=master ;; 10) t=develop ;;
@@ -160,7 +164,22 @@ check block "review artifact finding #" "glab issue create --title x --descripti
 check block "f13_ test name" "glab issue create --title x --description-file $D/pr2.md"
 check block "f13.Q1 bullet" "glab issue create --title x --description-file $D/pr3.md"
 check block "verify:: label in command" "glab issue update 3 -R group/project --label 'verify::L1'"
-check allow "plain labels in command" "glab issue update 3 -R group/project --label 'priority::low,type::bug'"
+check allow "existing labels" "glab issue update 3 -R group/project --label 'P3,bug'"
+# Labels (0.10.1): a skill never creates a label; GitLab creates a missing one silently when it is added.
+check block "labels that do not exist on the repo" "glab issue update 3 -R group/project --label 'priority::low,type::bug'"
+check block "-l with a missing label" "glab issue create -R group/project -t x -l feature --description-file $D/clean.md"
+check allow "existing label with a space" "glab mr update 6 -R group/project --label 'Do Not Merge'"
+check allow "--label=existing" "glab issue update 3 -R group/project --label=agent-ready"
+check block "two --label flags, one missing" "glab issue update 3 -R group/project --label bug --label size:XL"
+check allow "unlabel is not a new label" "glab issue update 3 -R group/project --unlabel type::story"
+check block "label list unreadable" "glab issue update 3 -R other/fail --label bug"
+check block "glab label create" "glab label create -R group/project --name foo --color '#ffffff'"
+check block "glab label delete" "glab label delete foo -R group/project"
+check block "glab label edit" "glab label edit foo -R group/project --name bar"
+check block "api POST to labels" "glab api -X POST projects/1/labels -f name=foo -f color=#ffffff"
+check allow "api GET labels" "glab api projects/1/labels"
+check block "api add_labels with a missing label" "glab api -X PUT projects/1/issues/3 -f add_labels=type::story"
+check allow "api add_labels with an existing label" "glab api -X PUT projects/1/issues/3 -R group/project -f add_labels=bug"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
 MSG_RE="10 GB"

@@ -15,6 +15,9 @@
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
 #   7. cargo build|test|clippy|run|check (and pb-ci.sh) in command position when free disk is under PB_DISK_FLOOR_GB
 #      (whole GB, default 10). Tests fake free space with PB_FREE_GB_OVERRIDE, read only when PB_GUARD_TEST=1.
+#   8. New labels: glab label create|edit|delete, glab api writes to /labels, and a label added by glab issue|mr
+#      create|update (--label, -l) or a glab api write (labels=, add_labels=) that the repo does not have
+#      (glab label list; unreadable -> block). GitLab creates a missing label silently when one is added.
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
 # Not enforced: wrappers (bash script.sh, eval, $(...)), curl or python calls to the API.
@@ -206,6 +209,60 @@ except Exception: print("")' 2>/dev/null)"
   if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?api[[:space:]]' &&
      printf '%s' "$seg" | grep -Eq '/(merge|approve|unapprove)([^[:alnum:]_-]|$)'; then
     block "glab api calls to /merge or /approve endpoints are never allowed (Gate 2: a person merges and approves every MR)."
+  fi
+
+  # 8. labels: a skill never creates a label (contract, Labels); only existing labels may be added.
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?label[[:space:]]+(create|edit|delete|update)([[:space:]]|$)'; then
+    block "glab label create, edit or delete is never run by a skill: only a person creates or changes labels (contract, Labels). Use an existing label (glab label list -R <repo>), or stop and report that the label is missing."
+  fi
+  lmode=""
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?(issue|mr)[[:space:]]+(create|update)([[:space:]]|$)'; then lmode=flag; fi
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]([^;&|]*[[:space:]])?api[[:space:]]' &&
+     printf '%s' "$seg" | grep -Eiq '(-X|--method)[[:space:]=]*(POST|PUT|PATCH|DELETE)|-XPOST|-XPUT|-XPATCH|-XDELETE|(^|[[:space:]])(-F|-f|--field|--raw-field|--input)([[:space:]=]|[^[:space:]-])'; then
+    if printf '%s' "$seg" | grep -Eq '/labels([/?[:space:]]|$)'; then
+      block "glab api writes to /labels are never run by a skill: only a person creates or changes labels (contract, Labels)."
+    fi
+    lmode=field
+  fi
+  if [ -n "$lmode" ]; then
+    labs="$(SEG="$seg" LMODE="$lmode" python3 -c '
+import os, re, shlex
+s = os.environ["SEG"]; mode = os.environ["LMODE"]
+try:
+    w = shlex.split(s)
+except ValueError:
+    w = s.split()
+out = []
+i = 0
+while i < len(w):
+    t = w[i]
+    if mode == "flag" and t in ("--label", "-l") and i + 1 < len(w):
+        out += w[i + 1].split(","); i += 2; continue
+    if mode == "flag" and t.startswith("--label="):
+        out += t[len("--label="):].split(",")
+    m = re.match(r"^(add_)?labels=(.*)$", t) if mode == "field" else None
+    if m:
+        out += m.group(2).split(",")
+    i += 1
+for x in out:
+    x = x.strip()
+    if x:
+        print(x)
+' 2>/dev/null)"
+    if [ -n "$labs" ]; then
+      lrepo=""
+      if [[ "$seg" =~ (^|[[:space:]])(-R|--repo)[[:space:]=]+([^[:space:]]+) ]]; then lrepo="${BASH_REMATCH[3]}"; lrepo="${lrepo//\"/}"; lrepo="${lrepo//\'/}"; fi
+      have="$(cd "$CUR" 2>/dev/null && glab label list ${lrepo:+-R "$lrepo"} --per-page 100 --output json 2>/dev/null |
+        python3 -c 'import json,sys
+try:
+    for x in json.load(sys.stdin): print(x.get("name") or "")
+except Exception: pass' 2>/dev/null)"
+      [ -n "$have" ] || block "Could not read the repo's labels (glab label list), so adding labels is blocked: GitLab would create a missing label silently. Check glab auth and the -R repo, then retry."
+      while IFS= read -r lab; do
+        printf '%s\n' "$have" | grep -Fxq -- "$lab" ||
+          block "Label '$lab' does not exist on the repo, and a skill never creates a label (contract, Labels). Use an existing one (glab label list -R <repo>), or stop and report that '$lab' is missing so a person can decide."
+      done <<< "$labs"
+    fi
   fi
 
   # 5. publishing

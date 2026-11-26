@@ -36,11 +36,11 @@ Two sources, one gate. Nothing is built before gate 1.
 | Source | Enters through | After gate 1 (`pb-triage --file`) |
 | --- | --- | --- |
 | Findings: a findings file given with `--source <file>` | `pb-triage` | A new issue in the ticket format |
-| GitLab issues from BA/QA, follow-ups, anyone else | `pb-triage --source gitlab` | A `<!-- pb:triage -->` comment with the ticket's sections (ticket format, without the title) and `priority::`/`type::`/`area::` labels. The reporter's title and description stay as written |
+| GitLab issues from BA/QA, follow-ups, anyone else | `pb-triage --source gitlab` | A `<!-- pb:triage -->` comment with the ticket's sections (ticket format, without the title) and type, priority and area labels (Labels). The reporter's title and description stay as written |
 
 Findings are filed per ticket: a findings file may group findings into tickets (`t1`, `t2`, ...), and one ticket is one issue that covers all its findings. Triage files write the item as `t<n>`; a batch without tickets holds one row per finding (`f<n>`).
 
-The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-fix` batch mode works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable. The label `pb::agent-ready` shows the approval on GitLab, but it never replaces the triage file.
+The triage file is the gate-1 record, and it lives only in `.podbay/`. `pb-fix` batch mode works only on issues that a file in `.podbay/triage/` lists as approved with their issue number. The reporter's role doesn't matter, and nothing anyone does on GitLab makes an issue workable. The label `agent-ready` shows the approval on GitLab, but it never replaces the triage file.
 
 ## Routing
 
@@ -49,9 +49,9 @@ One ticket, one session, one branch.
 | Kind | Path |
 | --- | --- |
 | 1. Found by us (our own BA/QA findings, already verified) | `pb-triage --verified` files it; the approver approves the ticket text; `pb-fix` in the same session (failing test, fix, isolated review, Draft MR through `pb-mr`) |
-| 2. Logged by someone else | `pb-triage` (reproduce on current `develop` as a failing test, grill); the approver approves the batch; `pb-triage --file` labels approved issues `pb::agent-ready` (a bug with no visual evidence gets "ask: visual evidence" instead); then one new session per ticket (`pb-fix`) or `pb-fix` batch mode; isolated review; Draft MR |
+| 2. Logged by someone else | `pb-triage` (reproduce on current `develop` as a failing test, grill); the approver approves the batch; `pb-triage --file` labels approved issues `agent-ready` (a bug with no visual evidence gets "ask: visual evidence" instead); then one new session per ticket (`pb-fix`) or `pb-fix` batch mode; isolated review; Draft MR |
 
-A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `pb::needs-human` at filing and is not worked by an agent.
+A ticket that already has a failing test and repro steps goes straight to a fix (`pb-fix`). Otherwise it goes through `pb-triage`. An item that `pb-triage` cannot reproduce gets `needs-human` at filing and is not worked by an agent.
 
 Branches: all work goes into `develop`, and `develop` reaches `main` only through the release MR (`pb-release`). An urgent fix for the live release goes from `main` into `main`, then `main` is merged back into `develop` (`mr-checklist.md`). Old `release/*` branches are read-only.
 
@@ -73,14 +73,17 @@ No Source section and no hidden marker: the issue never says where the finding c
 
 ## Labels
 
-Created on first use. One of each group, plus state labels as they apply.
+The repo's existing labels only. A skill never creates a label: GitLab creates a missing label silently when one is added, so `pb-guard` blocks creating, editing or deleting a label, and adding any label the repo does not have (`glab label list -R <repo>`). When a needed label is missing, stop and report it; a person decides whether to create it. One of each group when it applies, plus state labels as they apply.
 
 | Group | Values |
 | --- | --- |
-| `priority::` | `high`, `medium`, `low` |
-| `type::` | `bug`, `story`, `task`, `spike`, `epic` ([ticket-format.md](ticket-format.md), section 1) |
-| `area::` | `workspace`, `clone`, `overview`, `tasks`, `machines`, `settings`, `net`, `other` |
-| State | `pb::ready` (MR waits for a person), `pb::needs-advisor` (on an MR: it changes behavior, architecture, or network/security, i.e. a path `pb-tier.sh` prints as `sensitive:`; on an issue: triage size is `big UX / new feature`, which includes every ticket sized L), `pb::approved` (the advisor approved a `pb::needs-advisor` issue), `pb::agent-ready` (approved at gate 1; an agent may work it), `pb::needs-human` (could not be reproduced; a person looks first), `pb::draft`, `pb::skipped`, `pb::followup`, `pb::human-reviewed` (a person reviewed a sensitive change; `pb-merge-check.sh` needs it) |
+| Type | `bug`, `feature`, `improvement` ([ticket-format.md](ticket-format.md), section 1); a task, spike or epic gets no type label |
+| Priority | `P1`, `P2`, `P3` (`P1` = do next) |
+| Area | the repo's existing `area:<name>` labels (one colon, for example `area:network`); none when no label fits |
+| Read only | `feature::high` and other labels a person sets: skills read them and never add them |
+| State | `pb::ready` (MR waits for a person), `pb::needs-advisor` (on an MR: it changes behavior, architecture, or network/security, i.e. a path `pb-tier.sh` prints as `sensitive:`; on an issue: triage size is `big UX / new feature`, which includes every ticket sized L), `pb::approved` (the advisor approved a `pb::needs-advisor` issue), `agent-ready` (approved at gate 1; an agent may work it), `needs-human` (could not be reproduced; a person looks first), `pb::draft`, `pb::skipped`, `pb::followup`, `human-reviewed` (a person reviewed a sensitive change; `pb-merge-check.sh` needs it: a person adds `human-reviewed`) |
+
+`agent-ready`, `needs-human`, `human-reviewed` and `pb::needs-advisor` exist on the repo. `needs-human` means a person's attention or decision is needed; it is never approval, and only `human-reviewed` passes the merge gate. `pb::ready`, `pb::draft`, `pb::skipped`, `pb::approved` and `pb::followup` may not: a skill that needs one that is missing stops and reports it.
 
 In `live` mode, `pb-fix` batch mode skips issues labelled `pb::needs-advisor` until they also carry `pb::approved`. In `pilot` mode, the label is informational.
 
@@ -97,14 +100,14 @@ In `live` mode, `pb-fix` batch mode skips issues labelled `pb::needs-advisor` un
 ## Gates
 
 1. **Gate 1, grill then approve:** every ticket in the batch is grilled (`pb-triage` step 9) before approval: rounds of frontier questions, each with a recommended answer, decisions only (Claude finds facts itself). Answers are recorded as Decisions (with ids and who) in the triage file and filed as the issue's Assumptions (plain sentences). A question that can't be settled by talking (how it should look or feel) becomes an L2 screenshot check judged at gate 2. Then `pb-triage` stops once with the batch table. Nothing is filed before the approver approves (with overrides). The triage file records it as a line `Approved: <who>, <yyyy-mm-dd>` and an `approved` column (yes/no) per row; `pb-triage --file` files only rows with yes.
-2. **Gate 2, merge:** the protected branches are listed once, in `${CLAUDE_PLUGIN_ROOT}/scripts/pb-targets.sh`. A person merges every MR into a branch in its `PB_PERSON_MERGES` list (today `main`; old `release/*` branches are read-only), and a person approves every MR. No `pb-*` skill approves, or pushes to a branch in `PB_NO_PUSH` (`main`, `develop`). `develop` is team-shared for merges: a team member, or a skill such as the orchestrator under the user's standing rule, may merge an MR into `develop` or into an epic's `feat/<epic-name>` after its isolated review and a `pb-ci` pass; `pb-guard` checks the target and blocks when it cannot tell. Before any skill merge, `${CLAUDE_PLUGIN_ROOT}/scripts/pb-merge-check.sh <iid> -R <repo>` must pass (the reviewed commit, the `pb-ci` commit and the MR head are the same; a sensitive change also has `pb::human-reviewed`), and the merge is pinned with `--sha <head>`.
+2. **Gate 2, merge:** the protected branches are listed once, in `${CLAUDE_PLUGIN_ROOT}/scripts/pb-targets.sh`. A person merges every MR into a branch in its `PB_PERSON_MERGES` list (today `main`; old `release/*` branches are read-only), and a person approves every MR. No `pb-*` skill approves, or pushes to a branch in `PB_NO_PUSH` (`main`, `develop`). `develop` is team-shared for merges: a team member, or a skill such as the orchestrator under the user's standing rule, may merge an MR into `develop` or into an epic's `feat/<epic-name>` after its isolated review and a `pb-ci` pass; `pb-guard` checks the target and blocks when it cannot tell. Before any skill merge, `${CLAUDE_PLUGIN_ROOT}/scripts/pb-merge-check.sh <iid> -R <repo>` must pass (the reviewed commit, the `pb-ci` commit and the MR head are the same; a sensitive change also has `human-reviewed`), and the merge is pinned with `--sha <head>`.
 
 ## Isolated review
 
 - The session that wrote a change is never its reviewer. Self-review is fine, but it is not the review.
 - Before an MR leaves Draft, a fresh agent or session reviews it. It gets only the ticket, the branch or diff, and the repo path, never the author's reasoning. The prompt is `${CLAUDE_PLUGIN_ROOT}/reference/reviewer-prompt.md`; `pb-review` runs it.
 - The reviewer only reports findings: no edits, no push, no MR comments. The author fixes each finding or explains why not. The MR description's `## Pre-review` section says who reviewed it, how many rounds, and how each finding was handled; human review is still required. The author posts each round's full report as its own MR comment, headed with the commit it reviewed (`mr-checklist.md`, "Review comment").
-- Risk tier, from the changed paths (`${CLAUDE_PLUGIN_ROOT}/scripts/pb-tier.sh <base> <head>`, the one list): **light** (only `docs/`, `site/`, `*.md`) gets one review round and no more, and `pb-merge-check.sh` accepts it without a `pb-ci` log (no plan review; findings are fixed without a second round unless one is a blocker), and `pb-ci` is optional; **full** (anything else) gets the full review and a `pb-ci` pass on the head. A **sensitive** path inside full (auth, network, saved state, migrations, service, UI kit, dependencies, build script) also needs a person's review note before merge, shown by the label `pb::human-reviewed`; this holds in either tier. Only the person who reviewed adds that label: a skill or session never adds it. `pb-merge-check.sh` is a consistency check, not proof of who reviewed: anyone with write access can post a review note or add the label. It checks commits and that label, not findings: a review with an open blocker must be fixed before anyone merges. The MR's Pre-review section names the tier.
+- Risk tier, from the changed paths (`${CLAUDE_PLUGIN_ROOT}/scripts/pb-tier.sh <base> <head>`, the one list): **light** (only `docs/`, `site/`, `*.md`) gets one review round and no more, and `pb-merge-check.sh` accepts it without a `pb-ci` log (no plan review; findings are fixed without a second round unless one is a blocker), and `pb-ci` is optional; **full** (anything else) gets the full review and a `pb-ci` pass on the head. A **sensitive** path inside full (auth, network, saved state, migrations, service, UI kit, dependencies, build script) also needs a person's review note before merge, shown by the label `human-reviewed`; this holds in either tier. Only the person who reviewed adds that label: a skill or session never adds it. `pb-merge-check.sh` is a consistency check, not proof of who reviewed: anyone with write access can post a review note or add the label. It checks commits and that label, not findings: a review with an open blocker must be fixed before anyone merges. The MR's Pre-review section names the tier.
 - Plan review: before coding a ticket expected to change more than about 200 lines, the author writes a short plan to `.podbay/plan/<n>.md` (files, approach, tests) and a fresh agent reviews it against the ticket (`pb-review --plan`). The author fixes the plan or answers each finding, then codes. Plan rounds follow the same limits as below and are counted apart from the code review.
 - Rounds, per MR:
   1. At most 3 full rounds. This is a hard stop: if round 3 still has a blocker or should-fix finding, never start round 4; stop and report to the user (or to the orchestrator session that gave the task), who chooses: split the MR, accept the risk, or allow more rounds.

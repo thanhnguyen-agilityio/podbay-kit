@@ -31,12 +31,14 @@ if [ "\$1 \$2" = "mr view" ]; then
     1) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
     2) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"main","labels":[]}' ;;
     3) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":[]}' ;;
-    4) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["pb::human-reviewed"]}' ;;
+    4) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["human-reviewed"]}' ;;
     5) echo '{"state":"merged","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
-    6) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["area::net","pb::human-reviewed"]}' ;;
+    6) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["area:network","human-reviewed"]}' ;;
     7) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"feat/epic","labels":[]}' ;;
     8) echo '{"state":"opened","sha":"feat/x","target_branch":"feat/epic","labels":[]}' ;;
     10) echo '{"state":"opened","sha":"$DOCS_SHA","target_branch":"feat/epic","labels":[]}' ;;
+    13) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["needs-human"]}' ;;
+    14) echo '{"state":"opened","sha":"$NET_SHA","target_branch":"feat/epic","labels":["pb::human-reviewed"]}' ;;
     11) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"develop","labels":[]}' ;;
     12) echo '{"state":"opened","sha":"$HEAD_SHA","target_branch":"release/2026.11.20","labels":[]}' ;;
     *) exit 1 ;;
@@ -72,9 +74,11 @@ mc 0 "target develop: team-shared, the orchestrator may merge" 11 "not person-on
 mc 1 "target old release branch: a person merges" 12 "a person merges"
 mc 1 "MR not open: blocked" 5 "not open"
 review "$NET_SHA"; ci "$NET_SHA" pass
-mc 1 "sensitive change without pb::human-reviewed: blocked" 3 "pb::human-reviewed"
-mc 0 "sensitive change with pb::human-reviewed: pass" 4 "merge-check: OK"
-mc 0 "sensitive change with another label next to pb::human-reviewed: pass" 6 "merge-check: OK"
+mc 1 "sensitive change without human-reviewed: blocked" 3 "label human-reviewed"
+mc 0 "sensitive change with human-reviewed: pass" 4 "merge-check: OK"
+mc 0 "sensitive change with another label next to human-reviewed: pass" 6 "merge-check: OK"
+mc 1 "needs-human is never approval: blocked" 13 "label human-reviewed"
+mc 1 "the old pb::human-reviewed no longer counts: blocked" 14 "label human-reviewed"
 mc 2 "MR head that is not a full sha: refused" 8 "no head sha"
 review "$HEAD_SHA"
 printf 'PBCI-HEAD sha=%s\npb-ci %s total=1s\n' "$HEAD_SHA" "${HEAD_SHA:0:12}" > ".podbay/ci/${HEAD_SHA:0:12}.log"
