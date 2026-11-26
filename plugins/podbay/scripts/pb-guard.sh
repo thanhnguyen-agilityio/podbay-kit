@@ -240,9 +240,15 @@ while i < len(w):
         out += w[i + 1].split(","); i += 2; continue
     if mode == "flag" and t.startswith("--label="):
         out += t[len("--label="):].split(",")
-    m = re.match(r"^(add_)?labels=(.*)$", t) if mode == "field" else None
-    if m:
-        out += m.group(2).split(",")
+    elif mode == "flag" and t.startswith("-l") and not t.startswith("--") and len(t) > 2:
+        out += t[2:].lstrip("=").split(",")
+    if mode == "field":
+        f = re.sub(r"^(--field=|--raw-field=|-f|-F)", "", t)
+        m = re.match(r"^(add_)?labels(\[\])?=(.*)$", f)
+        if m:
+            out += m.group(3).split(",")
+        for q in re.findall(r"[?&](?:add_)?labels(?:\[\]|%5B%5D)?=([^&]*)", t):
+            out += q.split(",")
     i += 1
 for x in out:
     x = x.strip()
@@ -259,6 +265,7 @@ try:
 except Exception: pass' 2>/dev/null)"
       [ -n "$have" ] || block "Could not read the repo's labels (glab label list), so adding labels is blocked: GitLab would create a missing label silently. Check glab auth and the -R repo, then retry."
       while IFS= read -r lab; do
+        [ "$lab" = human-reviewed ] && block "Only the person who reviewed adds the merge-gate label human-reviewed; a skill or session never adds it (contract, Gate 2). Leave the MR open and report that it needs a person's review."
         printf '%s\n' "$have" | grep -Fxq -- "$lab" ||
           block "Label '$lab' does not exist on the repo, and a skill never creates a label (contract, Labels). Use an existing one (glab label list -R <repo>), or stop and report that '$lab' is missing so a person can decide."
       done <<< "$labs"

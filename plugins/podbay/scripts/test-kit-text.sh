@@ -146,6 +146,9 @@ hits="$(cd "$ROOT" && grep -rn 'pb::human-reviewed' skills reference templates s
 has   "batch mode orders by P1, P2, P3" skills/pb-fix/references/batch.md '.P1. -> .P2. -> .P3.'
 has   "batch mode stops when a state label is missing" skills/pb-fix/references/batch.md 'state label .*does not exist.*stop and report'
 has   "filing uses agent-ready" skills/pb-triage/references/file.md '.agent-ready.'
+has   "batch mode drops spikes and epics by the triage file's type" skills/pb-fix/references/batch.md 'triage file.s type column'
+has   "filing: spike and epic rows get no agent-ready" skills/pb-triage/references/file.md 'a spike or epic row gets no .agent-ready.'
+has   "filing: the triage comment starts with Kind: for a task, spike or epic" skills/pb-triage/references/file.md 'comment starts with .Kind: <kind>.'
 has   "ticket format: type table uses the old labels" reference/ticket-format.md '^\| Bug \| .bug. \|'
 [ ! -e "$ROOT/templates/release/slack-freeze.md" ] && [ -f "$ROOT/templates/release/slack-release-start.md" ] && ok "the freeze notice is replaced by a release-start notice" || bad "the freeze notice is replaced by a release-start notice"
 [ -f "$ROOT/evals/release-develop-flow/prompt.md" ] && [ -f "$ROOT/evals/release-develop-flow/graders/criteria.md" ] && ok "eval release-develop-flow exists" || bad "eval release-develop-flow exists"

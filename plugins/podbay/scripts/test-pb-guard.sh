@@ -19,7 +19,7 @@ cat > "$D/bin/glab" <<'FAKE'
 #!/bin/bash
 if [ "$1 $2" = "label list" ]; then
   case "$*" in *other/fail*) exit 1 ;; esac
-  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"}]'; exit 0
+  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"},{"name":"human-reviewed"}]'; exit 0
 fi
 [ "$1 $2" = "mr view" ] || exit 1
 case "${3#!}" in
@@ -172,6 +172,12 @@ check allow "existing label with a space" "glab mr update 6 -R group/project --l
 check allow "--label=existing" "glab issue update 3 -R group/project --label=agent-ready"
 check block "two --label flags, one missing" "glab issue update 3 -R group/project --label bug --label size:XL"
 check allow "unlabel is not a new label" "glab issue update 3 -R group/project --unlabel type::story"
+check block "a session never adds the merge-gate label" "glab mr update 6 -R group/project --label human-reviewed"
+check block "-l joined to a missing label" "glab issue update 3 -R group/project -lfeature"
+check block "-l= with a missing label" "glab issue update 3 -R group/project -l=feature"
+check block "api --field=labels= missing" "glab api -X PUT projects/1/issues/3 --field=labels=type::story"
+check block "api -flabels= missing" "glab api -X PUT projects/1/issues/3 -flabels=type::story"
+check block "api add_labels in the query string" "glab api -X PUT 'projects/1/issues/3?add_labels=type::story'"
 check block "label list unreadable" "glab issue update 3 -R other/fail --label bug"
 check block "glab label create" "glab label create -R group/project --name foo --color '#ffffff'"
 check block "glab label delete" "glab label delete foo -R group/project"

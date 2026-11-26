@@ -36,7 +36,7 @@ Select issues from $ARGUMENTS (`--skip-preflight` is not part of the selection):
   - Also drop issues whose latest comment contains `<!-- pb:skipped -->` with no newer comment from a member.
   - Also drop issues labelled `needs-human`: a person looks at them first.
   - Also drop child tickets of an epic (`glab api projects/<id>/issues/<n> --jq .epic` not null): they target `feat/<epic-name>` through `pb-fix` (contract, Routing).
-  - Also drop spikes and epics (the description starts with `Kind: Spike` or `Kind: Epic`): spikes run by hand, epics through their stories.
+  - Also drop spikes and epics: the approving triage file's type column says spike or epic (or the description or the `<!-- pb:triage -->` comment starts with `Kind: Spike` or `Kind: Epic`); there is no type label for them. Spikes run by hand, epics through their stories.
   - Follow-ups (`<!-- pb:followup-of #`) need their own triage like any issue, so they never chain into the same run.
   - In `live` mode only (contract, Target), also drop issues labelled `pb::needs-advisor` without `pb::approved`: the advisor has not approved them yet.
   - At most 10 issues per run, highest priority first; list the rest in the report as "not reached".
