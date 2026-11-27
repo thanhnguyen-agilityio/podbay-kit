@@ -326,13 +326,16 @@ has   "pb-kickoff expects stopped workers" skills/pb-kickoff/SKILL.md 'idle-sess
 
 # Private names never go in the kit. The list itself is private: set PB_PRIVATE_NAMES (an ERE) locally to check it.
 if [ -n "${PB_PRIVATE_NAMES:-}" ]; then
-  hit="$(grep -rEn -- "$PB_PRIVATE_NAMES" "$ROOT/skills" "$ROOT/reference" "$ROOT/templates" "$ROOT/../../README.md" "$ROOT/../../CHANGELOG.md" 2>/dev/null | head -1)"
+  hit="$(grep -rEn -- "$PB_PRIVATE_NAMES" "$ROOT/skills" "$ROOT/reference" "$ROOT/templates" "$ROOT/scripts" "$ROOT/evals" "$ROOT/../../README.md" "$ROOT/../../CHANGELOG.md" "$ROOT/../../CLAUDE.md" 2>/dev/null | grep -v '/evals/results/' | head -1)"
   [ -z "$hit" ] && ok "no private names in the kit text" || bad "no private names in the kit text ($(printf '%s' "$hit" | cut -c1-100))"
 fi
 has   "idle: a branch with no upstream fails the check" reference/idle-sessions.md 'no upstream.*fails'
 has   "idle: checkouts on every machine" reference/idle-sessions.md 'podbay-dev checkouts --all'
-has   "idle: nothing queued, by podbay-dev queue" reference/idle-sessions.md 'podbay-dev queue'
-has   "idle: process check on the session's machine" reference/idle-sessions.md '--on <machine>'
+has   "idle: nothing queued, by podbay-dev queue ls --all" reference/idle-sessions.md 'podbay-dev queue ls --all'
+has   "idle: no message for 30 minutes read from podbay-dev ls" reference/idle-sessions.md 'podbay-dev ls.*since'
+lacks "idle: git and ps never run through --on" reference/idle-sessions.md '(rev-parse|ps).*--on <machine>'
+has   "pb-orchestrator: the idle rule is an exception to asking before a stop" skills/pb-orchestrator/SKILL.md 'except under the idle rule'
+has   "pb-release --urgent also handles the urgent MR's outside reports" skills/pb-release/SKILL.md 'With .--urgent <iid>., read that MR.s .Closes #<n>. lines'
 has   "idle: night is a team value" reference/idle-sessions.md 'night:'
 has   "outside: 14 days counted from the Needs Info comment" reference/outside-reports.md '14 days.*from the date of the .Needs Info. comment'
 has   "pb-triage closes Duplicate, Won't fix and Cannot reproduce with a reply" skills/pb-triage/SKILL.md 'Duplicate of #<n>.*Won.t fix.*Cannot reproduce.*reporter-notified'

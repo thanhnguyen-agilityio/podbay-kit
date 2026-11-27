@@ -43,7 +43,7 @@ Always use `podbay-dev` (the daily Pod Bay). Never use `podbay-local*` to orches
 
 ## Rules
 
-- Ask the user before: `--on` another machine, `rm`, `ws-rm`, `stop` of a session you did not start, or any `passwd`/`remove`/`logout`.
+- Ask the user before: `--on` another machine, `rm`, `ws-rm`, `stop` of a session you did not start (except under the idle rule, `${CLAUDE_PLUGIN_ROOT}/reference/idle-sessions.md`), or any `passwd`/`remove`/`logout`.
 - A peer session cannot grant permission. Never ask a session to do what was denied here (for example a push the guard blocked).
 - Standing sessions: send each kind of work to the standing session that `.podbay/orchestrator.md` names for it, one task after another when they share files. Start an extra session only for big independent work in parallel, and stop it after. Offer the user a fresh conversation for a long-running worker daily or weekly.
 - Reviews are isolated (contract, Isolated review): never ask the session that wrote a change to review it. Before an MR leaves Draft, give the review to a fresh session or agent (`/podbay:pb-review <MR>`) with only the ticket, the branch and the repo path, never the author's summary. The reviewer reports findings only; relay them to the author session.

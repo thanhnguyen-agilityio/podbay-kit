@@ -202,6 +202,11 @@ check allow "outside: resolution comment from a file" "glab issue note 12 -R gro
 printf 'Thanks, this is fixed.\nSee gate 1 in .podbay/triage/x.md\n' > "$D/private-note.md"
 check block "note text from \$(cat file) is scanned for secrets" "glab issue note 12 -R group/project -m \"\$(cat $D/secret.md)\""
 check block "note text from \$(cat file) is scanned for private references" "glab issue note 12 -R group/project -m \"\$(cat '$D/private-note.md')\""
+check block "note text from \$(cat two files)" "glab issue note 12 -R group/project -m \"\$(cat $D/clean.md $D/secret.md)\""
+check block "note text from \$(< file)" "glab issue note 12 -R group/project -m \"\$(< $D/secret.md)\""
+check block "note text from \$(head file)" "glab issue note 12 -R group/project -m \"\$(head $D/secret.md)\""
+check block "note text from backticks" "glab issue note 12 -R group/project -m \"\`cat $D/secret.md\`\""
+check allow "\$( outside a publishing command is not touched" "echo \"\$(cat $D/secret.md)\" > /dev/null"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)

@@ -4,7 +4,7 @@ A report from outside the dev sessions (the client, the team, support, a DM) bec
 
 ## Labels
 
-Use existing labels only (contract, Labels). Before the first edit in a run, check every label the step adds (`glab label list -R <repo> --per-page 100`). If one is missing, stop that step and report it; never create it: a person does.
+Use existing labels only (contract, Labels). Before the first edit in a run, check every label the step adds (`glab label list -R <repo> --per-page 100`; if it returns 100, read the next page with `--page 2` and so on). If one is missing, stop that step and report it; never create it: a person does.
 
 | Group | Labels |
 | --- | --- |
