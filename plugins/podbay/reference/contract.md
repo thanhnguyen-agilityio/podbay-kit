@@ -93,10 +93,10 @@ The repo's existing status labels show where a ticket is. One at a time; each mo
 
 | Moment | Who | Command |
 | --- | --- | --- |
-| A session starts the ticket | `pb-orchestrator` when it briefs the session; `pb-fix` when it starts one on its own | `glab issue update <n> -R <repo> --label 'In Process' --assignee '+<ticket-assignee>'` |
+| A session starts the ticket | `pb-orchestrator` when it briefs the session; `pb-fix` (and a batch worker) when it starts one on its own | `glab issue update <n> -R <repo> --unlabel 'In Review,On Dev' --label 'In Process' --assignee '+<ticket-assignee>'` |
 | Its MR is ready for a person's review (opened without Draft, or marked ready later) | `pb-mr` when it opens the MR; `pb-orchestrator` when it next sees the MR no longer a Draft | `glab issue update <n> -R <repo> --unlabel 'In Process' --label 'In Review'` |
 | The MR goes back to Draft | `pb-orchestrator` when it sees it | `glab issue update <n> -R <repo> --unlabel 'In Review' --label 'In Process'` |
-| The MR merges into `develop` (for an epic: the `feat/<epic-name>` MR into `develop`, for each child ticket) | `pb-orchestrator` right after the merge | `glab issue update <n> -R <repo> --unlabel 'In Process,In Review' --label 'On Dev'` |
+| The MR merges into `develop` (for an epic: the `feat/<epic-name>` MR into `develop`, for each child ticket: the `Closes #<n>` lines of `glab mr list -R <repo> --merged --target-branch feat/<epic-name> --per-page 100`) | `pb-orchestrator` right after the merge | `glab issue update <n> -R <repo> --unlabel 'In Process,In Review' --label 'On Dev'` |
 | `develop` merges into `main` | GitLab closes it from `Closes #<n>`; `pb-release` step 7 closes the leftovers | `glab issue close <n> -R <repo>` |
 
 - The ticket is each issue in a `Closes #<n>` line of the MR (one MR may close several). An MR with none (release-prep, back-merge) changes no status. While the MR is a Draft, the ticket keeps `In Process`.

@@ -187,7 +187,7 @@ check allow "api GET labels" "glab api projects/1/labels"
 check block "api add_labels with a missing label" "glab api -X PUT projects/1/issues/3 -f add_labels=type::story"
 check allow "api add_labels with an existing label" "glab api -X PUT projects/1/issues/3 -R group/project -f add_labels=bug"
 # Ticket status (0.10.2): moving an issue between the existing status labels and assigning it must pass.
-check allow "status: In Process and assignee" "glab issue update 12 -R group/project --label 'In Process' --assignee someone"
+check allow "status: In Process and assignee" "glab issue update 12 -R group/project --unlabel 'In Review,On Dev' --label 'In Process' --assignee '+someone'"
 check allow "status: In Process -> In Review" "glab issue update 12 -R group/project --unlabel 'In Process' --label 'In Review'"
 check allow "status: In Review -> On Dev" "glab issue update 12 -R group/project --unlabel 'In Review' --label 'On Dev'"
 check block "status: a misspelt status label" "glab issue update 12 -R group/project --label 'In Progress'"

@@ -5,16 +5,32 @@ The role map is a Markdown file with lines like:  - `~/path/to/checkout` = role-
 Its path comes from the env var PB_ROLE_MAP, else from a line `role-map: <path>` in
 <checkout>/.podbay/roles.md (an absolute or ~ path only; a map inside the git checkout is ignored, so a repo
 cannot bring its own "role"). Map entries must be absolute or start with ~. The role file is <map folder>/<role-name>.md. The longest
-matching checkout path wins. Any problem (no map, no match, no file, bad input) means
+matching checkout path wins. A line may end in ` @<machine>`: it then applies only on the machine
+that `podbay-dev setup` names (env PB_MACHINE overrides), and wins over a plain line for the same path.
+Unknown machine: qualified lines are ignored, never guessed. Any problem (no map, no match, no file, bad input) means
 no output and exit 0: the hook never blocks or slows a session start.
 """
 import json
 import os
 import re
+import subprocess
 import sys
 
 CAP = 8000
-LINE = re.compile(r"^- `([^`]+)`\s*=\s*([a-z0-9][a-z0-9-]*)\s*$")
+LINE = re.compile(r"^- `([^`]+)`\s*=\s*([a-z0-9][a-z0-9-]*)(?:\s+@([A-Za-z0-9][A-Za-z0-9._-]*))?\s*$")
+
+
+def machine_name():
+    """This machine's name as podbay-dev knows it, or None. Never guessed from the hostname."""
+    env = os.environ.get("PB_MACHINE", "").strip()
+    if env:
+        return env
+    try:
+        out = subprocess.run(["podbay-dev", "setup"], capture_output=True, text=True, timeout=3).stdout
+        name = json.loads(out).get("machine")
+        return name.strip() if isinstance(name, str) and name.strip() else None
+    except Exception:
+        return None
 
 
 def expand(p, base=None):
@@ -83,16 +99,25 @@ def main():
     mp = map_path(cwd)
     if not mp or not os.path.isfile(mp):
         return
-    best, role = "", None
+    best, role = (-1, 0), None
     with open(mp, encoding="utf-8", errors="replace") as fh:
         map_lines = fh.read(65536).splitlines()
+    machine, asked = None, False  # read once, only when a qualified line matches the path
     for line in map_lines:
         m = LINE.match(line)
         if not m or not absolute(m.group(1)):
             continue
         path = expand(m.group(1))
-        if inside(cwd, path) and len(path) > len(best):
-            best, role = path, m.group(2)
+        if not inside(cwd, path):
+            continue
+        if m.group(3):
+            if not asked:
+                machine, asked = machine_name(), True
+            if machine is None or m.group(3) != machine:
+                continue
+        rank = (len(path), 1 if m.group(3) else 0)
+        if rank > best:
+            best, role = rank, m.group(2)
     if not role:
         return
     roles_dir = os.path.dirname(mp)

@@ -8,8 +8,11 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Status label moves and the assignee need no approval; closing an issue still does. The labels must already exist; a missing one stops that step (never created). Briefs from `pb-orchestrator` state the rule.
 - `pb-guard` needed no change: tests prove it allows these label moves, the assignee and `glab issue close`, and still blocks a misspelt status label.
 - The assignee is added with `--assignee '+<user>'` (a bare name would replace the other assignees). The orchestrator also moves a ticket to `In Review` when it sees a person marked the MR ready, and back to `In Process` when the MR returns to Draft. `pb-fix` sets `In Process` when it starts a ticket without the orchestrator. `pb-release` step 0 checks the default branch is `main` (GitLab closes tickets only on a merge into it), and step 7 also closes epic child tickets, which never auto-close.
-- Tests: test-pb-guard.sh 162 pass (7 new), test-kit-text.sh 212 pass (22 new).
-- Review: isolated round 1 on Opus, no blockers; 5 should-fix (In Review was rarely set, the assignee replaced others, the default-branch assumption, epic children, a 30-label page limit) and the nits fixed.
+- Round 2: batch workers set `In Process` too; starting removes an older status label (`--unlabel 'In Review,On Dev'`); the orchestrator finds an epic's child tickets with `glab mr list --merged --target-branch feat/<epic-name>`; `pb-release --urgent` skips the close step (GitLab closed those tickets on the merge into `main`).
+- Role map machine qualifier: a map line may end in ` @<machine>` (`- `~/path` = role @M2`). `pb-role.py` then applies it only on the machine that `podbay-dev setup` names (env `PB_MACHINE` overrides), and it wins over a plain line for the same path. An unknown machine name means qualified lines are ignored; names match exactly. Older kits ignore qualified lines, so release this before a map uses them.
+- `pb-orchestrator` briefs carry a fixed line: do not edit `src/ui/kit*`, `src/ui/theme*`, `src/ui/sink.rs` or tokens (only the design-system owner does; a fix that needs a design part stops and asks). It is left out only in a brief to the design-system owner.
+- Tests: test-pb-guard.sh 162 pass (7 new), test-kit-text.sh 218 pass (28 new), test-pb-role.sh 31 pass (8 new).
+- Review: isolated rounds on Opus. Round 1, no blockers; 5 should-fix (In Review was rarely set, the assignee replaced others, the default-branch assumption, epic children, a 30-label page limit) and the nits fixed.
 
 ## podbay 0.10.1 - 2026-11-26
 

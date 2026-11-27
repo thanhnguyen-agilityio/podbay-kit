@@ -264,8 +264,12 @@ has   "contract: a missing status label stops the step" reference/contract.md 's
 has   "contract: merge into develop never closes the ticket" reference/contract.md 'On Dev.*never close'
 has   "pb-orchestrator sets In Process and the assignee at start" skills/pb-orchestrator/SKILL.md 'In Process.*ticket-assignee'
 has   "pb-orchestrator briefs carry the status flow" skills/pb-orchestrator/SKILL.md '[Bb]rief.*Ticket status'
-has   "pb-orchestrator sets On Dev after a merge into develop" skills/pb-orchestrator/SKILL.md 'On Dev'
-has   "pb-mr sets In Review only when the MR is ready" skills/pb-mr/SKILL.md 'In Review'
+has   "pb-orchestrator sets On Dev after a merge into develop" skills/pb-orchestrator/SKILL.md "merge into .develop.*--unlabel 'In Process,In Review' --label 'On Dev'"
+has   "pb-orchestrator finds an epic's child tickets by command" skills/pb-orchestrator/SKILL.md 'glab mr list -R <repo> --merged --target-branch feat/<epic-name>'
+has   "status: starting removes any older status label" reference/contract.md "--unlabel 'In Review,On Dev' --label 'In Process'"
+has   "pb-fix batch worker sets In Process" skills/pb-fix/references/worker.md "In Process"
+has   "pb-release skips the close step with --urgent" skills/pb-release/SKILL.md 'With .--urgent., skip the ticket close'
+has   "pb-mr sets In Review only when the MR is ready" skills/pb-mr/SKILL.md "ready for review.*glab issue update <n> -R <repo> --unlabel 'In Process' --label 'In Review'"
 has   "pb-mr keeps In Process while Draft" skills/pb-mr/SKILL.md 'Draft.*In Process|In Process.*Draft'
 has   "pb-release closes On Dev leftovers after the merge into main" skills/pb-release/SKILL.md 'On Dev.*glab issue close|glab issue close.*On Dev'
 has   "status: assignee is added with +, not replaced" reference/contract.md "--assignee '\\+<ticket-assignee>'"
@@ -276,6 +280,8 @@ has   "pb-release checks the default branch is main" skills/pb-release/SKILL.md 
 has   "pb-release counts epic child tickets at the close step" skills/pb-release/SKILL.md 'feat/<epic-name>.*On Dev|On Dev.*feat/<epic-name>'
 has   "status: every Closes line counts" reference/contract.md 'each issue in a .Closes'
 has   "pb-fix sets In Process when it starts a ticket on its own" skills/pb-fix/SKILL.md 'In Process'
+step  "pb-orchestrator brief carries the design-system line" skills/pb-orchestrator/SKILL.md 4 'Do not edit src/ui/kit\*, src/ui/theme\*, src/ui/sink\.rs or tokens; only the design-system owner does\. If the fix needs a design part, stop and ask the orchestrator\.'
+has   "role map: the machine qualifier is documented" ../../CLAUDE.md '@<machine>'
 lacks "no person's username in the status rules" reference/contract.md 'thanh'
 lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
 

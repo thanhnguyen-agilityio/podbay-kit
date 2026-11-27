@@ -16,6 +16,7 @@ Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply onl
 - **On-demand checks:** before L2 or L3, read `<scratch>/preflight-checks.md`. Run each needed check (`screenshots` for L2; `app` for L3) not recorded as pass and append `<check>: pass|fail <time> <error>`. Retry a recorded fail once per issue. Still failing -> mark **unverified** with the failed check.
 
 ## 1. Plan
+- Ticket status (contract, Ticket status): if the issue has no status label, set `In Process` (`glab issue update <n> -R <repo> --label 'In Process'`, plus `--assignee '+<ticket-assignee>'` when `.podbay/orchestrator.md` names one). No approval needed; a missing label is a soft note in the work log, not a hard stop.
 - Read the issue: `glab issue view <n> -R <repo> --comments`. If the triage user posted a `<!-- pb:triage -->` comment, its Expected, Out of scope, Assumptions and Repro test replace the description's (contract, Intake).
 - The issue's Assumptions are settled at triage: build to them, never re-decide them. Work that would contradict one is a hard stop.
 - For implementation choices, use the grilling discipline (contract, gate 1) without a human: map the design tree, settle facts from the code, and give each remaining decision a suggested pick per `references/decisions.md`. Ask nobody mid-run except through a hard stop.

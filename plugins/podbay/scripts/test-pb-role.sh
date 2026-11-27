@@ -94,5 +94,25 @@ printf 'role-map: ~/notes/roles/map.md\n' > "$H/work/up/.podbay/roles.md"
 printf -- '- `~/work/up/repo` = kit\n' >> "$H/notes/roles/map.md"
 out="$(NOMAP=1 run "$H/work/up/repo")"; [ -z "$out" ] && ok "roles.md above the git root is not used" || bad "roles.md above the git root is not used (got: $out)"
 
+# Machine qualifier (0.10.2): "- `path` = role @<machine>" applies only on that machine (podbay-dev's name).
+mkdir -p "$H/work/q1" "$H/work/q2" "$H/work/q3" "$D/fakebin" "$D/nobin"
+printf -- '- `~/work/q1` = kit @M2\n- `~/work/q2` = app-feature\n- `~/work/q3` = app-feature\n- `~/work/q3` = kit @M2\n' > "$H/notes/roles/map-q.md"
+printf '#!/bin/sh\n[ "$1" = setup ] && echo %s\n' "'{\"checkouts\":\"/x\",\"machine\":\"M2\"}'" > "$D/fakebin/podbay-dev"; chmod +x "$D/fakebin/podbay-dev"
+PY="$(python3 -c 'import sys; print(sys.executable)')"
+# runq <cwd> <PATH> [PB_MACHINE] -> hook stdout with the qualified map
+runq() {
+  printf '{"session_id":"s","cwd":"%s","hook_event_name":"SessionStart","source":"startup"}' "$1" |
+    if [ -n "${3:-}" ]; then env HOME="$H" PATH="$2" PB_ROLE_MAP="$H/notes/roles/map-q.md" PB_MACHINE="$3" "$PY" "$HOOK"
+    else env -u PB_MACHINE HOME="$H" PATH="$2" PB_ROLE_MAP="$H/notes/roles/map-q.md" "$PY" "$HOOK"; fi
+}
+out="$(runq "$H/work/q1" "$D/nobin" M2)"; printf '%s' "$out" | ctx | grep -q 'ask before push' && ok "@M2 line applies on M2" || bad "@M2 line applies on M2 (got: $out)"
+out="$(runq "$H/work/q1" "$D/nobin" Mac-mini)"; [ -z "$out" ] && ok "@M2 line is ignored on another machine" || bad "@M2 line is ignored on another machine (got: $out)"
+out="$(runq "$H/work/q1" "$D/nobin")"; [ -z "$out" ] && ok "@M2 line is ignored when the machine is unknown" || bad "@M2 line is ignored when the machine is unknown (got: $out)"
+out="$(runq "$H/work/q2" "$D/nobin" Mac-mini)"; printf '%s' "$out" | ctx | grep -q 'tests first' && ok "a line without @ applies on every machine" || bad "a line without @ applies on every machine (got: $out)"
+out="$(runq "$H/work/q3" "$D/nobin" M2)"; printf '%s' "$out" | ctx | grep -q 'ask before push' && ok "same path: the line for this machine wins" || bad "same path: the line for this machine wins (got: $out)"
+out="$(runq "$H/work/q3" "$D/nobin" Mac-mini)"; printf '%s' "$out" | ctx | grep -q 'tests first' && ok "same path on another machine: the plain line" || bad "same path on another machine: the plain line (got: $out)"
+out="$(runq "$H/work/q1" "$D/fakebin")"; printf '%s' "$out" | ctx | grep -q 'ask before push' && ok "machine name read from podbay-dev setup" || bad "machine name read from podbay-dev setup (got: $out)"
+out="$(runq "$H/work/q1" "$D/nobin" m2)"; [ -z "$out" ] && ok "machine names match exactly (no guessing)" || bad "machine names match exactly (got: $out)"
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]
