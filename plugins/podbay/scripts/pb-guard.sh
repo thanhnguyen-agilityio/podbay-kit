@@ -18,9 +18,11 @@
 #   8. New labels: glab label create|edit|delete, glab api writes to /labels, and a label added by glab issue|mr
 #      create|update (--label, -l) or a glab api write (labels=, add_labels=) that the repo does not have
 #      (glab label list; unreadable -> block). GitLab creates a missing label silently when one is added.
-#   9. Uploads (glab api or curl to /uploads or /wikis/attachments with a form or POST, glab ... --attach, glab release
-#      upload|create, and the Chrome file_upload tool): answered with "ask", so the person's permission prompt decides;
-#      checked after every block. In bypassPermissions mode (no prompt) they are blocked.
+#   9. Uploads (any glab api or curl call to /uploads or /wikis/attachments, glab ... --attach, glab release
+#      upload|create, a curl form to an API URL built from a variable, and the Chrome or browser upload tools): answered
+#      with "ask", so the person's permission prompt decides; checked after every block. In a mode with no prompt for
+#      the person (bypassPermissions, dontAsk, unknown) they are blocked. Accepted false asks: a GET of an upload
+#      endpoint, `glab release create` without files, a curl POST to an API URL built from a variable.
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
 # Not enforced: wrappers (bash script.sh, eval), python calls to the API, and curl to the API other than uploads.
@@ -56,7 +58,8 @@ CWD="$(printf '%s\n' "$meta" | sed -n 2p)"
 PMODE="$(printf '%s\n' "$meta" | sed -n 3p)"
 
 # ask_upload: an upload goes to the person's permission prompt. Only modes where the docs promise that prompt get
-# "ask"; any other mode (bypassPermissions, dontAsk, unknown) blocks, since nobody could say yes.
+# "ask" (auto too: there a hook's "ask" goes to the prompt and the classifier does not decide it; an empty mode is a
+# client that sends no mode, which prompts as default); any other mode (bypassPermissions, dontAsk, unknown) blocks.
 ask_upload() {
   case "$PMODE" in
     ""|default|acceptEdits|plan|auto) ;;
@@ -75,7 +78,7 @@ block() {
 }
 
 # Only Bash and the Chrome upload tool reach here (hooks.json matcher).
-case "$TOOL" in mcp__claude-in-chrome__file_upload|mcp__claude-in-chrome__upload_image) ask_upload ;; esac
+case "$TOOL" in mcp__*[Cc]hrome*__file_upload|mcp__*[Cc]hrome*__upload_image|mcp__*[Bb]rowser*__file_upload|mcp__*[Bb]rowser*__upload_image) ask_upload ;; esac
 [ "$TOOL" = "Bash" ] || exit 0
 CMD="$(cat "$CMDF")"
 [ -n "$CMD" ] || exit 0

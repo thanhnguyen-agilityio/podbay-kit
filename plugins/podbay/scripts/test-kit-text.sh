@@ -352,8 +352,10 @@ has   "pb-fix carries the upload line" skills/pb-fix/SKILL.md "$UPL"
 has   "worker.md carries the upload line" skills/pb-fix/references/worker.md "$UPL"
 has   "pb-orchestrator brief carries the upload line" skills/pb-orchestrator/SKILL.md "[Bb]rief.*$UPL"
 has   "pb-verify carries the upload line" skills/pb-verify/SKILL.md "$UPL"
-has   "hooks.json sends Chrome uploads to the guard" hooks/hooks.json 'mcp__claude-in-chrome__file_upload'
-has   "hooks.json sends Chrome upload_image to the guard" hooks/hooks.json 'mcp__claude-in-chrome__upload_image'
+has   "hooks.json sends any Chrome or browser upload tool to the guard" hooks/hooks.json 'mcp__\.\*\(\[Cc\]hrome\|\[Bb\]rowser\)\.\*__\(file_upload\|upload_image\)'
+# Design system (0.10.4): stateful kit widgets take an id from the caller.
+has   "review checklist: kit widgets take an id and run in push_id" reference/review-checklist.md 'Every stateful kit widget takes an id parameter from its caller and runs inside .push_id.; no literal .Id::new\("\.\.\."\). in .src/ui/kit\*.'
+has   "review checklist: grep the diff for literal Id::new in kit files" reference/review-checklist.md 'git diff .*src/ui/kit.*Id::new.*should fix'
 has   "contract: uploads are blocked where no prompt can show" reference/contract.md 'bypass.*block'
 has   "contract: the guard asks before an upload" reference/contract.md 'permission prompt.*upload|upload.*permission prompt'
 

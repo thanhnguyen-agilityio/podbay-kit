@@ -4,7 +4,7 @@ Claude Code plugin marketplace (`podbay-kit`) with one plugin, `podbay`: skills,
 
 ## Commands
 - `claude plugin validate .` and `claude plugin validate plugins/podbay` : both must pass. Only the missing-icon/LICENSE warning is expected.
-- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 209 pass, 0 fail.
+- `bash plugins/podbay/scripts/test-pb-guard.sh` : the guard's tests; 214 pass, 0 fail.
 - `bash plugins/podbay/scripts/test-kit-text.sh` : rules in skill and reference text; 275 pass, 0 fail (276 with `PB_PRIVATE_NAMES` set to a local list of private names).
 - `bash plugins/podbay/scripts/test-pb-helpers.sh` : pb-ci's Docker start (`skills/pb-ci/docker-up.sh`), the window screenshot helper (`scripts/pb-shot.sh`) and the tier 3 real-window check (`skills/pb-verify/ui-window-check.sh`); 37 pass, 0 fail.
 - `bash plugins/podbay/scripts/test-merge-check.sh` : merge check and risk tiers; 35 pass, 0 fail.

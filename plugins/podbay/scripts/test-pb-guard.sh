@@ -48,7 +48,7 @@ print(json.dumps(d))')"
   else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >"$D/stdout")"; rc=$?; fi
   local got=allow; [ $rc -eq 2 ] && got=block
   [ $rc -eq 0 ] && [ -s "$D/stdout" ] && got=allow-with-stdout
-  [ $rc -eq 0 ] && grep -q '"permissionDecision": *"ask"' "$D/stdout" && got=ask
+  [ $rc -eq 0 ] && grep -q '"permissionDecision": *"ask"' "$D/stdout" && python3 -m json.tool "$D/stdout" >/dev/null 2>&1 && got=ask
   [ $rc -ne 0 ] && [ $rc -ne 2 ] && got="exit$rc"
   if [ "$got" = block ] && [ -n "$MSG_RE" ] && ! printf '%s' "$err" | grep -Eq -- "$MSG_RE"; then got="block-without-/$MSG_RE/"; fi
   if [ "$got" = "$want" ]; then pass=$((pass+1)); printf 'ok    %-5s %s\n' "$want" "$label"
@@ -249,6 +249,11 @@ check allow "another non-Bash tool stays silent" "x" Write
 PERM=dontAsk check block "upload in dontAsk mode is blocked" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 PERM=madeUpMode check block "upload in an unknown mode is blocked" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 PERM=acceptEdits check ask   "upload in acceptEdits mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+check ask   "upload: Chrome tool under another server prefix" "x" mcp__Claude_in_Chrome__file_upload
+check ask   "upload: built-in browser upload tool" "x" mcp__Claude_Browser__file_upload
+check ask   "accepted false ask: release create without files" "glab release create v1.2.3 --notes x -R group/project"
+PERM=auto check ask   "upload in auto mode asks (the docs: the classifier does not decide a hook's ask)" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+PERM=plan check ask   "upload in plan mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 PERM=default check ask   "upload in default mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
