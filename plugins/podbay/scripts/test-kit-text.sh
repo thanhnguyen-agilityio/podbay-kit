@@ -345,5 +345,13 @@ has   "outside: 14 days counted from the Needs Info comment" reference/outside-r
 has   "pb-triage closes Duplicate, Won't fix and Cannot reproduce with a reply" skills/pb-triage/SKILL.md 'Duplicate of #<n>.*Won.t fix.*Cannot reproduce.*reporter-notified'
 has   "pb-release finds auto-closed outside reports" skills/pb-release/SKILL.md 'glab issue view <n> -R <repo> --output json.*source::'
 
+# Uploads (0.10.4): the fixed line in every place that briefs or uploads.
+UPL='Uploads of screenshots or files to GitLab need the person.s yes in the session.s own window, even for invented data\.'
+has   "pb-mr carries the upload line" skills/pb-mr/SKILL.md "$UPL"
+has   "pb-fix carries the upload line" skills/pb-fix/SKILL.md "$UPL"
+has   "worker.md carries the upload line" skills/pb-fix/references/worker.md "$UPL"
+has   "pb-orchestrator brief carries the upload line" skills/pb-orchestrator/SKILL.md "[Bb]rief.*$UPL"
+has   "contract: the guard asks before an upload" reference/contract.md 'permission prompt.*upload|upload.*permission prompt'
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

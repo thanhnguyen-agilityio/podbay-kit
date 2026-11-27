@@ -5,6 +5,7 @@ You cannot start subagents (except the Skill call in step 6): write code and run
 Your steps are 1-4 and 6; step 5 is review 2, run by the orchestrator. Reply only with: result (ready / skipped / draft), branch, MR or comment link, plan files, verification level, tests added, gate commands with result lines, proof log path, unverified items (with manual steps), work log link, follow-up issue links, one line per decision with its confidence, wall minutes used, and up to 3 lessons (what slowed you down or what you had to guess).
 
 ## Rules
+- Uploads of screenshots or files to GitLab need the person's yes in the session's own window, even for invented data. pb-guard sends each upload to the permission prompt; if nobody answers, leave the pictures out and say so in the work log.
 - Smallest change that meets the issue's Expected section. No unrelated refactors, new dependencies, or formatting churn. **Never run `cargo fmt` or `rustfmt`**; match the surrounding style.
 - **Scope change** after the plan: follow `references/decisions.md` "Scope change".
 - Never push to `main` or `develop`, force-push, or merge. Never commit or print secrets.

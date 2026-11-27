@@ -15,6 +15,8 @@
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
 #   7. cargo build|test|clippy|run|check (and pb-ci.sh) in command position when free disk is under PB_DISK_FLOOR_GB
 #      (whole GB, default 10). Tests fake free space with PB_FREE_GB_OVERRIDE, read only when PB_GUARD_TEST=1.
+#   9. Uploads to GitLab (glab api or curl to /uploads, glab ... --attach): answered with "ask", so the person's
+#      permission prompt decides; checked after every block.
 #   8. New labels: glab label create|edit|delete, glab api writes to /labels, and a label added by glab issue|mr
 #      create|update (--label, -l) or a glab api write (labels=, add_labels=) that the repo does not have
 #      (glab label list; unreadable -> block). GitLab creates a missing label silently when one is added.
@@ -352,4 +354,18 @@ if [ "$PUBLISH" = 1 ]; then
     *) block "private-ref-check could not scan the command text (exit $rc): $out" ;;
   esac
 fi
+
+# 9. uploads: a file sent to GitLab (glab api or curl to /uploads with a form or POST, or glab ... --attach) always goes
+#    to the person's permission prompt. Checked last, so every block above still wins; never auto-allowed.
+while IFS= read -r seg; do
+  up=0
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]' && printf '%s' "$seg" | grep -Eq '(^|[[:space:]])--attach([[:space:]=]|$)'; then up=1; fi
+  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])(glab[[:space:]]([^;&|]*[[:space:]])?api|curl)[[:space:]]' &&
+     printf '%s' "$seg" | grep -Eq '/uploads([?[:space:]"'"'"']|$)' &&
+     printf '%s' "$seg" | grep -Eiq '(^|[[:space:]])(-F|--form|--field|-f|--data[a-z-]*|-d)([[:space:]=]|[^[:space:]-])|(-X|--request|--method)[[:space:]=]*POST|-XPOST'; then up=1; fi
+  if [ "$up" = 1 ]; then
+    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"pb-guard: this uploads a file to GitLab. Uploads need the person'"'"'s yes in this window, even for invented data. Approve only if you want this file on GitLab."}}'
+    exit 0
+  fi
+done <<< "$SEGS"
 exit 0

@@ -2,6 +2,11 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.10.4 - 2026-11-27
+
+- Uploads need the person's yes (owner's batch, 2026-11-27): a worker had uploaded drawn pictures to MRs on its own judgment. `pb-guard` now answers every upload to GitLab (`glab api` or `curl` to `/uploads` with a form or POST, and `glab ... --attach`) with "ask", so the person's permission prompt decides; it runs after every other check, so a block still wins, and nothing auto-allows it. The fixed line "Uploads of screenshots or files to GitLab need the person's yes in the session's own window, even for invented data." is in `pb-mr`, `pb-fix`, the batch worker, the `pb-orchestrator` brief and the contract.
+- Tests: test-pb-guard.sh 183 pass (6 new; 2 older upload cases now expect "ask"), test-kit-text.sh 271 pass (5 new; 272 with `PB_PRIVATE_NAMES` set). The guard test helper knows a third result, "ask".
+
 ## podbay 0.10.3 - 2026-11-27
 
 - Outside reports (owner's decision of 2026-11-27), in a new `reference/outside-reports.md` and a contract section: a report from the client, the team, support or a DM becomes one GitLab issue with one source label (`source::client`, `source::team`, `source::support`, `source::dm`), `bug` or `Feature request`, and a Reporter block. It moves New -> Acknowledged (comment after the reply was sent) -> Triaged (priority and a milestone or `Planned: Backlog`, gate 1) -> optional `Needs Info` (closed as `Resolution: No response` after 14 days, only with a yes) -> the status labels -> closed with one fixed `Resolution:` comment -> `reporter-notified` with a `Notified:` comment. Sessions draft replies and never send them. Steps added to `pb-triage` (2b), `pb-fix` (Needs Info), `pb-orchestrator` (lists stale Needs Info) and `pb-release` step 7 (`Resolution: Fixed in <x.y.z>`, reporter reply drafts, `reporter-notified`).

@@ -42,9 +42,10 @@ check() {
 import json, os
 ti = {"command": os.environ["CMD"]} if os.environ["TOOL"] == "Bash" else {"file_path": "/etc/hosts"}
 print(json.dumps({"tool_name": os.environ["TOOL"], "tool_input": ti, "cwd": "/tmp"}))')"
-  if [ "$UNSET_KIT" = 1 ]; then err="$(printf '%s' "$payload" | env -u PB_KIT_REPO "$GUARD" 2>&1 >/dev/null)"; rc=$?
-  else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >/dev/null)"; rc=$?; fi
+  if [ "$UNSET_KIT" = 1 ]; then err="$(printf '%s' "$payload" | env -u PB_KIT_REPO "$GUARD" 2>&1 >"$D/stdout")"; rc=$?
+  else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >"$D/stdout")"; rc=$?; fi
   local got=allow; [ $rc -eq 2 ] && got=block
+  [ $rc -eq 0 ] && grep -q '"permissionDecision": *"ask"' "$D/stdout" && got=ask
   [ $rc -ne 0 ] && [ $rc -ne 2 ] && got="exit$rc"
   if [ "$got" = block ] && [ -n "$MSG_RE" ] && ! printf '%s' "$err" | grep -Eq -- "$MSG_RE"; then got="block-without-/$MSG_RE/"; fi
   if [ "$got" = "$want" ]; then pass=$((pass+1)); printf 'ok    %-5s %s\n' "$want" "$label"
@@ -97,7 +98,7 @@ check block "mr create, secret file (=)" "glab mr create --description-file=$D/s
 check block "mr create, missing file" "glab mr create --title x --description-file $D/nope.md"
 check block "mr create, variable path" "glab mr create --title x --description-file \$F"
 check block "api -F @secret file" "glab api -X POST projects/1/uploads -F file=@$D/secret.md"
-check allow "api -F @clean file" "glab api -X POST projects/1/uploads -F file=@$D/clean.md"
+check ask   "api -F @clean file (an upload: the person decides)" "glab api -X POST projects/1/uploads -F file=@$D/clean.md"
 check block "inline secret in -m" "glab issue note 3 -m 'password=hunter2hunter2'"
 check allow "issue note -m fixed" "glab issue note 3 -m \"fixed\""
 check allow "issue view" "glab issue view 3 -R group/project --comments"
@@ -105,7 +106,7 @@ check allow "Read tool payload" "ignored" Read
 
 printf '\211PNG\r\n\032\n\000\000' > "$D/shot.png"
 git init -q -b main "$D/onmain" && git init -q -b fix/x "$D/onbranch"
-check allow "upload png screenshot" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+check ask   "upload png screenshot (the person decides)" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 check block "bare push while on main" "git -C $D/onmain push"
 check block "push origin HEAD while on main" "cd $D/onmain && git push origin HEAD"
 check allow "bare push on a branch" "git -C $D/onbranch push"
@@ -210,6 +211,14 @@ check allow "\$( outside a publishing command is not touched" "echo \"\$(cat $D/
 check block "note text from a variable set earlier" "X=\"\$(cat $D/secret.md)\"; glab issue note 12 -R group/project -m \"\$X\""
 check block "description from a variable" "glab issue update 12 -R group/project --description \"\${BODY}\""
 check block "title from a variable" "glab mr create -R group/project --title \"\$T\" --description-file $D/clean.md"
+# Uploads (0.10.4): an upload to GitLab always goes to the person's permission prompt ("ask"), never auto-allowed.
+printf 'PNG' > "$D/shot.png"; printf 'PRIVATE-TOKEN: x' > "$D/hdr"
+check ask   "upload: glab api POST to uploads" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+check ask   "upload: curl fallback to uploads" "curl -sf -H @$D/hdr -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads"
+check ask   "upload: note with --attach" "glab mr note 6 -R group/project -m \"\$(cat $D/clean.md)\" --attach $D/shot.png"
+check ask   "upload: issue update with --attach" "glab issue update 12 -R group/project --attach $D/shot.png"
+check block "upload with a secret in the text is still blocked" "glab mr note 6 -R group/project -m \"\$(cat $D/secret.md)\" --attach $D/shot.png"
+check allow "not an upload: reading a file named uploads" "cat uploads/readme.txt"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
