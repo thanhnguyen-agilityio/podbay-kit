@@ -268,6 +268,14 @@ has   "pb-orchestrator sets On Dev after a merge into develop" skills/pb-orchest
 has   "pb-mr sets In Review only when the MR is ready" skills/pb-mr/SKILL.md 'In Review'
 has   "pb-mr keeps In Process while Draft" skills/pb-mr/SKILL.md 'Draft.*In Process|In Process.*Draft'
 has   "pb-release closes On Dev leftovers after the merge into main" skills/pb-release/SKILL.md 'On Dev.*glab issue close|glab issue close.*On Dev'
+has   "status: assignee is added with +, not replaced" reference/contract.md "--assignee '\\+<ticket-assignee>'"
+has   "status: label check reads 100 labels" reference/contract.md 'glab label list -R <repo> --per-page 100'
+has   "status: a ready MR found by the orchestrator moves to In Review; back to Draft moves back" skills/pb-orchestrator/SKILL.md 'no longer a Draft.*In Review.*Draft again.*In Process'
+has   "status: the flow needs main as the default branch" reference/contract.md 'default branch.*main'
+has   "pb-release checks the default branch is main" skills/pb-release/SKILL.md 'default_branch'
+has   "pb-release counts epic child tickets at the close step" skills/pb-release/SKILL.md 'feat/<epic-name>.*On Dev|On Dev.*feat/<epic-name>'
+has   "status: every Closes line counts" reference/contract.md 'each issue in a .Closes'
+has   "pb-fix sets In Process when it starts a ticket on its own" skills/pb-fix/SKILL.md 'In Process'
 lacks "no person's username in the status rules" reference/contract.md 'thanh'
 lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
 

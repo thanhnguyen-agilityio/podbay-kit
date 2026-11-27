@@ -93,15 +93,16 @@ The repo's existing status labels show where a ticket is. One at a time; each mo
 
 | Moment | Who | Command |
 | --- | --- | --- |
-| A session starts the ticket | `pb-orchestrator` when it briefs the session (a session that starts a ticket on its own does the same) | `glab issue update <n> -R <repo> --label 'In Process' --assignee <ticket-assignee>` |
-| Its MR is ready for a person's review (opened without Draft, or found marked ready) | `pb-mr` | `glab issue update <n> -R <repo> --unlabel 'In Process' --label 'In Review'` |
-| The MR merges into `develop` (for an epic: the `feat/<epic-name>` MR into `develop`, for each child ticket) | `pb-orchestrator` right after the merge | `glab issue update <n> -R <repo> --unlabel 'In Process' --unlabel 'In Review' --label 'On Dev'` |
+| A session starts the ticket | `pb-orchestrator` when it briefs the session; `pb-fix` when it starts one on its own | `glab issue update <n> -R <repo> --label 'In Process' --assignee '+<ticket-assignee>'` |
+| Its MR is ready for a person's review (opened without Draft, or marked ready later) | `pb-mr` when it opens the MR; `pb-orchestrator` when it next sees the MR no longer a Draft | `glab issue update <n> -R <repo> --unlabel 'In Process' --label 'In Review'` |
+| The MR goes back to Draft | `pb-orchestrator` when it sees it | `glab issue update <n> -R <repo> --unlabel 'In Review' --label 'In Process'` |
+| The MR merges into `develop` (for an epic: the `feat/<epic-name>` MR into `develop`, for each child ticket) | `pb-orchestrator` right after the merge | `glab issue update <n> -R <repo> --unlabel 'In Process,In Review' --label 'On Dev'` |
 | `develop` merges into `main` | GitLab closes it from `Closes #<n>`; `pb-release` step 7 closes the leftovers | `glab issue close <n> -R <repo>` |
 
-- The ticket is the issue in the MR's `Closes #<n>` line. While the MR is a Draft, the ticket keeps `In Process`.
-- `On Dev` means merged into `develop`, not released: never close the ticket at that point.
-- `<ticket-assignee>` is a team value: the `ticket-assignee:` line in `.podbay/orchestrator.md`. The kit never names a person. When the line is missing, set the label only and say so in the report.
-- Before the first status edit in a run, check the three labels exist (`glab label list -R <repo>`). If a status label is missing, stop that step and report it; never create it (Labels).
+- The ticket is each issue in a `Closes #<n>` line of the MR (one MR may close several). An MR with none (release-prep, back-merge) changes no status. While the MR is a Draft, the ticket keeps `In Process`.
+- `On Dev` means merged into `develop`, not released: never close the ticket at that point. GitLab closes from `Closes #<n>` only on a merge into the default branch, so this flow needs the default branch to be `main` (`pb-release` step 0 checks it). Epic child tickets are not in the `feat/<epic-name>` MR's `Closes` lines (their MRs went into the epic branch), so they never auto-close: `pb-release` step 7 closes them.
+- `<ticket-assignee>` is a team value: the `ticket-assignee:` line in `.podbay/orchestrator.md`. The kit never names a person. The `+` adds the person and keeps other assignees. When the line is missing, set the label only and say so in the report.
+- Before the first status edit in a run, check the three labels exist (`glab label list -R <repo> --per-page 100`). If a status label is missing, stop that step and report it; never create it (Labels).
 - Under the owner's standing rule, a status label move and the assignee need no approval. Closing an issue still needs the user's yes (pb-release asks before it).
 
 ## Comment markers

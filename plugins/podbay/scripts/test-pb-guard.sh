@@ -191,6 +191,8 @@ check allow "status: In Process and assignee" "glab issue update 12 -R group/pro
 check allow "status: In Process -> In Review" "glab issue update 12 -R group/project --unlabel 'In Process' --label 'In Review'"
 check allow "status: In Review -> On Dev" "glab issue update 12 -R group/project --unlabel 'In Review' --label 'On Dev'"
 check block "status: a misspelt status label" "glab issue update 12 -R group/project --label 'In Progress'"
+check allow "status: the On Dev command as written" "glab issue update 12 -R group/project --unlabel 'In Process,In Review' --label 'On Dev'"
+check allow "status: list On Dev issues" "glab issue list -R group/project --label 'On Dev' --per-page 100"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)

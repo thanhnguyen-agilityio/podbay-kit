@@ -7,7 +7,9 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Ticket status flow (owner's rule of 2026-11-27), in a new contract section "Ticket status": `In Process` when a session starts a ticket (`pb-orchestrator` sets it with the assignee from the `ticket-assignee:` line in `.podbay/orchestrator.md`; the kit names no person), `In Review` when the MR is ready for review (`pb-mr`; a Draft keeps `In Process`), `On Dev` right after the merge into `develop` (`pb-orchestrator`; for an epic, each child ticket when `feat/<epic-name>` merges). The ticket is never closed at `On Dev`: GitLab closes it from `Closes #<n>` when `develop` merges into `main`, and `pb-release` step 7 lists the leftovers and closes them after the user's yes.
 - Status label moves and the assignee need no approval; closing an issue still does. The labels must already exist; a missing one stops that step (never created). Briefs from `pb-orchestrator` state the rule.
 - `pb-guard` needed no change: tests prove it allows these label moves, the assignee and `glab issue close`, and still blocks a misspelt status label.
-- Tests: test-pb-guard.sh 160 pass (5 new), test-kit-text.sh 204 pass (14 new).
+- The assignee is added with `--assignee '+<user>'` (a bare name would replace the other assignees). The orchestrator also moves a ticket to `In Review` when it sees a person marked the MR ready, and back to `In Process` when the MR returns to Draft. `pb-fix` sets `In Process` when it starts a ticket without the orchestrator. `pb-release` step 0 checks the default branch is `main` (GitLab closes tickets only on a merge into it), and step 7 also closes epic child tickets, which never auto-close.
+- Tests: test-pb-guard.sh 162 pass (7 new), test-kit-text.sh 212 pass (22 new).
+- Review: isolated round 1 on Opus, no blockers; 5 should-fix (In Review was rarely set, the assignee replaced others, the default-branch assumption, epic children, a 30-label page limit) and the nits fixed.
 
 ## podbay 0.10.1 - 2026-11-26
 
