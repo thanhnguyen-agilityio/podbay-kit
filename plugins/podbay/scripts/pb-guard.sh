@@ -281,12 +281,15 @@ except Exception: pass' 2>/dev/null)"
   if [ "$is_pub" = 1 ]; then
     PUBLISH=1
     # Text from a command substitution is scanned only in the form $(cat <one path>); any other $( or backtick
-    # (two files, $(< f), $(head f), `cat f`) would reach GitLab unscanned.
+    # (two files, $(< f), $(head f), `cat f`) or a shell variable (set earlier from anything) would reach GitLab unscanned.
     rest="$(printf '%s' "$seg" | sed -E 's/\$\(cat[[:space:]]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:])"'"'"']+)\)//g')"
     case "$rest" in
       *'$('*|*'`'*) block "Text for GitLab may come from a command substitution only as \$(cat <one file>), so the file can be scanned first. Write the text to one scratchpad file and use -m \"\$(cat <file>)\" or --description-file <file>." ;;
     esac
-    cands="$(printf '%s' "$seg" | grep -oE -e '--description-file[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '(-F|--field)[ =]*[^[:space:]=]+=@("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '--input[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '\$\(cat[[:space:]]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:])]+)' || true)"
+    if printf '%s' "$rest" | grep -Eq '\$([A-Za-z_{]|[0-9@*#?!-])'; then
+      block "A GitLab command may not use a shell variable: its value cannot be scanned. Write the literal value in the command, or the text to one scratchpad file and use -m \"\$(cat <file>)\" or --description-file <file>."
+    fi
+    cands="$(printf '%s' "$seg" | grep -oE -e '--description-file[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '(-F|--field)[ =]*[^[:space:]=]+=@("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '--input[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '\$\(cat[[:space:]]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:])"'"'"']+)' || true)"
     while IFS= read -r c; do
       [ -n "$c" ] || continue
       case "$c" in

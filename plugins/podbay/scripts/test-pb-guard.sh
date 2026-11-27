@@ -207,6 +207,9 @@ check block "note text from \$(< file)" "glab issue note 12 -R group/project -m 
 check block "note text from \$(head file)" "glab issue note 12 -R group/project -m \"\$(head $D/secret.md)\""
 check block "note text from backticks" "glab issue note 12 -R group/project -m \"\`cat $D/secret.md\`\""
 check allow "\$( outside a publishing command is not touched" "echo \"\$(cat $D/secret.md)\" > /dev/null"
+check block "note text from a variable set earlier" "X=\"\$(cat $D/secret.md)\"; glab issue note 12 -R group/project -m \"\$X\""
+check block "description from a variable" "glab issue update 12 -R group/project --description \"\${BODY}\""
+check block "title from a variable" "glab mr create -R group/project --title \"\$T\" --description-file $D/clean.md"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)

@@ -40,7 +40,7 @@ New -> Acknowledged -> Triaged -> (Needs Info) -> In Process -> In Review -> On 
 | Closed | exactly one fixed comment, then close | see below |
 | reporter-notified | `reporter-notified` and a comment `Notified: <date>, <link>` | `pb-release` drafts the reply; after the sender says it was sent, add both |
 
-A `'Needs Info'` ticket with no answer for 14 days, counted from the date of the `Needs Info` comment (`glab issue view <n> -R <repo> --comments`), is closed with `Resolution: No response`, only after the user's yes (`pb-orchestrator` lists them).
+A `'Needs Info'` ticket with no answer for 14 days, counted from the date of the `Needs Info` comment (`glab issue view <n> -R <repo> --comments --per-page 100`), is closed with `Resolution: No response`, only after the user's yes (`pb-orchestrator` lists them).
 
 ## Closing comment
 

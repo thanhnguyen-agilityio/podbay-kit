@@ -11,7 +11,10 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Round 1 fixes: `pb-triage` closes Duplicate, Won't fix and Cannot reproduce with one comment and a reply draft; Needs Info counts 14 days from its comment; `pb-release` finds outside reports through the `Closes` lines and their `source::` label; the idle check uses `podbay-dev checkouts --all` and `podbay-dev queue`, fails a branch with no upstream, and reads `night:` from `.podbay/orchestrator.md`.
 - Private names are no longer in the kit's tests: set `PB_PRIVATE_NAMES` (an ERE) locally and `test-kit-text.sh` checks the skill, reference, template, README and CHANGELOG text for them.
 - Round 2 fixes: in a publishing command, `pb-guard` blocks any `$(...)` or backtick other than `$(cat <one file>)` (two files, `$(< f)`, `$(head f)` and backticks sent text unscanned); the idle check reads `podbay-dev queue ls --all` and `status`/`since` from `podbay-dev ls --all`, and asks a session on another machine instead of using `--on` for git or ps; the idle rule is an exception to asking before a stop in `pb-orchestrator`; `pb-release --urgent` handles the urgent MR's outside reports.
-- Tests: test-pb-guard.sh 174 pass (12 new), test-kit-text.sh 262 pass (42 new; 263 with `PB_PRIVATE_NAMES` set).
+- Round 3 fixes: `pb-guard` blocks a shell variable in a GitLab publishing command (text set earlier as `X="$(cat f)"` and sent as `-m "$X"` went unscanned); `pb-release` step 7 posts `Resolution:` before the close, asks for the comments on their own with `--urgent`, drafts replies for `source::client` and `source::team` reporters too, and lists closed outside reports with no `reporter-notified`.
+- Tests: test-pb-guard.sh 177 pass (15 new), test-kit-text.sh 266 pass (46 new; 267 with `PB_PRIVATE_NAMES` set).
+- Review: 3 isolated rounds on Opus, no blockers; round 1: 4 should-fix, round 2: 5, round 3: 3, all fixed.
+- Evals: triage-verified, triage-bug-evidence, fix-grill-first, release-develop-flow and kickoff-readback all 1.00.
 
 ## podbay 0.10.2 - 2026-11-27
 

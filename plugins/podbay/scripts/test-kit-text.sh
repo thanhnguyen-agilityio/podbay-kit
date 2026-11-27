@@ -307,7 +307,11 @@ has   "outside: the session never sends the reply" $OR 'never sends'
 has   "contract points to outside reports" reference/contract.md 'outside-reports\.md'
 has   "pb-triage acknowledges and triages outside reports" skills/pb-triage/SKILL.md 'outside-reports\.md'
 has   "pb-orchestrator lists stale Needs Info" skills/pb-orchestrator/SKILL.md 'Needs Info.*14 days'
-has   "pb-fix sets Needs Info for an outside report it cannot build" skills/pb-fix/SKILL.md 'Needs Info'
+has   "pb-fix sets Needs Info for an outside report it cannot build" skills/pb-fix/SKILL.md '1a2.*source::.*Needs Info'
+has   "pb-release drafts replies for client and team reporters too" skills/pb-release/SKILL.md 'source::client. and .source::team.*the user decides where'
+has   "pb-release posts Resolution before the close" skills/pb-release/SKILL.md 'Resolution:. before .glab issue close'
+has   "pb-release --urgent asks for the comments on their own" skills/pb-release/SKILL.md 'With .--urgent., ask for the comments on their own'
+has   "pb-release lists closed outside reports not yet notified" skills/pb-release/SKILL.md 'source::. label and no .reporter-notified'
 has   "pb-release posts the Fixed resolution and drafts reporter replies" skills/pb-release/SKILL.md 'Resolution: Fixed in <x\.y\.z>.*reporter-notified'
 
 # Idle sessions (0.10.3): stop a worker idle for 30 minutes after a check; resume with --resume latest.
