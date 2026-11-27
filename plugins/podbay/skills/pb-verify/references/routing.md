@@ -42,7 +42,7 @@ Only after the first approval (step 6a). Text body comes from a file; the podbay
 
 ### GitLab
 
-1. Media: for each file, once: `glab api -X POST projects/<id>/uploads -F file=@<out>/<file>`. Take the `markdown` field from the answer.
+1. Media (Uploads of screenshots or files to GitLab need the person's yes in the session's own window, even for invented data. pb-guard asks at each upload): for each file, once: `glab api -X POST projects/<id>/uploads -F file=@<out>/<file>`. Take the `markdown` field from the answer.
    - glab 1.128 is known to return HTTP 400 here. On any failure, do not retry and do not switch to curl or tokens: use Chrome for media (below).
 2. Put the returned markdown links into a copy of the approved draft: `<scratchpad>/mr-comment-final.md`. Rerun both scans on it.
 3. Show the final file and this command, wait for yes, then run it:

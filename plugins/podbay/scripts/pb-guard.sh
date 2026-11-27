@@ -15,14 +15,15 @@
 #      labels): scripts/private-ref-check.sh on the same files and on the command text with file-path arguments removed.
 #   7. cargo build|test|clippy|run|check (and pb-ci.sh) in command position when free disk is under PB_DISK_FLOOR_GB
 #      (whole GB, default 10). Tests fake free space with PB_FREE_GB_OVERRIDE, read only when PB_GUARD_TEST=1.
-#   9. Uploads to GitLab (glab api or curl to /uploads, glab ... --attach): answered with "ask", so the person's
-#      permission prompt decides; checked after every block.
 #   8. New labels: glab label create|edit|delete, glab api writes to /labels, and a label added by glab issue|mr
 #      create|update (--label, -l) or a glab api write (labels=, add_labels=) that the repo does not have
 #      (glab label list; unreadable -> block). GitLab creates a missing label silently when one is added.
+#   9. Uploads (glab api or curl to /uploads or /wikis/attachments with a form or POST, glab ... --attach, glab release
+#      upload|create, and the Chrome file_upload tool): answered with "ask", so the person's permission prompt decides;
+#      checked after every block. In bypassPermissions mode (no prompt) they are blocked.
 # Compound commands are split on && || ; | & and newlines; each piece is checked. Parsing is loose and errs toward blocking.
 # A bare `git push` (or `git push <remote> HEAD`) is checked against the target checkout's current branch.
-# Not enforced: wrappers (bash script.sh, eval, $(...)), curl or python calls to the API.
+# Not enforced: wrappers (bash script.sh, eval), python calls to the API, and curl to the API other than uploads.
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 # The "may push to main" exception exists only when PB_KIT_REPO names an existing directory.
@@ -48,13 +49,21 @@ ti = d.get("tool_input") or {}
 open(sys.argv[1], "w").write(ti.get("command") or "")
 print(d.get("tool_name") or "")
 print(d.get("cwd") or "")
+print(d.get("permission_mode") or "")
 ' "$CMDF" 2>/dev/null)" || exit 0
 TOOL="$(printf '%s\n' "$meta" | sed -n 1p)"
 CWD="$(printf '%s\n' "$meta" | sed -n 2p)"
-[ "$TOOL" = "Bash" ] || exit 0
+PMODE="$(printf '%s\n' "$meta" | sed -n 3p)"
+
+# ask_upload: an upload goes to the person's permission prompt. In bypassPermissions mode no prompt shows, so block.
+ask_upload() {
+  if [ "$PMODE" = bypassPermissions ]; then
+    block "This uploads a file, and this session skips permission prompts, so nobody can say yes. Uploads of screenshots or files need the person's yes in the session's own window, even for invented data. Leave the file out and report it, or run in a mode with prompts."
+  fi
+  printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"pb-guard: this uploads a file. Uploads need the person'"'"'s yes in this window, even for invented data. Approve only if you want this file uploaded."}}'
+  exit 0
+}
 [ -n "$CWD" ] || CWD="$PWD"
-CMD="$(cat "$CMDF")"
-[ -n "$CMD" ] || exit 0
 
 PRIV_HINT="GitLab readers can't see the triage notes: rewrite in plain terms (no finding ids, triage file names, review artifact, gate or grilling words, internal labels)."
 
@@ -62,6 +71,12 @@ block() {
   printf 'pb-guard: BLOCKED. %s\n' "$1" >&2
   exit 2
 }
+
+# Only Bash and the Chrome upload tool reach here (hooks.json matcher).
+[ "$TOOL" = "mcp__claude-in-chrome__file_upload" ] && ask_upload
+[ "$TOOL" = "Bash" ] || exit 0
+CMD="$(cat "$CMDF")"
+[ -n "$CMD" ] || exit 0
 
 # resolve <path> <base>: print the absolute physical path, or fail if it has variables or does not exist.
 resolve() {
@@ -355,17 +370,16 @@ if [ "$PUBLISH" = 1 ]; then
   esac
 fi
 
-# 9. uploads: a file sent to GitLab (glab api or curl to /uploads with a form or POST, or glab ... --attach) always goes
-#    to the person's permission prompt. Checked last, so every block above still wins; never auto-allowed.
-while IFS= read -r seg; do
-  up=0
-  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])glab[[:space:]]' && printf '%s' "$seg" | grep -Eq '(^|[[:space:]])--attach([[:space:]=]|$)'; then up=1; fi
-  if printf '%s' "$seg" | grep -Eq '(^|[[:space:]])(glab[[:space:]]([^;&|]*[[:space:]])?api|curl)[[:space:]]' &&
-     printf '%s' "$seg" | grep -Eq '/uploads([?[:space:]"'"'"']|$)' &&
-     printf '%s' "$seg" | grep -Eiq '(^|[[:space:]])(-F|--form|--field|-f|--data[a-z-]*|-d)([[:space:]=]|[^[:space:]-])|(-X|--request|--method)[[:space:]=]*POST|-XPOST'; then up=1; fi
-  if [ "$up" = 1 ]; then
-    printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"pb-guard: this uploads a file to GitLab. Uploads need the person'"'"'s yes in this window, even for invented data. Approve only if you want this file on GitLab."}}'
-    exit 0
-  fi
-done <<< "$SEGS"
+# 9. uploads: a file sent to GitLab always goes to the person's permission prompt (ask_upload). Checked last, on the
+#    whole command with line continuations joined (an upload split over lines or with & in its URL is still seen),
+#    so every block above still wins; never auto-allowed.
+J="$(printf '%s' "$CMD" | sed -e ':a' -e '/\\$/N; s/\\\n//; ta')"
+CMDW='(^|[[:space:];&|(`])'
+if printf '%s' "$J" | grep -Eq "${CMDW}glab[[:space:]]" && printf '%s' "$J" | grep -Eq '(^|[[:space:]])--attach([[:space:]=]|$)'; then ask_upload; fi
+if printf '%s' "$J" | grep -Eq "${CMDW}glab[[:space:]]+([^;&|]*[[:space:]])?release[[:space:]]+(upload|create)([[:space:]]|$)"; then ask_upload; fi
+if printf '%s' "$J" | grep -Eq "${CMDW}(glab[[:space:]]([^;&|]*[[:space:]])?api|([^[:space:]]*/)?curl)[[:space:]]" &&
+   printf '%s' "$J" | grep -Eq '/(uploads|wikis/attachments)/?([?[:space:]"'"'"'>&;|)]|$)' &&
+   printf '%s' "$J" | grep -Eiq '(^|[[:space:]])(-F|--form|--field|-f|--data[a-z-]*|-d)([[:space:]=]|[^[:space:]-])|(-X|--request|--method)[[:space:]=]*POST|-XPOST'; then
+  ask_upload
+fi
 exit 0

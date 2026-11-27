@@ -2,7 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|mcp__claude-in-chrome__file_upload",
         "hooks": [
           {
             "type": "command",

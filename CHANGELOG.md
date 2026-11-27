@@ -5,7 +5,8 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 ## podbay 0.10.4 - 2026-11-27
 
 - Uploads need the person's yes (owner's batch, 2026-11-27): a worker had uploaded drawn pictures to MRs on its own judgment. `pb-guard` now answers every upload to GitLab (`glab api` or `curl` to `/uploads` with a form or POST, and `glab ... --attach`) with "ask", so the person's permission prompt decides; it runs after every other check, so a block still wins, and nothing auto-allows it. The fixed line "Uploads of screenshots or files to GitLab need the person's yes in the session's own window, even for invented data." is in `pb-mr`, `pb-fix`, the batch worker, the `pb-orchestrator` brief and the contract.
-- Tests: test-pb-guard.sh 183 pass (6 new; 2 older upload cases now expect "ask"), test-kit-text.sh 271 pass (5 new; 272 with `PB_PRIVATE_NAMES` set). The guard test helper knows a third result, "ask".
+- Round 1 fixes: the upload check runs on the whole command with line continuations joined (a multi-line curl or an `&` in the URL was missed), accepts `/usr/bin/curl`, a trailing slash and a redirect, and also covers `glab release upload|create` and `/wikis/attachments`. The Chrome `file_upload` tool now reaches the guard (hooks.json matcher) and gets the same prompt; `pb-verify` carries the fixed line. The docs do not say a hook's "ask" prompts in bypass-permissions mode, so there an upload is blocked instead.
+- Tests: test-pb-guard.sh 199 pass (22 new; 2 older upload cases now expect "ask"), test-kit-text.sh 274 pass (8 new; 275 with `PB_PRIVATE_NAMES` set). The guard test helper knows a third result, "ask", and can set the permission mode.
 
 ## podbay 0.10.3 - 2026-11-27
 

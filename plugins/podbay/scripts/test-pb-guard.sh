@@ -40,8 +40,10 @@ check() {
   local want="$1" label="$2" cmd="$3" tool="${4:-Bash}" payload rc err
   payload="$(CMD="$cmd" TOOL="$tool" python3 -c '
 import json, os
-ti = {"command": os.environ["CMD"]} if os.environ["TOOL"] == "Bash" else {"file_path": "/etc/hosts"}
-print(json.dumps({"tool_name": os.environ["TOOL"], "tool_input": ti, "cwd": "/tmp"}))')"
+ti = {"command": os.environ["CMD"]} if os.environ["TOOL"] == "Bash" else {"file_path": "/etc/hosts", "paths": ["/etc/hosts"]}
+d = {"tool_name": os.environ["TOOL"], "tool_input": ti, "cwd": "/tmp"}
+if os.environ.get("PERM"): d["permission_mode"] = os.environ["PERM"]
+print(json.dumps(d))')"
   if [ "$UNSET_KIT" = 1 ]; then err="$(printf '%s' "$payload" | env -u PB_KIT_REPO "$GUARD" 2>&1 >"$D/stdout")"; rc=$?
   else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >"$D/stdout")"; rc=$?; fi
   local got=allow; [ $rc -eq 2 ] && got=block
@@ -219,6 +221,24 @@ check ask   "upload: note with --attach" "glab mr note 6 -R group/project -m \"\
 check ask   "upload: issue update with --attach" "glab issue update 12 -R group/project --attach $D/shot.png"
 check block "upload with a secret in the text is still blocked" "glab mr note 6 -R group/project -m \"\$(cat $D/secret.md)\" --attach $D/shot.png"
 check allow "not an upload: reading a file named uploads" "cat uploads/readme.txt"
+check ask   "upload: curl over several lines" "curl -sf -H @$D/hdr \\
+  -F file=@$D/shot.png \\
+  https://gitlab.example.com/api/v4/projects/1/uploads"
+check ask   "upload: & in the URL" "curl -sf -F file=@$D/shot.png 'https://gitlab.example.com/api/v4/projects/1/uploads?a=1&b=2'"
+check ask   "upload: curl by full path" "/usr/bin/curl -sf -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads"
+check ask   "upload: trailing slash" "curl -sf -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads/"
+check ask   "upload: output redirected" "curl -sf -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads>$D/out.json"
+check ask   "upload: release asset" "glab release upload v1.2.3 $D/shot.png -R group/project"
+check ask   "upload: release create with files" "glab release create v1.2.3 $D/shot.png -R group/project"
+check ask   "upload: wiki attachment" "glab api projects/1/wikis/attachments --form file=@$D/shot.png"
+check block "upload with a secret file is blocked, not asked" "glab api -X POST projects/1/uploads -F file=@$D/secret.md"
+check allow "not an upload: GET of uploads" "glab api projects/1/uploads"
+check allow "not an upload: curl download" "curl -sf -o $D/x.png https://gitlab.example.com/uploads/abc/x.png"
+check allow "not an upload: text that names /uploads" "glab mr note 6 -R group/project -m 'see the uploads page'"
+check ask   "upload: Chrome file upload tool" "x" mcp__claude-in-chrome__file_upload
+PERM=bypassPermissions check block "upload in bypass mode is blocked (no prompt there)" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+PERM=bypassPermissions check block "Chrome upload in bypass mode is blocked" "x" mcp__claude-in-chrome__file_upload
+PERM=default check ask   "upload in default mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
