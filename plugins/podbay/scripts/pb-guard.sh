@@ -8,7 +8,7 @@
 #   2. git push with --force, -f, --force-with-lease, +refspec, --all or --mirror.
 #   3. git push to a branch in PB_NO_PUSH (pb-targets.sh: main, master, develop, release/*). A push to main or master is allowed only when env PB_KIT_REPO is set to a repo path and the push targets that repo (git -C <path> inside it, or cd into it first). Unset: never allowed.
 #   4. glab mr merge, glab mr approve, glab api calls to /merge or /approve endpoints. Merge is allowed only into a target that is not in PB_PERSON_MERGES (pb-targets.sh: main, master, release/*), read from glab mr view; unsure -> block (Gate 2).
-#   5. Publishing to GitLab without a secret scan: glab issue|mr create|note|update and glab api with a non-GET method or
+#   5. Publishing to GitLab without a secret scan (also the file in -m "$(cat <file>)"): glab issue|mr create|note|update and glab api with a non-GET method or
 #      field flags. Runs scripts/publish-check.sh on each --description-file / -F key=@file / --input file, and on the whole
 #      command text (inline -m / --description). Match, missing file, unresolvable path or scanner error -> block.
 #   6. Private references in that same text (finding ids, triage file names, review artifact, gate or grilling words, internal
@@ -280,13 +280,14 @@ except Exception: pass' 2>/dev/null)"
   fi
   if [ "$is_pub" = 1 ]; then
     PUBLISH=1
-    cands="$(printf '%s' "$seg" | grep -oE -e '--description-file[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '(-F|--field)[ =]*[^[:space:]=]+=@("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '--input[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' || true)"
+    cands="$(printf '%s' "$seg" | grep -oE -e '--description-file[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '(-F|--field)[ =]*[^[:space:]=]+=@("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '--input[= ]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:]]+)' -e '\$\(cat[[:space:]]+("[^"]+"|'"'"'[^'"'"']+'"'"'|[^[:space:])]+)' || true)"
     while IFS= read -r c; do
       [ -n "$c" ] || continue
       case "$c" in
         *@*) f="${c#*@}" ;;
         --description-file*) f="${c#--description-file}"; f="${f#[= ]}"; f="${f#"${f%%[![:space:]]*}"}"; f="${f#=}" ;;
         --input*) f="${c#--input}"; f="${f#[= ]}"; f="${f#"${f%%[![:space:]]*}"}" ;;
+        '$(cat'*) f="${c#\$(cat}"; f="${f#"${f%%[![:space:]]*}"}"; f="${f#\"}"; f="${f%\"}"; f="${f#\'}"; f="${f%\'}" ;;
         *) f="" ;;
       esac
       [ -n "$f" ] || continue

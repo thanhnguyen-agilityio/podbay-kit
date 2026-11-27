@@ -199,6 +199,9 @@ check allow "outside: Needs Info" "glab issue update 12 -R group/project --label
 check allow "outside: reporter-notified" "glab issue update 12 -R group/project --label reporter-notified"
 check block "outside: source label that does not exist yet" "glab issue update 12 -R group/project --label 'source::client'"
 check allow "outside: resolution comment from a file" "glab issue note 12 -R group/project -m \"\$(cat $D/clean.md)\""
+printf 'Thanks, this is fixed.\nSee gate 1 in .podbay/triage/x.md\n' > "$D/private-note.md"
+check block "note text from \$(cat file) is scanned for secrets" "glab issue note 12 -R group/project -m \"\$(cat $D/secret.md)\""
+check block "note text from \$(cat file) is scanned for private references" "glab issue note 12 -R group/project -m \"\$(cat '$D/private-note.md')\""
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)

@@ -8,16 +8,16 @@ Only the orchestrator, the supervisor, and a session with an open watch (it watc
 
 ## When
 
-- Day: a worker with no task, nothing queued for it, and no message from it for 30 minutes (`PB_IDLE_MINUTES`, default 30; a team value may be in `.podbay/orchestrator.md`).
-- Night: every worker, after the same check.
+- Day: a worker with no task, nothing queued for it (`podbay-dev queue`), and no message from it for 30 minutes (`PB_IDLE_MINUTES`, default 30; a team value may be in `.podbay/orchestrator.md`).
+- Night: every worker, after the same check. When night starts is a team value: a `night:` line in `.podbay/orchestrator.md` (for example `night: 22:00`); without it, night is when the user says so.
 - Never a session that is mid-task, or one the user said to keep.
 
 ## Check before the stop
 
 All must pass. If one fails, the session is reported, never stopped.
 
-1. Work pushed: in its checkout (`podbay-dev checkouts`), `git status --porcelain` is empty and `git rev-list @{u}..HEAD` prints nothing.
-2. No build or test running in that checkout: no `cargo`, `pb-ci` or test process (`ps` with the checkout path).
+1. Work pushed: `podbay-dev checkouts --all` shows its checkout with `dirty` 0 and `ahead` 0, and the branch has an upstream (`git -C <path> rev-parse @{u}` succeeds; run it with `podbay-dev ... --on <machine>` or ask the session when it is on another machine). A branch with no upstream fails the check.
+2. No build or test running in that checkout: no `cargo`, `pb-ci` or test process (`ps` with the checkout path, on the session's machine: `--on <machine>`, or ask the session).
 3. No prompt waiting for the user: `podbay-dev ls` shows `waiting_for` empty for it.
 
 ## Stop and resume

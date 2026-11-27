@@ -284,8 +284,6 @@ step  "pb-orchestrator brief carries the design-system line" skills/pb-orchestra
 has   "role map: the machine qualifier is documented" ../../CLAUDE.md '@<machine>'
 has   "pb-kickoff knows map lines with @<machine>" skills/pb-kickoff/SKILL.md '@<machine>'
 has   "README documents the machine qualifier and PB_MACHINE" ../../README.md '@<machine>.*PB_MACHINE'
-lacks "no person's username in the status rules" reference/contract.md 'thanh'
-lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
 
 # Outside reports (0.10.3): GitLab lifecycle from New to reporter-notified.
 OR=reference/outside-reports.md
@@ -306,7 +304,6 @@ has   "outside: Needs Info closes after 14 days with a yes" $OR '14 days.*yes'
 has   "outside: the Notified comment" $OR 'Notified: <date>, <link>'
 has   "outside: a missing label stops, never created" $OR 'missing.*stop.*never create'
 has   "outside: the session never sends the reply" $OR 'never sends'
-lacks "outside: no person names" $OR 'Trung|Thanh'
 has   "contract points to outside reports" reference/contract.md 'outside-reports\.md'
 has   "pb-triage acknowledges and triages outside reports" skills/pb-triage/SKILL.md 'outside-reports\.md'
 has   "pb-orchestrator lists stale Needs Info" skills/pb-orchestrator/SKILL.md 'Needs Info.*14 days'
@@ -317,16 +314,29 @@ has   "pb-release posts the Fixed resolution and drafts reporter replies" skills
 IS=reference/idle-sessions.md
 [ -f "$ROOT/$IS" ] && ok "idle-sessions reference exists" || bad "idle-sessions reference exists"
 has   "idle: 30 minutes and PB_IDLE_MINUTES" $IS '30 minutes.*PB_IDLE_MINUTES|PB_IDLE_MINUTES.*30'
-has   "idle: work pushed check" $IS 'git rev-list @\{u\}\.\.HEAD'
+has   "idle: work pushed check" $IS 'dirty. 0 and .ahead. 0.*rev-parse @\{u\}'
 has   "idle: no build or test running" $IS '[Nn]o build or test'
 has   "idle: no prompt waiting" $IS 'waiting_for'
 has   "idle: resume command" $IS 'podbay-dev start <project> <repo> --ws <ws> --resume latest'
 has   "idle: only the orchestrator, the supervisor and a watching session stay up" $IS 'orchestrator.*supervisor.*watch'
 has   "idle: standing roles are stopped too" $IS 'standing roles'
 has   "idle: a failed check is reported, never stopped" $IS 'reported, never stopped'
-lacks "idle: no team session names" $IS 'Togepi|#M2|kit-|artifacts worker'
 has   "pb-orchestrator links the idle rule" skills/pb-orchestrator/SKILL.md 'idle-sessions\.md'
 has   "pb-kickoff expects stopped workers" skills/pb-kickoff/SKILL.md 'idle-sessions\.md'
+
+# Private names never go in the kit. The list itself is private: set PB_PRIVATE_NAMES (an ERE) locally to check it.
+if [ -n "${PB_PRIVATE_NAMES:-}" ]; then
+  hit="$(grep -rEn -- "$PB_PRIVATE_NAMES" "$ROOT/skills" "$ROOT/reference" "$ROOT/templates" "$ROOT/../../README.md" "$ROOT/../../CHANGELOG.md" 2>/dev/null | head -1)"
+  [ -z "$hit" ] && ok "no private names in the kit text" || bad "no private names in the kit text ($(printf '%s' "$hit" | cut -c1-100))"
+fi
+has   "idle: a branch with no upstream fails the check" reference/idle-sessions.md 'no upstream.*fails'
+has   "idle: checkouts on every machine" reference/idle-sessions.md 'podbay-dev checkouts --all'
+has   "idle: nothing queued, by podbay-dev queue" reference/idle-sessions.md 'podbay-dev queue'
+has   "idle: process check on the session's machine" reference/idle-sessions.md '--on <machine>'
+has   "idle: night is a team value" reference/idle-sessions.md 'night:'
+has   "outside: 14 days counted from the Needs Info comment" reference/outside-reports.md '14 days.*from the date of the .Needs Info. comment'
+has   "pb-triage closes Duplicate, Won't fix and Cannot reproduce with a reply" skills/pb-triage/SKILL.md 'Duplicate of #<n>.*Won.t fix.*Cannot reproduce.*reporter-notified'
+has   "pb-release finds auto-closed outside reports" skills/pb-release/SKILL.md 'glab issue view <n> -R <repo> --output json.*source::'
 
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

@@ -40,11 +40,11 @@ New -> Acknowledged -> Triaged -> (Needs Info) -> In Process -> In Review -> On 
 | Closed | exactly one fixed comment, then close | see below |
 | reporter-notified | `reporter-notified` and a comment `Notified: <date>, <link>` | `pb-release` drafts the reply; after the sender says it was sent, add both |
 
-A `'Needs Info'` ticket with no answer for 14 days is closed with `Resolution: No response`, only after the user's yes (`pb-orchestrator` lists them).
+A `'Needs Info'` ticket with no answer for 14 days, counted from the date of the `Needs Info` comment (`glab issue view <n> -R <repo> --comments`), is closed with `Resolution: No response`, only after the user's yes (`pb-orchestrator` lists them).
 
 ## Closing comment
 
-Exactly one of these, as the issue's last comment before it closes:
+Exactly one of these per ticket, as its closing comment (on a ticket GitLab closed itself, right after the close):
 
 - `Resolution: Fixed in <version>`
 - `Resolution: Duplicate of #<n>`
@@ -52,7 +52,7 @@ Exactly one of these, as the issue's last comment before it closes:
 - `Resolution: Cannot reproduce`
 - `Resolution: No response`
 
-A ticket that GitLab closed from `Closes #<n>` gets `Resolution: Fixed in <version>` from `pb-release` step 7.
+A ticket that GitLab closed from `Closes #<n>` gets `Resolution: Fixed in <version>` from `pb-release` step 7. `Duplicate of #<n>`, `Won't fix`, `Cannot reproduce` and `No response` are decided at triage or by the user: `pb-triage` (gate 1) or `pb-orchestrator` (Needs Info) posts the comment, closes the ticket and drafts the reply to the reporter, then adds `reporter-notified` after the sender says it went.
 
 ## Replies to the reporter
 
