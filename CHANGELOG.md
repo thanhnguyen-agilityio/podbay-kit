@@ -12,7 +12,8 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Role map machine qualifier: a map line may end in ` @<machine>` (`- `~/path` = role @M2`). `pb-role.py` then applies it only on the machine that `podbay-dev setup` names (env `PB_MACHINE` overrides), and it wins over a plain line for the same path. An unknown machine name means qualified lines are ignored; names match exactly. The name is read from `podbay-dev` on PATH, else `~/.local/bin/podbay-dev`, with a 2 s limit that also ends its child processes. `pb-kickoff` takes the qualifier into account. Older kits ignore qualified lines, so release this before a map uses them.
 - `pb-orchestrator` briefs carry a fixed line: do not edit `src/ui/kit*`, `src/ui/theme*`, `src/ui/sink.rs` or tokens (only the design-system owner does; a fix that needs a design part stops and asks). It is left out only in a brief to the design-system owner (deliberate: that session owns those files).
 - Tests: test-pb-guard.sh 162 pass (7 new), test-kit-text.sh 220 pass (30 new), test-pb-role.sh 35 pass (12 new).
-- Review: isolated rounds on Opus. Round 1, no blockers; 5 should-fix (In Review was rarely set, the assignee replaced others, the default-branch assumption, epic children, a 30-label page limit) and the nits fixed.
+- Review: isolated rounds on Opus. Round 1, no blockers; 5 should-fix (In Review was rarely set, the assignee replaced others, the default-branch assumption, epic children, a 30-label page limit) and the nits fixed. Round 2, no blockers; 4 should-fix (batch workers, older status labels, epic child lookup, `--urgent`) fixed. Round 3, no blockers; 4 should-fix (podbay-dev outside PATH, a hang-safe timeout, `pb-kickoff`, README) fixed; the owner chose no round 4.
+- Evals: mr-target, release-develop-flow, kickoff-readback and fix-grill-first all 1.00.
 
 ## podbay 0.10.1 - 2026-11-26
 
