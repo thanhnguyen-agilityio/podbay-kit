@@ -19,7 +19,7 @@ cat > "$D/bin/glab" <<'FAKE'
 #!/bin/bash
 if [ "$1 $2" = "label list" ]; then
   case "$*" in *other/fail*) exit 1 ;; esac
-  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"},{"name":"human-reviewed"},{"name":"In Process"},{"name":"In Review"},{"name":"On Dev"}]'; exit 0
+  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"},{"name":"human-reviewed"},{"name":"In Process"},{"name":"In Review"},{"name":"On Dev"},{"name":"source::support"},{"name":"Needs Info"},{"name":"reporter-notified"},{"name":"Feature request"}]'; exit 0
 fi
 [ "$1 $2" = "mr view" ] || exit 1
 case "${3#!}" in
@@ -193,6 +193,12 @@ check allow "status: In Review -> On Dev" "glab issue update 12 -R group/project
 check block "status: a misspelt status label" "glab issue update 12 -R group/project --label 'In Progress'"
 check allow "status: the On Dev command as written" "glab issue update 12 -R group/project --unlabel 'In Process,In Review' --label 'On Dev'"
 check allow "status: list On Dev issues" "glab issue list -R group/project --label 'On Dev' --per-page 100"
+# Outside reports (0.10.3)
+check allow "outside: new report with source and type" "glab issue update 12 -R group/project --label 'source::support,Feature request'"
+check allow "outside: Needs Info" "glab issue update 12 -R group/project --label 'Needs Info'"
+check allow "outside: reporter-notified" "glab issue update 12 -R group/project --label reporter-notified"
+check block "outside: source label that does not exist yet" "glab issue update 12 -R group/project --label 'source::client'"
+check allow "outside: resolution comment from a file" "glab issue note 12 -R group/project -m \"\$(cat $D/clean.md)\""
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)

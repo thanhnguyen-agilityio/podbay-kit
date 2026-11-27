@@ -105,6 +105,10 @@ The repo's existing status labels show where a ticket is. One at a time; each mo
 - Before the first status edit in a run, check the three labels exist (`glab label list -R <repo> --per-page 100`). If a status label is missing, stop that step and report it; never create it (Labels).
 - Under the owner's standing rule, a status label move and the assignee need no approval. Closing an issue still needs the user's yes (pb-release asks before it).
 
+## Outside reports
+
+A report from the client, the team, support or a DM follows the lifecycle in [outside-reports.md](outside-reports.md): source and type labels, the Reporter block, Acknowledged, Triaged, Needs Info, the status labels above, one fixed `Resolution:` comment at close, and `reporter-notified`. The session drafts replies; a person sends them.
+
 ## Comment markers
 
 | Marker | Where | Meaning |

@@ -2,6 +2,13 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.10.3 - 2026-11-27
+
+- Outside reports (owner's decision of 2026-11-27), in a new `reference/outside-reports.md` and a contract section: a report from the client, the team, support or a DM becomes one GitLab issue with one source label (`source::client`, `source::team`, `source::support`, `source::dm`), `bug` or `Feature request`, and a Reporter block. It moves New -> Acknowledged (comment after the reply was sent) -> Triaged (priority and a milestone or `Planned: Backlog`, gate 1) -> optional `Needs Info` (closed as `Resolution: No response` after 14 days, only with a yes) -> the status labels -> closed with one fixed `Resolution:` comment -> `reporter-notified` with a `Notified:` comment. Sessions draft replies and never send them. Steps added to `pb-triage` (2b), `pb-fix` (Needs Info), `pb-orchestrator` (lists stale Needs Info) and `pb-release` step 7 (`Resolution: Fixed in <x.y.z>`, reporter reply drafts, `reporter-notified`).
+- Labels must exist; a missing one stops that step and is never created. `pb-guard` needed no change: tests prove it allows these labels and comments and blocks a source label the repo does not have yet.
+- Idle sessions, in a new `reference/idle-sessions.md`: the orchestrator stops a worker idle for 30 minutes (`PB_IDLE_MINUTES`), standing roles included, after a check (work pushed, no build or test running, no prompt waiting); a session that fails the check is reported, never stopped. At night every worker that passes stops. Only the orchestrator, the supervisor and a session with an open watch stay up. Resume with `podbay-dev start ... --resume latest`. `pb-kickoff` expects stopped workers.
+- Tests: test-pb-guard.sh 167 pass (5 new), test-kit-text.sh 255 pass (35 new).
+
 ## podbay 0.10.2 - 2026-11-27
 
 - Ticket status flow (owner's rule of 2026-11-27), in a new contract section "Ticket status": `In Process` when a session starts a ticket (`pb-orchestrator` sets it with the assignee from the `ticket-assignee:` line in `.podbay/orchestrator.md`; the kit names no person), `In Review` when the MR is ready for review (`pb-mr`; a Draft keeps `In Process`), `On Dev` right after the merge into `develop` (`pb-orchestrator`; for an epic, each child ticket when `feat/<epic-name>` merges). The ticket is never closed at `On Dev`: GitLab closes it from `Closes #<n>` when `develop` merges into `main`, and `pb-release` step 7 lists the leftovers and closes them after the user's yes.

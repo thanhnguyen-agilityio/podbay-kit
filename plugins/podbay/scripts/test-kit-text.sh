@@ -287,5 +287,46 @@ has   "README documents the machine qualifier and PB_MACHINE" ../../README.md '@
 lacks "no person's username in the status rules" reference/contract.md 'thanh'
 lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
 
+# Outside reports (0.10.3): GitLab lifecycle from New to reporter-notified.
+OR=reference/outside-reports.md
+[ -f "$ROOT/$OR" ] && ok "outside-reports reference exists" || bad "outside-reports reference exists"
+has   "outside: the states in order" $OR 'New.*Acknowledged.*Triaged.*Needs Info.*In Process.*In Review.*On Dev.*Closed.*reporter-notified'
+has   "outside: the four source labels" $OR 'source::client.*source::team.*source::support.*source::dm'
+has   "outside: one source label per ticket" $OR 'one source label'
+has   "outside: type label bug or Feature request" $OR "'Feature request'"
+has   "outside: the Reporter block" $OR 'Reporter: <name> \(<role>\) · Source: <link> · Reply to: <thread \| DM to <person>>'
+has   "outside: the Acknowledged/Notified line" $OR 'Acknowledged: <date> · Notified: —'
+has   "outside: the Acknowledged comment" $OR 'Acknowledged: replied to reporter, logged as #<n>'
+has   "outside: resolution fixed" $OR '^- `Resolution: Fixed in <version>`'
+has   "outside: resolution duplicate" $OR '^- `Resolution: Duplicate of #<n>`'
+has   "outside: resolution wont-fix" $OR '^- `Resolution: Won.t fix: <why>`'
+has   "outside: resolution cannot-reproduce" $OR '^- `Resolution: Cannot reproduce`'
+has   "outside: resolution no-response" $OR '^- `Resolution: No response`'
+has   "outside: Needs Info closes after 14 days with a yes" $OR '14 days.*yes'
+has   "outside: the Notified comment" $OR 'Notified: <date>, <link>'
+has   "outside: a missing label stops, never created" $OR 'missing.*stop.*never create'
+has   "outside: the session never sends the reply" $OR 'never sends'
+lacks "outside: no person names" $OR 'Trung|Thanh'
+has   "contract points to outside reports" reference/contract.md 'outside-reports\.md'
+has   "pb-triage acknowledges and triages outside reports" skills/pb-triage/SKILL.md 'outside-reports\.md'
+has   "pb-orchestrator lists stale Needs Info" skills/pb-orchestrator/SKILL.md 'Needs Info.*14 days'
+has   "pb-fix sets Needs Info for an outside report it cannot build" skills/pb-fix/SKILL.md 'Needs Info'
+has   "pb-release posts the Fixed resolution and drafts reporter replies" skills/pb-release/SKILL.md 'Resolution: Fixed in <x\.y\.z>.*reporter-notified'
+
+# Idle sessions (0.10.3): stop a worker idle for 30 minutes after a check; resume with --resume latest.
+IS=reference/idle-sessions.md
+[ -f "$ROOT/$IS" ] && ok "idle-sessions reference exists" || bad "idle-sessions reference exists"
+has   "idle: 30 minutes and PB_IDLE_MINUTES" $IS '30 minutes.*PB_IDLE_MINUTES|PB_IDLE_MINUTES.*30'
+has   "idle: work pushed check" $IS 'git rev-list @\{u\}\.\.HEAD'
+has   "idle: no build or test running" $IS '[Nn]o build or test'
+has   "idle: no prompt waiting" $IS 'waiting_for'
+has   "idle: resume command" $IS 'podbay-dev start <project> <repo> --ws <ws> --resume latest'
+has   "idle: only the orchestrator, the supervisor and a watching session stay up" $IS 'orchestrator.*supervisor.*watch'
+has   "idle: standing roles are stopped too" $IS 'standing roles'
+has   "idle: a failed check is reported, never stopped" $IS 'reported, never stopped'
+lacks "idle: no team session names" $IS 'Togepi|#M2|kit-|artifacts worker'
+has   "pb-orchestrator links the idle rule" skills/pb-orchestrator/SKILL.md 'idle-sessions\.md'
+has   "pb-kickoff expects stopped workers" skills/pb-kickoff/SKILL.md 'idle-sessions\.md'
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]
