@@ -87,6 +87,23 @@ The repo's existing labels only. A skill never creates a label: GitLab creates a
 
 In `live` mode, `pb-fix` batch mode skips issues labelled `pb::needs-advisor` until they also carry `pb::approved`. In `pilot` mode, the label is informational.
 
+## Ticket status
+
+The repo's existing status labels show where a ticket is. One at a time; each move removes the previous one.
+
+| Moment | Who | Command |
+| --- | --- | --- |
+| A session starts the ticket | `pb-orchestrator` when it briefs the session (a session that starts a ticket on its own does the same) | `glab issue update <n> -R <repo> --label 'In Process' --assignee <ticket-assignee>` |
+| Its MR is ready for a person's review (opened without Draft, or found marked ready) | `pb-mr` | `glab issue update <n> -R <repo> --unlabel 'In Process' --label 'In Review'` |
+| The MR merges into `develop` (for an epic: the `feat/<epic-name>` MR into `develop`, for each child ticket) | `pb-orchestrator` right after the merge | `glab issue update <n> -R <repo> --unlabel 'In Process' --unlabel 'In Review' --label 'On Dev'` |
+| `develop` merges into `main` | GitLab closes it from `Closes #<n>`; `pb-release` step 7 closes the leftovers | `glab issue close <n> -R <repo>` |
+
+- The ticket is the issue in the MR's `Closes #<n>` line. While the MR is a Draft, the ticket keeps `In Process`.
+- `On Dev` means merged into `develop`, not released: never close the ticket at that point.
+- `<ticket-assignee>` is a team value: the `ticket-assignee:` line in `.podbay/orchestrator.md`. The kit never names a person. When the line is missing, set the label only and say so in the report.
+- Before the first status edit in a run, check the three labels exist (`glab label list -R <repo>`). If a status label is missing, stop that step and report it; never create it (Labels).
+- Under the owner's standing rule, a status label move and the assignee need no approval. Closing an issue still needs the user's yes (pb-release asks before it).
+
 ## Comment markers
 
 | Marker | Where | Meaning |

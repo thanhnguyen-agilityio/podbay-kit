@@ -2,6 +2,13 @@
 
 One entry per podbay plugin version, newest first. Older versions: see `git log`.
 
+## podbay 0.10.2 - 2026-11-27
+
+- Ticket status flow (owner's rule of 2026-11-27), in a new contract section "Ticket status": `In Process` when a session starts a ticket (`pb-orchestrator` sets it with the assignee from the `ticket-assignee:` line in `.podbay/orchestrator.md`; the kit names no person), `In Review` when the MR is ready for review (`pb-mr`; a Draft keeps `In Process`), `On Dev` right after the merge into `develop` (`pb-orchestrator`; for an epic, each child ticket when `feat/<epic-name>` merges). The ticket is never closed at `On Dev`: GitLab closes it from `Closes #<n>` when `develop` merges into `main`, and `pb-release` step 7 lists the leftovers and closes them after the user's yes.
+- Status label moves and the assignee need no approval; closing an issue still does. The labels must already exist; a missing one stops that step (never created). Briefs from `pb-orchestrator` state the rule.
+- `pb-guard` needed no change: tests prove it allows these label moves, the assignee and `glab issue close`, and still blocks a misspelt status label.
+- Tests: test-pb-guard.sh 160 pass (5 new), test-kit-text.sh 204 pass (14 new).
+
 ## podbay 0.10.1 - 2026-11-26
 
 - Old label scheme (team decision of 2026-11-26): type `bug`, `feature` or `improvement` (a task, spike or epic gets no type label and starts its description with `Kind: <kind>`); priority `P1`, `P2`, `P3`; the repo's existing `area:<name>` labels; `feature::high` is read, never added. Replaces `type::*`, `priority::*` and `area::*` in the contract, ticket format, pb-triage filing, pb-fix batch mode and follow-ups, the bug checks in pb-mr and pb-fix, and the issue templates.

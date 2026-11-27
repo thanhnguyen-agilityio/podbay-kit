@@ -255,5 +255,21 @@ for p in $(grep -rhoE '\$\{CLAUDE_PLUGIN_ROOT\}/[A-Za-z0-9_./-]+' "$ROOT/skills"
 done
 [ -z "$missing" ] && ok "every \${CLAUDE_PLUGIN_ROOT} path in skill and reference text exists" || bad "missing plugin paths:$missing"
 
+# Ticket status (0.10.2): In Process -> In Review -> On Dev; the ticket closes on the merge into main.
+has   "contract has a Ticket status section" reference/contract.md '^## Ticket status'
+has   "contract: the three status labels in order" reference/contract.md 'In Process.*In Review.*On Dev'
+has   "contract: status edits need no approval, closing does" reference/contract.md 'status label.*no approval.*[Cc]losing'
+has   "contract: assignee is a team value, never in the kit" reference/contract.md 'ticket-assignee:'
+has   "contract: a missing status label stops the step" reference/contract.md 'status label is missing.*stop'
+has   "contract: merge into develop never closes the ticket" reference/contract.md 'On Dev.*never close'
+has   "pb-orchestrator sets In Process and the assignee at start" skills/pb-orchestrator/SKILL.md 'In Process.*ticket-assignee'
+has   "pb-orchestrator briefs carry the status flow" skills/pb-orchestrator/SKILL.md '[Bb]rief.*Ticket status'
+has   "pb-orchestrator sets On Dev after a merge into develop" skills/pb-orchestrator/SKILL.md 'On Dev'
+has   "pb-mr sets In Review only when the MR is ready" skills/pb-mr/SKILL.md 'In Review'
+has   "pb-mr keeps In Process while Draft" skills/pb-mr/SKILL.md 'Draft.*In Process|In Process.*Draft'
+has   "pb-release closes On Dev leftovers after the merge into main" skills/pb-release/SKILL.md 'On Dev.*glab issue close|glab issue close.*On Dev'
+lacks "no person's username in the status rules" reference/contract.md 'thanh'
+lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]

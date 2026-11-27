@@ -19,7 +19,7 @@ cat > "$D/bin/glab" <<'FAKE'
 #!/bin/bash
 if [ "$1 $2" = "label list" ]; then
   case "$*" in *other/fail*) exit 1 ;; esac
-  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"},{"name":"human-reviewed"}]'; exit 0
+  echo '[{"name":"bug"},{"name":"P3"},{"name":"area:network"},{"name":"agent-ready"},{"name":"pb::needs-advisor"},{"name":"Do Not Merge"},{"name":"human-reviewed"},{"name":"In Process"},{"name":"In Review"},{"name":"On Dev"}]'; exit 0
 fi
 [ "$1 $2" = "mr view" ] || exit 1
 case "${3#!}" in
@@ -186,6 +186,12 @@ check block "api POST to labels" "glab api -X POST projects/1/labels -f name=foo
 check allow "api GET labels" "glab api projects/1/labels"
 check block "api add_labels with a missing label" "glab api -X PUT projects/1/issues/3 -f add_labels=type::story"
 check allow "api add_labels with an existing label" "glab api -X PUT projects/1/issues/3 -R group/project -f add_labels=bug"
+# Ticket status (0.10.2): moving an issue between the existing status labels and assigning it must pass.
+check allow "status: In Process and assignee" "glab issue update 12 -R group/project --label 'In Process' --assignee someone"
+check allow "status: In Process -> In Review" "glab issue update 12 -R group/project --unlabel 'In Process' --label 'In Review'"
+check allow "status: In Review -> On Dev" "glab issue update 12 -R group/project --unlabel 'In Review' --label 'On Dev'"
+check block "status: a misspelt status label" "glab issue update 12 -R group/project --label 'In Progress'"
+check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 
 # disk floor (default 10 GB, env PB_DISK_FLOOR_GB; PB_FREE_GB_OVERRIDE is read only with PB_GUARD_TEST=1)
 MSG_RE="10 GB"
