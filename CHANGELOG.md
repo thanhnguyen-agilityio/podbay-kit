@@ -9,7 +9,7 @@ One entry per podbay plugin version, newest first. Older versions: see `git log`
 - Round 2 fixes: any `glab api` or `curl` call to `/uploads` or `/wikis/attachments` asks, whatever its flags (`curl -sF` was missed); `glab` by full path is seen; a command ending in a backslash no longer hides the upload (the lines are joined in bash, not BSD sed); a curl form to an API URL built from a shell variable asks; the Chrome `upload_image` tool is covered; only the default, acceptEdits, plan and auto modes get "ask", every other mode blocks.
 - Round 3 fixes: Chrome and browser upload tools are matched under any server prefix; the auto mode keeps "ask" (the docs: the classifier does not decide a hook's "ask"); the guard tests also check that an "ask" is valid JSON.
 - Review checklist (design system): every stateful kit widget takes an id from its caller and runs inside `push_id`; a literal `Id::new("...")` added in `src/ui/kit*` (a grep of the diff) is should-fix. Failing a test on an egui id clash is not a `pb-ci` setting: it belongs in the app's test harness.
-- Tests: test-pb-guard.sh 214 pass (37 new; 3 older upload cases now expect "ask"), test-kit-text.sh 275 pass (10 new; 276 with `PB_PRIVATE_NAMES` set).
+- Tests: test-pb-guard.sh 214 pass (37 new; 3 older upload cases now expect "ask"), test-kit-text.sh 276 pass (10 new; 277 with `PB_PRIVATE_NAMES` set).
 - Review: 3 isolated rounds on Opus. Round 1: no blockers, 5 should-fix; round 2: 3 blockers (`curl -sF`, a trailing backslash, glab by path) and 4 should-fix; round 3: no blockers, 2 should-fix. All fixed. The guard test helper knows the results "ask" and "allow-with-stdout" (an allow must be silent) and can set the permission mode.
 
 ## podbay 0.10.3 - 2026-11-27
