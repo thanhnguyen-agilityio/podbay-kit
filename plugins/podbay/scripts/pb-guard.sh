@@ -55,11 +55,13 @@ TOOL="$(printf '%s\n' "$meta" | sed -n 1p)"
 CWD="$(printf '%s\n' "$meta" | sed -n 2p)"
 PMODE="$(printf '%s\n' "$meta" | sed -n 3p)"
 
-# ask_upload: an upload goes to the person's permission prompt. In bypassPermissions mode no prompt shows, so block.
+# ask_upload: an upload goes to the person's permission prompt. Only modes where the docs promise that prompt get
+# "ask"; any other mode (bypassPermissions, dontAsk, unknown) blocks, since nobody could say yes.
 ask_upload() {
-  if [ "$PMODE" = bypassPermissions ]; then
-    block "This uploads a file, and this session skips permission prompts, so nobody can say yes. Uploads of screenshots or files need the person's yes in the session's own window, even for invented data. Leave the file out and report it, or run in a mode with prompts."
-  fi
+  case "$PMODE" in
+    ""|default|acceptEdits|plan|auto) ;;
+    *) block "This uploads a file, and in permission mode '$PMODE' no prompt reaches the person, so nobody can say yes. Uploads of screenshots or files need the person's yes in the session's own window, even for invented data. Leave the file out and report it, or run in a mode with prompts." ;;
+  esac
   printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"pb-guard: this uploads a file. Uploads need the person'"'"'s yes in this window, even for invented data. Approve only if you want this file uploaded."}}'
   exit 0
 }
@@ -73,7 +75,7 @@ block() {
 }
 
 # Only Bash and the Chrome upload tool reach here (hooks.json matcher).
-[ "$TOOL" = "mcp__claude-in-chrome__file_upload" ] && ask_upload
+case "$TOOL" in mcp__claude-in-chrome__file_upload|mcp__claude-in-chrome__upload_image) ask_upload ;; esac
 [ "$TOOL" = "Bash" ] || exit 0
 CMD="$(cat "$CMDF")"
 [ -n "$CMD" ] || exit 0
@@ -372,14 +374,21 @@ fi
 
 # 9. uploads: a file sent to GitLab always goes to the person's permission prompt (ask_upload). Checked last, on the
 #    whole command with line continuations joined (an upload split over lines or with & in its URL is still seen),
-#    so every block above still wins; never auto-allowed.
-J="$(printf '%s' "$CMD" | sed -e ':a' -e '/\\$/N; s/\\\n//; ta')"
+#    so every block above still wins; never auto-allowed. Any glab api or curl call to /uploads or
+#    /wikis/attachments asks, whatever its flags (a rare GET gets a needless prompt; a missed upload costs more).
+J="${CMD//$'\\\n'/}"
+J="${J%\\}"
 CMDW='(^|[[:space:];&|(`])'
-if printf '%s' "$J" | grep -Eq "${CMDW}glab[[:space:]]" && printf '%s' "$J" | grep -Eq '(^|[[:space:]])--attach([[:space:]=]|$)'; then ask_upload; fi
-if printf '%s' "$J" | grep -Eq "${CMDW}glab[[:space:]]+([^;&|]*[[:space:]])?release[[:space:]]+(upload|create)([[:space:]]|$)"; then ask_upload; fi
-if printf '%s' "$J" | grep -Eq "${CMDW}(glab[[:space:]]([^;&|]*[[:space:]])?api|([^[:space:]]*/)?curl)[[:space:]]" &&
-   printf '%s' "$J" | grep -Eq '/(uploads|wikis/attachments)/?([?[:space:]"'"'"'>&;|)]|$)' &&
-   printf '%s' "$J" | grep -Eiq '(^|[[:space:]])(-F|--form|--field|-f|--data[a-z-]*|-d)([[:space:]=]|[^[:space:]-])|(-X|--request|--method)[[:space:]=]*POST|-XPOST'; then
+GL="${CMDW}([^[:space:]]*/)?glab[[:space:]]"
+if printf '%s' "$J" | grep -Eq "$GL" && printf '%s' "$J" | grep -Eq '(^|[[:space:]])--attach([[:space:]=]|$)'; then ask_upload; fi
+if printf '%s' "$J" | grep -Eq "${GL}([^;&|]*[[:space:]])?release[[:space:]]+(upload|create)([[:space:]]|$)"; then ask_upload; fi
+if printf '%s' "$J" | grep -Eq "(${GL}([^;&|]*[[:space:]])?api|${CMDW}([^[:space:]]*/)?curl)[[:space:]]" &&
+   printf '%s' "$J" | grep -Eq '/(uploads|wikis/attachments)/?([?[:space:]"'"'"'>&;|)]|$)'; then
+  ask_upload
+fi
+# curl with a form or POST to a GitLab API URL whose path uses a shell variable: the endpoint cannot be read.
+if printf '%s' "$J" | grep -Eq "${CMDW}([^[:space:]]*/)?curl[[:space:]]" && printf '%s' "$J" | grep -Eq '/api/v4/[^[:space:]]*\$' &&
+   printf '%s' "$J" | grep -Eq '(^|[[:space:]])(-[A-Za-z]*F|--form|--data[a-z-]*|-d)([[:space:]=]|[^[:space:]-])|(-X|--request)[[:space:]=]*(POST|post)'; then
   ask_upload
 fi
 exit 0

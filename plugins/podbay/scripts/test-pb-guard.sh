@@ -47,6 +47,7 @@ print(json.dumps(d))')"
   if [ "$UNSET_KIT" = 1 ]; then err="$(printf '%s' "$payload" | env -u PB_KIT_REPO "$GUARD" 2>&1 >"$D/stdout")"; rc=$?
   else err="$(printf '%s' "$payload" | "$GUARD" 2>&1 >"$D/stdout")"; rc=$?; fi
   local got=allow; [ $rc -eq 2 ] && got=block
+  [ $rc -eq 0 ] && [ -s "$D/stdout" ] && got=allow-with-stdout
   [ $rc -eq 0 ] && grep -q '"permissionDecision": *"ask"' "$D/stdout" && got=ask
   [ $rc -ne 0 ] && [ $rc -ne 2 ] && got="exit$rc"
   if [ "$got" = block ] && [ -n "$MSG_RE" ] && ! printf '%s' "$err" | grep -Eq -- "$MSG_RE"; then got="block-without-/$MSG_RE/"; fi
@@ -232,12 +233,22 @@ check ask   "upload: release asset" "glab release upload v1.2.3 $D/shot.png -R g
 check ask   "upload: release create with files" "glab release create v1.2.3 $D/shot.png -R group/project"
 check ask   "upload: wiki attachment" "glab api projects/1/wikis/attachments --form file=@$D/shot.png"
 check block "upload with a secret file is blocked, not asked" "glab api -X POST projects/1/uploads -F file=@$D/secret.md"
-check allow "not an upload: GET of uploads" "glab api projects/1/uploads"
+check ask   "any call to uploads asks, whatever the flags (a GET too)" "glab api projects/1/uploads"
 check allow "not an upload: curl download" "curl -sf -o $D/x.png https://gitlab.example.com/uploads/abc/x.png"
 check allow "not an upload: text that names /uploads" "glab mr note 6 -R group/project -m 'see the uploads page'"
 check ask   "upload: Chrome file upload tool" "x" mcp__claude-in-chrome__file_upload
 PERM=bypassPermissions check block "upload in bypass mode is blocked (no prompt there)" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 PERM=bypassPermissions check block "Chrome upload in bypass mode is blocked" "x" mcp__claude-in-chrome__file_upload
+check ask   "upload: curl with combined short flags" "curl -sF file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads"
+check ask   "upload: command ends in a backslash" "curl -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/uploads \\"
+check ask   "upload: glab by full path" "/opt/homebrew/bin/glab api projects/1/uploads -F file=@$D/shot.png"
+check ask   "upload: endpoint hidden in a variable" "X=uploads; curl -F file=@$D/shot.png https://gitlab.example.com/api/v4/projects/1/\$X"
+check allow "not an upload: curl -f GET of an API page" "curl -f https://gitlab.example.com/api/v4/projects/1/issues"
+check ask   "upload: Chrome upload_image tool" "x" mcp__claude-in-chrome__upload_image
+check allow "another non-Bash tool stays silent" "x" Write
+PERM=dontAsk check block "upload in dontAsk mode is blocked" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+PERM=madeUpMode check block "upload in an unknown mode is blocked" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
+PERM=acceptEdits check ask   "upload in acceptEdits mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 PERM=default check ask   "upload in default mode asks" "glab api -X POST projects/1/uploads -F file=@$D/shot.png"
 check allow "release closes a leftover issue" "glab issue close 12 -R group/project"
 

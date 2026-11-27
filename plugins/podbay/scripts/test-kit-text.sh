@@ -353,6 +353,7 @@ has   "worker.md carries the upload line" skills/pb-fix/references/worker.md "$U
 has   "pb-orchestrator brief carries the upload line" skills/pb-orchestrator/SKILL.md "[Bb]rief.*$UPL"
 has   "pb-verify carries the upload line" skills/pb-verify/SKILL.md "$UPL"
 has   "hooks.json sends Chrome uploads to the guard" hooks/hooks.json 'mcp__claude-in-chrome__file_upload'
+has   "hooks.json sends Chrome upload_image to the guard" hooks/hooks.json 'mcp__claude-in-chrome__upload_image'
 has   "contract: uploads are blocked where no prompt can show" reference/contract.md 'bypass.*block'
 has   "contract: the guard asks before an upload" reference/contract.md 'permission prompt.*upload|upload.*permission prompt'
 
