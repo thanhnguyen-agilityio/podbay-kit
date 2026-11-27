@@ -282,6 +282,8 @@ has   "status: every Closes line counts" reference/contract.md 'each issue in a 
 has   "pb-fix sets In Process when it starts a ticket on its own" skills/pb-fix/SKILL.md 'In Process'
 step  "pb-orchestrator brief carries the design-system line" skills/pb-orchestrator/SKILL.md 4 'Do not edit src/ui/kit\*, src/ui/theme\*, src/ui/sink\.rs or tokens; only the design-system owner does\. If the fix needs a design part, stop and ask the orchestrator\.'
 has   "role map: the machine qualifier is documented" ../../CLAUDE.md '@<machine>'
+has   "pb-kickoff knows map lines with @<machine>" skills/pb-kickoff/SKILL.md '@<machine>'
+has   "README documents the machine qualifier and PB_MACHINE" ../../README.md '@<machine>.*PB_MACHINE'
 lacks "no person's username in the status rules" reference/contract.md 'thanh'
 lacks "no person's username in pb-orchestrator" skills/pb-orchestrator/SKILL.md 'thanh'
 

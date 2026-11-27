@@ -13,6 +13,7 @@ no output and exit 0: the hook never blocks or slows a session start.
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 
@@ -25,12 +26,29 @@ def machine_name():
     env = os.environ.get("PB_MACHINE", "").strip()
     if env:
         return env
-    try:
-        out = subprocess.run(["podbay-dev", "setup"], capture_output=True, text=True, timeout=3).stdout
-        name = json.loads(out).get("machine")
+    # A hook started from a GUI app often lacks ~/.local/bin on PATH, where podbay-dev usually lives.
+    for exe in ("podbay-dev", os.path.expanduser("~/.local/bin/podbay-dev")):
+        try:
+            # Own process group, so a timeout also ends any child that still holds stdout (the hook has 5 s).
+            pr = subprocess.Popen([exe, "setup"], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL, text=True, start_new_session=True)
+        except Exception:
+            continue
+        try:
+            out, _ = pr.communicate(timeout=2)
+        except Exception:
+            try:
+                os.killpg(pr.pid, signal.SIGKILL)
+            except Exception:
+                pass
+            return None
+        try:
+            d = json.loads(out)
+            name = d.get("machine") if isinstance(d, dict) else None
+        except Exception:
+            name = None
         return name.strip() if isinstance(name, str) and name.strip() else None
-    except Exception:
-        return None
+    return None
 
 
 def expand(p, base=None):

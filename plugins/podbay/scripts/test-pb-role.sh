@@ -114,5 +114,17 @@ out="$(runq "$H/work/q3" "$D/nobin" Mac-mini)"; printf '%s' "$out" | ctx | grep 
 out="$(runq "$H/work/q1" "$D/fakebin")"; printf '%s' "$out" | ctx | grep -q 'ask before push' && ok "machine name read from podbay-dev setup" || bad "machine name read from podbay-dev setup (got: $out)"
 out="$(runq "$H/work/q1" "$D/nobin" m2)"; [ -z "$out" ] && ok "machine names match exactly (no guessing)" || bad "machine names match exactly (got: $out)"
 
+# podbay-dev only in ~/.local/bin (GUI apps often lack it on PATH); slow or broken podbay-dev never blocks.
+mkdir -p "$H/.local/bin" "$D/slowbin" "$D/badbin"
+cp "$D/fakebin/podbay-dev" "$H/.local/bin/podbay-dev"
+out="$(runq "$H/work/q1" "$D/nobin")"; printf '%s' "$out" | ctx | grep -q 'ask before push' && ok "machine name read from ~/.local/bin/podbay-dev" || bad "machine name read from ~/.local/bin/podbay-dev (got: $out)"
+rm -f "$H/.local/bin/podbay-dev"
+printf '#!/bin/sh\nsleep 10\necho x\n' > "$D/slowbin/podbay-dev"; chmod +x "$D/slowbin/podbay-dev"
+t0=$(date +%s); out="$(runq "$H/work/q2" "$D/slowbin")"; rc=$?; t1=$(date +%s)
+[ $rc -eq 0 ] && [ $((t1 - t0)) -lt 5 ] && printf '%s' "$out" | ctx | grep -q 'tests first' && ok "a hanging podbay-dev is cut off in time" || bad "a hanging podbay-dev is cut off in time (rc=$rc, $((t1 - t0))s, got: $out)"
+out="$(runq "$H/work/q1" "$D/slowbin")"; [ -z "$out" ] && ok "a hanging podbay-dev means unknown machine" || bad "a hanging podbay-dev means unknown machine (got: $out)"
+printf '#!/bin/sh\necho "[1,2]"\n' > "$D/badbin/podbay-dev"; chmod +x "$D/badbin/podbay-dev"
+out="$(runq "$H/work/q1" "$D/badbin")"; rc=$?; [ $rc -eq 0 ] && [ -z "$out" ] && ok "non-object JSON from podbay-dev means unknown machine" || bad "non-object JSON from podbay-dev (rc=$rc, got: $out)"
+
 echo "passed $pass, failed $fail"
 [ "$fail" -eq 0 ]
